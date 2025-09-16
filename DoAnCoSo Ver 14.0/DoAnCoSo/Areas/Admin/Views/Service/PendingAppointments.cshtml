@@ -1,0 +1,111 @@
+﻿@model List<DoAnCoSo.Models.Appointment>
+@using DoAnCoSo.Extensions
+@using System
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Đơn đặt lịch chờ xác nhận";
+
+    // Chuẩn bị thông tin múi giờ Việt Nam (giữ nguyên)
+    TimeZoneInfo vietnamTimeZone = null;
+    bool timeZoneFound = false;
+    try
+    {
+        vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        timeZoneFound = true;
+    }
+    catch (TimeZoneNotFoundException)
+    {
+        try
+        {
+            vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            timeZoneFound = true;
+        }
+        catch (TimeZoneNotFoundException) { }
+    }
+    catch (InvalidTimeZoneException) { }
+}
+
+<div class="container py-5">
+    <h2>Đơn đặt lịch chờ xác nhận</h2>
+
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Mã đặt lịch </th>
+                <th>Thú cưng</th>
+                <th>Dịch vụ</th>
+                <th>Thời gian hẹn</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                @* --- HÀNG CHÍNH (Hiển thị chỉ 5 cột chính + 1 cột mở rộng) --- *@
+                <tr class="main-row" data-appointment-id="@item.AppointmentId">
+                    @* Ô CHỨA BIỂU TƯỢNG MỞ RỘNG (giữ nguyên) *@
+                    <td>@item.AppointmentId</td>
+                    @* -------------------------------------- *@
+
+                    @* *** CÁC Ô HIỂN THỊ 5 CỘT CHÍNH *** *@
+                    <td>@(item.Pet?.Name ?? "N/A") (@(item.Pet?.Type ?? "N/A"))</td>
+                    <td>@(item.Service?.Name ?? "N/A")</td>
+
+                    @* Nội dung cột "Thời gian hẹn" kết hợp (giữ nguyên logic) *@
+                    <td>
+                        @if (item.ServiceId >= 1 && item.ServiceId <= 3)
+                        {
+                            @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A")
+                            @if (item.AppointmentTime != default(TimeSpan))
+                            {
+                                @: @item.AppointmentTime.ToString(@"hh\:mm")
+                            }
+                        }
+                        else
+                        {
+                            @if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
+                            {
+                                @(item.StartDate.ToShortDateString() + " - " + item.EndDate.ToShortDateString())
+                            }
+                            else if (item.StartDate != default(DateTime))
+                            {
+                                @(item.StartDate.ToShortDateString() + " - N/A")
+                            }
+                            else if (item.EndDate != default(DateTime))
+                            {
+                                @("N/A - " + item.EndDate.ToShortDateString())
+                            }
+                            else
+                            {
+                                @:N/A
+                            }
+                        }
+                    </td>
+
+                    <td>@item.Status.GetDisplayName()</td>
+
+                    @* Nội dung cột Hành động (giữ nguyên, nên dùng Form POST cho nút Chấp nhận/Hủy) *@
+                    <td>
+                        @* Nút Chấp nhận/Hủy *@
+                        <form asp-action="AcceptAppointment" asp-route-id="@item.AppointmentId" method="post" style="display:inline;">
+                            @* Cần thêm @Html.AntiForgeryToken() hoặc input hidden trong View chứa bảng này *@
+                            <button type="submit" class="btn btn-success btn-sm">Chấp nhận</button>
+                        </form>
+                        <form asp-action="CancelAppointment" asp-route-id="@item.AppointmentId" method="post" style="display:inline;">
+                            @* Cần thêm @Html.AntiForgeryToken() *@
+                            <button type="submit" class="btn btn-danger btn-sm">Hủy</button>
+                        </form>
+                        @* *** Link "Xem chi tiết" (giữ nguyên) *** *@
+                        <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn btn-info btn-sm">
+                            Chi tiết
+                        </a>
+                        @* ----------------------------------------- *@
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

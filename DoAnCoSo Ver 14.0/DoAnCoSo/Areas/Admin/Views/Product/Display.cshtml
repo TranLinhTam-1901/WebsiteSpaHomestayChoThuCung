@@ -1,0 +1,34 @@
+﻿@model DoAnCoSo.Models.Product
+<div class="container py-5">
+<h2>@Model.Name</h2>
+<div>
+	<ul>
+		<li><strong>Tên sản phẩm:</strong> @Model.Name</li>
+		<li>
+			<strong>Giá:</strong>
+			@if (Model.PriceReduced.HasValue && Model.PriceReduced < Model.Price)
+			{
+				<span style="text-decoration: line-through; color: gray;">@Model.Price</span>
+				<br />
+				<span style="color: red; font-weight: bold;">@Model.PriceReduced</span>
+			}
+			else
+			{
+				<span>@Model.Price</span>
+			}
+		</li>
+		@if (!string.IsNullOrEmpty(Model.Description))
+		{
+			<li><strong>Mô tả:</strong> @Model.Description</li>
+		}
+		@if (!string.IsNullOrEmpty(Model.ImageUrl))
+		{
+			<li><strong>Hình ảnh:</strong> <img src="@Model.ImageUrl" alt="Hình ảnh sản phẩm" style="max-width:100px" /></li>
+		}
+		<li><strong>Thương hiệu:</strong> @Model.Trademark</li>
+		<li><strong>Loại sản phẩm:</strong> @Model.Category?.Name</li>
+		@* Bạn có thể thêm các thuộc tính khác tương tự như thế này *@
+	</ul>
+</div>
+<a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
+</div>

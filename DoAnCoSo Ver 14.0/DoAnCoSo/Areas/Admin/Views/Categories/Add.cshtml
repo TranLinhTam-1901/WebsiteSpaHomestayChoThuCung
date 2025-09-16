@@ -1,0 +1,18 @@
+﻿@model DoAnCoSo.Models.Category
+
+@{
+    ViewData["Title"] = "Thêm loại sản phẩm";
+}
+<div class="container py-5">
+<h2>Thêm loại sản phẩm</h2>
+
+<form asp-action="Add" method="post">
+    <div class="form-group">
+        <label asp-for="Name"> Tên loại </label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Thêm</button>
+</form>
+</div>

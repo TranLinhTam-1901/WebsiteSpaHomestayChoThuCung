@@ -1,0 +1,313 @@
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "Home Page";
+    var firstItem = true; // Biến để xác định item đầu tiên
+}
+
+<div id="eventCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+
+    <!-- Indicators/dots -->
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#eventCarousel" data-bs-slide-to="2"></button>
+    </div>
+
+    <!-- The slideshow/carousel -->
+    <div class="carousel-inner">
+        <!-- Slide 1 -->
+        <div class="carousel-item active">
+            <div class="d-flex justify-content-center flex-nowrap">
+                <img src="~/images/pro_service_1.webp" class="d-block w-50 p-2" alt="Concert 1">
+                <img src="~/images/pro_service_2.webp" class="d-block w-50 p-2" alt="Concert 2">
+            </div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="carousel-item">
+            <div class="d-flex justify-content-center flex-nowrap">
+                <img src="~/images/pro_service_3.webp" class="d-block w-50 p-2" alt="Concert 3">
+                <img src="~/images/pro_service_4.webp" class="d-block w-50 p-2" alt="Concert 4">
+            </div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="carousel-item">
+            <div class="d-flex justify-content-center flex-nowrap">
+                <img src="~/images/pro_service_5.webp" class="d-block w-50 p-2" alt="Concert 5">
+                <img src="~/images/pro_service_6.webp" class="d-block w-50 p-2" alt="Concert 6">
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút Previous -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#eventCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    </button>
+
+    <!-- Nút Next -->
+    <button class="carousel-control-next" type="button" data-bs-target="#eventCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    </button>
+
+</div>
+
+@if (Model.DiscountedProducts != null && Model.DiscountedProducts.Count > 0)
+{
+    <h2 class="text-center">CÁC SẢN PHẨM ĐANG GIẢM GIÁ</h2>
+
+    <!-- Slider Container -->
+    <div id="featuredProductsCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            @foreach (var item in Model.DiscountedProducts)
+            {
+                <div class="carousel-item @(firstItem ? "active" : "")">
+                    @{
+                        firstItem = false; // Sau item đầu tiên sẽ set thành false
+                    }
+                    <div class="d-flex justify-content-center">
+                        <div class="card h-100 shadow-sm" style="width: 22rem;">
+                            <div class="image-container1 ">
+                                <img src="@item.ImageUrl" class="product-image1" alt="@item.Name">
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="fw-bold text-center">@item.Name</h5>
+                                <p class="text-center">Thương hiệu: <span class="text-primary fw-semibold">@item.Trademark</span></p>
+                                <div class="bg-light p-2 rounded text-center">
+                                    <p class="mb-0">
+                                        @if (item.PriceReduced != null && item.PriceReduced > 0 && item.PriceReduced < item.Price)
+                                        {
+                                            <span class="fw-bold text-danger fs-4">@($"{item.PriceReduced.Value.ToString("N0")}đ")</span>
+                                            <del class="text-muted">@item.Price.ToString("N0")đ</del>
+                                            <span class="badge bg-danger">@item.DiscountPercentage.ToString("0.##")%</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold text-danger fs-4">@($"{item.Price.ToString("N0")}đ")</span>
+                                        }
+                                    </p>
+                                </div>
+                                <div class="mt-auto text-center d-flex justify-content-center gap-2 pt-3">
+                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm w-50">Xem Chi Tiết</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Carousel Controls -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#featuredProductsCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#featuredProductsCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true"></span>
+        </button>
+    </div>
+
+    <!-- Nút xem tất cả sản phẩm -->
+    <div class="text-center mt-4">
+        <a asp-controller="Product" asp-action="AllProducts" class="btn btn-outline-primary">Xem tất cả sản phẩm</a>
+    </div>
+}
+<!-- CSS Custom -->
+<style>
+    .carousel-item {
+        text-align: center;
+    }
+
+    #featuredProductsCarousel .image-container1 {
+        width: 100%;
+        height: 200px;
+        position: relative;
+        overflow: hidden; /* Ẩn phần thừa */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f8f9fa; /* Màu nền phòng trường hợp ảnh nhỏ */
+    }
+
+    #featuredProductsCarousel .product-image1 {
+        width: 100%; /* Chiếm đầy chiều ngang */
+        height: 100%; /* Chiếm đầy chiều dọc */
+        object-fit: cover; /* Lấp đầy container (có thể cắt ảnh) */
+        /* Hoặc dùng object-fit: contain nếu muốn hiển thị toàn bộ ảnh (có thể có khoảng trống) */
+        object-position: center; /* Căn giữa trọng tâm ảnh */
+    }
+    /* Định dạng card */
+    .card {
+        border-radius: 10px;
+    }
+
+    /* Giúp nút điều hướng dễ nhìn hơn */
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        width: 40px;
+        height: 40px;
+    }
+</style>
+
+<!-- Swiper - Sản phẩm dành cho Mèo -->
+<div class="container text-start mt-4">
+    <h2 class="custom-title">Sản phẩm bán chạy dành cho Mèo 🔥</h2>
+</div>
+
+<div class="container">
+    <div class="swiper mySwiper">
+        <div class="swiper-wrapper">
+            @foreach (var p in Model.CatProducts)
+            {
+                <div class="swiper-slide">
+                    <a href="@Url.Action("Details", "Product", new { id = p.Id })" class="card-link text-decoration-none">
+                        <img src="@p.ImageUrl" alt="@p.Name">
+                        <div class="card-overlay">
+                            <h5>@p.Name</h5>
+                            <p></p>
+                        </div>
+                    </a>
+                </div>
+            }
+            <!-- Card "Xem thêm" -->
+            <div class="swiper-slide">
+                <a href="@Url.Action("AllProducts", "Product")">
+                    <img src="~/images/loginlogout.png" alt="">
+                    <div class="card-overlay">
+                        <h5>Xem thêm</h5>
+                        <p></p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+</div>
+
+<!-- Swiper - Sản phẩm dành cho Chó -->
+<div class="container text-start mt-4">
+    <h2 class="custom-title">Sản phẩm bán chạy dành cho Chó 🔥</h2>
+</div>
+
+<div class="container">
+    <div class="swiper mySwiper">
+        <div class="swiper-wrapper">
+            @foreach (var p in Model.DogProducts)
+            {
+                <div class="swiper-slide">
+                    <a href="@Url.Action("Details", "Product", new { id = p.Id })" class="card-link text-decoration-none">
+                        <img src="@p.ImageUrl" alt="@p.Name">
+                        <div class="card-overlay">
+                            <h5>@p.Name</h5>
+                            <p></p>
+                        </div>
+                    </a>
+                </div>
+            }
+            <!-- Card "Xem thêm" -->
+            <div class="swiper-slide">
+                <a href="@Url.Action("AllProducts", "Product")">
+                    <img src="~/images/loginlogout.png" alt="">
+                    <div class="card-overlay">
+                        <h5>Xem thêm</h5>
+                        <p></p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+</div>
+
+<style>
+    .carousel-item img {
+        border-radius: 10px;
+        width: 100%;
+        object-fit: contain;
+    }
+
+    .carousel-inner img {
+        height: 550px; /* Đặt kích thước chiều cao cố định */
+        object-fit: contain; /* Đảm bảo ảnh không bị méo */
+        border-radius: 10px; /* Bo góc ảnh nhẹ nhàng */
+    }
+
+    .swiper-container {
+        margin-top: 50px;
+        /* Tạo khoảng cách giữa tiêu đề và Swiper */
+        padding: 20px 0;
+    }
+
+    .swiper-slide {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease-in-out;
+    }
+
+        .swiper-slide img {
+            width: 100%;
+            height: 450px; /* Tăng chiều cao để ảnh có tỷ lệ chữ nhật đứng */
+            object-fit: cover; /* Đảm bảo ảnh không bị méo */
+            border-radius: 10px; /* Giữ bo góc nếu cần */
+        }
+
+        .swiper-slide:hover {
+            transform: scale(1.05);
+        }
+
+    /* Ngăn chọn chữ trong card */
+    .card-overlay,
+    .card-overlay h3,
+    .card-overlay p {
+        user-select: none; /* Cấm chọn văn bản */
+    }
+
+    /* Ngăn chọn hình ảnh */
+    .swiper-slide img {
+        pointer-events: auto; /* Cho tương tác với ảnh */
+        user-select: none; /* Cấm bôi đen */
+    }
+
+    .card-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        text-align: center;
+        padding: 15px;
+    }
+
+    .swiper-button-prev,
+    .swiper-button-next {
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 20px;
+        transition: background 0.3s;
+    }
+
+        .swiper-button-prev:hover,
+        .swiper-button-next:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .swiper-button-prev::after,
+        .swiper-button-next::after {
+            color: white;
+            font-size: 20px;
+        }
+
+    .carousel-item {
+        transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out !important;
+        opacity: 1 !important;
+        /* Đảm bảo không bị mờ */
+    }
+
+        .carousel-item.active {
+            opacity: 1 !important;
+        }
+</style>

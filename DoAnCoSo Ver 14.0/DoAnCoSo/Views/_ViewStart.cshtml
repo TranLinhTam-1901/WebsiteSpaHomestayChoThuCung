@@ -1,0 +1,12 @@
+﻿@{
+    if (User.Identity.IsAuthenticated)
+    {
+        Layout = User.IsInRole("Admin")
+            ? "~/Views/Shared/_LayoutAdmin.cshtml"
+            : "~/Views/Shared/_Layout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml"; // Layout cho người dùng chưa đăng nhập
+    }
+}

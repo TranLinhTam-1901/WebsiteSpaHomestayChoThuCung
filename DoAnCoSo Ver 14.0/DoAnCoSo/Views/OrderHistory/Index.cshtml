@@ -1,0 +1,78 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Order>
+
+@{
+    ViewData["Title"] = "Lịch sử đặt hàng";
+}
+
+<div class="container mt-4">
+<h1>Lịch sử đặt hàng của bạn</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p>Bạn chưa có đơn hàng nào.</p>
+}
+else
+{
+    @foreach (var order in Model)
+    {
+        <div class="order-item-container mb-4 pb-3" style="border-bottom: 1px solid #ddd;"> 
+            <div class="row align-items-center mb-2">
+                <div class="col-md-2"><strong>Mã đơn hàng:</strong> @order.Id</div>
+                <div class="col-md-3"><strong>Ngày đặt:</strong> @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div> 
+                <div class="col-md-2"><strong>Tổng tiền:</strong> @order.TotalPrice.ToString("N0") VNĐ</div>
+                <div class="col-md-2"><strong>Trạng thái:</strong>
+                    @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan) { <span>Chờ xác nhận</span> }
+                    else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan) { <span>Đã xác nhận</span> }
+                    else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy) { <span>Đã hủy</span> }
+                    else { <span>@order.Status.ToString()</span> }
+                </div>
+                <div class="col-md-3"><strong>Người nhận:</strong> @order.CustomerName</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-12">
+                    <strong>Chi tiết sản phẩm:</strong>
+                    @if (order.OrderDetails != null && order.OrderDetails.Any())
+                    {
+                        <ul>
+                            @foreach (var item in order.OrderDetails)
+                            {
+                                <li>
+                                    @item.Product.Name: @item.Quantity x @item.Price.ToString("N0") VNĐ
+                                    @if (!string.IsNullOrEmpty(item.SelectedFlavor))
+                                    {
+                                        <span> (Vị: @item.SelectedFlavor)</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>Không có chi tiết sản phẩm.</p>
+                    }
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info btn-sm">Xem chi tiết</a>
+                    @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                    {
+                        <form asp-action="CancelOrder" asp-route-id="@order.Id" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Hủy đơn</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}
+</div>

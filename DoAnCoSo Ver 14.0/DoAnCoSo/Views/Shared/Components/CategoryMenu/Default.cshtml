@@ -1,0 +1,16 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Category> 
+<ul class="level1">
+   
+    @foreach (var category in Model)
+    {
+        <li class="level2">
+           
+            <a asp-controller="Product"          
+               asp-action="ProductsByCategory" 
+               asp-route-categoryName="@category.Name" 
+               title="@category.Name">
+                @category.Name 
+            </a>
+        </li>
+    }
+</ul>

@@ -1,0 +1,65 @@
+﻿@model DoAnCoSo.Models.Product
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+ ViewData["Title"] = "Add Product";
+}
+<div class="container py-5">
+
+<h2>Thêm sản phẩm</h2>
+
+<form asp-action="Add" method="post" enctype="multipart/form-data">
+
+	<div class="form-group">
+		<label for="Name">Tên sản phẩm</label>
+		<input id="Name" name="Name" class="form-control"  />
+		<span asp-validation-for="Name" class="text-danger"></span>
+	</div>
+
+	<div class="form-group">
+		<label for="Price">Giá sản phẩm</label>
+		<input id="Price" name="Price" class="form-control" />
+		<span asp-validation-for="Price" class="text-danger"></span>
+	</div>
+
+	<div class="form-group">
+		<label for="PriceReduced">Giá giảm (nếu có)</label>
+		<input id="PriceReduced" name="PriceReduced" class="form-control"  />
+		<span asp-validation-for="PriceReduced" class="text-danger"></span>
+	</div>
+
+	<div class="form-group">
+		<label for="Trademark">Thương hiệu</label>
+		<input id="Trademark" name="Trademark" class="form-control"  />
+		<span asp-validation-for="Trademark" class="text-danger"></span>
+	</div>
+
+	<div class="form-group">
+		<label for="Description">Mô tả sản phẩm</label>
+		<textarea id="Description" name="Description" class="form-control"></textarea>
+	</div>
+
+	<div class="form-group">
+		<label asp-for="CategoryId">Loại sản phẩm</label>
+		<select asp-for="CategoryId" asp-items="ViewBag.Categories"
+				class="form-control"></select>
+	</div>
+
+	<div class="form-group">
+		<label for="imageInput">Ảnh đại diện </label>
+		<input type="file" name="imageUrl" class="form-control" id="imageInput" />
+	</div>
+
+	 <div class="form-group">
+        <label for="additionalImagesInput">Ảnh sản phẩm khác (Upload Nhiều File)</label>
+        <input type="file" id="additionalImagesInput" name="images" class="form-control-file" multiple /> 
+    </div>
+
+	<label for="flavorsList">Hương vị</label>
+	@for (int i = 0; i < 3; i++) // Hiển thị 3 ô nhập
+	{
+		<input type="text" name="flavorsList[@i]" class="form-control" />
+	}
+
+	<button type="submit" class="btn btn-primary">Thêm</button>
+</form>
+</div>

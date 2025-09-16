@@ -1,0 +1,87 @@
+﻿@model DoAnCoSo.Models.Product
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+}
+<div class="container py-5">
+
+<h2>CHỈNH SỬA SẢN PHẨM</h2>
+<form asp-action="Update" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Name">Tên sản phẩm</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Price">Giá sản phẩm</label>
+        <input asp-for="Price" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+
+    <div class="form-group">
+        <label asp-for="PriceReduced">Giá giảm (nếu có)</label>
+        <input asp-for="PriceReduced" class="form-control" />
+        <span asp-validation-for="PriceReduced" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Trademark">Thương hiệu</label>
+        <input asp-for="Trademark" class="form-control" />
+        <span asp-validation-for="Trademark" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Description">Mô tả sản phẩm</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CategoryId">Loại sản phẩm</label>
+        <select asp-for="CategoryId" asp-items="@ViewBag.Categories"
+                class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label for="imageInput">Ảnh sản phẩm</label>
+        <input type="file" name="imageUrl" class="form-control" id="imageInput" />
+    </div>
+
+     <div class="form-group">
+        <label for="additionalImagesInput">Ảnh sản phẩm khác (Upload Nhiều File)</label>
+        <input type="file" id="additionalImagesInput" name="images" class="form-control-file" multiple /> 
+    </div> 
+
+    <label for="flavorsList">Hương vị</label>
+    @for (int i = 0; i < 3; i++) // Hiển thị 3 ô nhập
+    {
+        <input type="text" name="flavorsList[@i]" class="form-control" />
+    }
+
+    <button type="submit" value="Lưu" class="btn btn-primary">Lưu</button>
+
+</form>
+
+<div class="col-8">
+    <img src="@Model.ImageUrl" alt="Ảnh sản phẩm" style="max-width:200px;" id="previewImage" />
+</div>
+</div>
+<script>
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+    const img = document.getElementById("previewImage")
+    img.src = e.target.result
+    };
+    reader.readAsDataURL(file);
+    }
+    });
+    });
+</script>

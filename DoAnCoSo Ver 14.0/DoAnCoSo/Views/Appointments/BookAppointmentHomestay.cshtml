@@ -1,0 +1,108 @@
+﻿@model DoAnCoSo.ViewModels.HomestayBookingViewModel
+
+@{
+    ViewData["Title"] = "🐱 Đặt lịch cho dịch vụ Homestay 🐶 🏨";
+}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 w-50 mx-auto">
+        <h2 class="text-center">@ViewData["Title"]</h2>
+
+        <form asp-action="BookAppointmentHomestay" method="post">
+
+            <div class="mb-3">
+                <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
+                <input asp-for="OwnerPhoneNumber" class="form-control" required>
+                <span asp-validation-for="OwnerPhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="PetName" class="form-label"></label>
+                <input asp-for="PetName" class="form-control" required>
+                <span asp-validation-for="PetName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="PetType" class="form-label">Loại thú cưng</label>
+                <input asp-for="PetType" class="form-control" required>
+                <span asp-validation-for="PetType" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ServiceId" class="form-label">Chọn loại phòng</label>
+                <select asp-for="ServiceId" class="form-select" asp-items="@(new SelectList(ViewBag.HomestayServices, "ServiceId", "Name"))" required>
+                    <option value="">Chọn loại phòng</option>
+                </select>
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
+            </div>
+
+            <h4>3️⃣ Chọn thời gian</h4>
+
+            <div class="mb-3">
+                <label asp-for="StartDate" class="form-label"></label>
+                <input asp-for="StartDate" class="form-control" type="date" required>
+                <span asp-validation-for="StartDate" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="EndDate" class="form-label"></label>
+                <input asp-for="EndDate" class="form-control" type="date" required>
+                <span asp-validation-for="EndDate" class="text-danger"></span>
+            </div>
+
+            @* <div class="mb-3"> *@
+            @* 	<label asp-for="StartDate" class="form-label"></label> *@
+            @* 	@* Thay đổi type="date" thành type="text" và thêm ID *@ 
+            @* 	<input asp-for="StartDate" class="form-control" type="text" id="startDateInput" required>  *@
+            @*           <span asp-validation-for="StartDate" class="text-danger"></span> *@
+            @*         </div> *@
+
+            @* <div class="mb-3"> *@
+            @* 	<label asp-for="EndDate" class="form-label"></label> *@
+            @* 	@* Thay đổi type="date" thành type="text" và thêm ID *@ 
+            @* 	<input asp-for="EndDate" class="form-control" type="text" id="appointmentDateInput" required> *@
+            @* 	<span asp-validation-for="EndDate" class="text-danger"></span> *@
+            @* </div> *@
+
+            <button type="submit" class="btn btn-primary">
+                📅 Đặt lịch
+            </button>
+        </form>
+    </div>
+</div>
+
+@* <script> *@
+@* 	document.addEventListener('DOMContentLoaded', function() { *@
+@* 		// Lấy giá trị ngày mặc định từ Model Razor và định dạng sang 'yyyy-MM-dd' *@
+@* 		// Sử dụng 'toISOString().split('T')[0]' là một cách phổ biến để format DateTime của JS sang 'yyyy-MM-dd' *@
+@* 		// Tuy nhiên, nếu Model.StartDate là null, cần xử lý cẩn thận. *@
+@* 		// Đảm bảo Model.StartDate và Model.EndDate không phải là null khi trang render. *@
+@* 		// Giả sử Model.StartDate và Model.EndDate luôn có giá trị (ví dụ: DateTime.Now) *@
+
+@* 		var defaultStartDate = null; *@
+@* 		// Kiểm tra nếu Model.StartDate có giá trị (không null) và là Date *@
+@* 		// @Model.StartDate là đối tượng DateTime của C#, cần chuyển nó sang chuỗi hoặc timestamp JS *@
+@* 		// Cách an toàn nhất là render nó thành chuỗi 'yyyy-MM-dd' ngay trong Razor *@
+@* 		var initialStartDateString = "@Model.StartDate.ToString("yyyy-MM-dd")"; // Format C# DateTime sang yyyy-MM-dd *@
+@* 		if (initialStartDateString) { *@
+@* 			 defaultStartDate = initialStartDateString; *@
+@* 		} *@
+
+@* 		var defaultEndDate = null; *@
+@* 		 var initialEndDateString = "@Model.EndDate.ToString("yyyy-MM-dd")"; // Format C# DateTime sang yyyy-MM-dd *@
+@* 		if (initialEndDateString) { *@
+@* 			 defaultEndDate = initialEndDateString; *@
+@* 		} *@
+
+@* 		// Khởi tạo Flatpickr cho StartDate *@
+@* 		flatpickr("#startDateInput", { *@
+@* 			dateFormat: "d/m/Y", // Định dạng hiển thị *@
+@* 			defaultDate: defaultStartDate, // Sử dụng giá trị mặc định từ Model *@
+@* 			// Các tùy chọn khác *@
+@* 		}); *@
+
+@* 		// Khởi tạo Flatpickr cho EndDate *@
+@* 		flatpickr("#endDateInput", { // Hoặc ID bạn đã dùng cho ô End Date *@
+@* 			dateFormat: "d/m/Y", // Định dạng hiển thị *@
+@* 			defaultDate: defaultEndDate, // Sử dụng giá trị mặc định từ Model *@
+@* 			// Các tùy chọn khác *@
+@* 		}); *@
+@* 	}); *@
+@* </script> *@

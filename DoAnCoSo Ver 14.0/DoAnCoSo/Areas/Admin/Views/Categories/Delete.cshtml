@@ -1,0 +1,10 @@
+﻿@model DoAnCoSo.Models.Category
+<div class="container py-5">
+<h2>Xóa Danh Mục</h2>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="Id" />
+    <p>Bạn có chắc chắn muốn xóa @Model.Name không?</p>
+    <button type="submit" class="btn btn-danger">Xóa</button>
+</form>
+</div>

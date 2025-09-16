@@ -1,0 +1,32 @@
+﻿@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var user = await UserManager.GetUserAsync(User);
+    var fullName = user?.FullName ?? user?.UserName ?? "Tài khoản";
+
+    <li class="ng-scope">
+        <a rel="nofollow id="manage" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+            @fullName
+        </a>
+    </li>
+    <li class="ng-scope">
+        <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+            <a href="#" id="logout" rel="nofollow" onclick="document.getElementById('logoutForm').submit();">
+                Đăng xuất
+            </a>
+        </form>
+    </li>
+}
+else
+{
+    <li class="ng-scope">
+        <a rel="nofollow" id="login" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
+    </li>
+    <li class="ng-scope">
+        <a rel="nofollow" id="register" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
+    </li>
+}

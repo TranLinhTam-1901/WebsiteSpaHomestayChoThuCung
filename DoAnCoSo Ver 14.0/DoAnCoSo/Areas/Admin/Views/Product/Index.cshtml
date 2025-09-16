@@ -1,0 +1,56 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Product>
+
+<!-- Sản phẩm -->
+<div class="container py-5">
+    <div class="tab-pane fade show active" id="sanpham">
+        <h3>Quản lý Sản phẩm</h3>
+
+        <a asp-area="Admin" asp-controller="Product" asp-action="Add" class="btn btn-primary mb-3">+ Thêm sản phẩm</a>
+
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Hình ảnh</th>
+                    <th>Giá</th>
+                    <th>Mô tả</th>
+                    <th>Danh mục</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model)
+                {
+                    <tr>
+                        <td>@product.Id</td>
+                        <td>@product.Name</td>
+                        <td>
+                            <img src="@product.ImageUrl" alt="pic" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;" />
+                        </td>
+                        <td>
+                            @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
+                            {
+                                <span style="text-decoration: line-through; color: gray;">@product.Price.ToString("N0")</span>
+
+                                <br />
+                                <span style="color: red; font-weight: bold;">@product.PriceReduced.Value.ToString("N0")</span>
+                            }
+                            else
+                            {
+                                <span>@product.Price.ToString("N0")</span>
+                            }
+                        </td>
+                        <td style="max-width: 200px;">@product.Description</td>
+                        <td>@product.Category?.Name</td>
+                        <td>
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id" class="btn btn-info btn-sm">Xem</a>
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id" class="btn btn-warning btn-sm">Sửa</a>
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger btn-sm">Xóa</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

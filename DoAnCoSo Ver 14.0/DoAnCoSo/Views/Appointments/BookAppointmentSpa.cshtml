@@ -1,0 +1,70 @@
+﻿@model DoAnCoSo.ViewModels.SpaBookingViewModel
+
+@{
+    ViewData["Title"] = "Đặt lịch cho dịch vụ Spa";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 w-50 mx-auto">
+        <h2 class="text-center">@ViewData["Title"]</h2>
+        <form asp-action="BookAppointmentSpa" method="post" id="bookingForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <h4>1️⃣ Thông tin chủ nuôi</h4>
+
+            <div class="mb-3">
+                <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
+                <input asp-for="OwnerPhoneNumber" class="form-control" required>
+                <span asp-validation-for="OwnerPhoneNumber" class="text-danger"></span>
+            </div>
+
+            <h4>2️⃣ Thông tin thú cưng</h4>
+            <div class="mb-3">
+                <label asp-for="PetName" class="form-label">Tên thú cưng:</label>
+                <input asp-for="PetName" class="form-control" required>
+                <span asp-validation-for="PetName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="PetType" class="form-label">Loại thú cưng</label>
+                <input asp-for="PetType" class="form-control" required>
+                <span asp-validation-for="PetType" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="PetWeight" class="form-label">Chọn cân nặng của thú cưng</label>
+                <select asp-for="PetWeight" class="form-select" required>
+                    <option value="">Chọn cân nặng</option>
+                    <option value="Dưới 5kg">Dưới 5kg</option>
+                    <option value="5kg - 12kg">5kg - 12kg</option>
+                    <option value="12kg - 25kg">12kg - 25kg</option>
+                    <option value="Trên 25kg">Trên 25kg</option>
+                </select>
+                <span asp-validation-for="PetWeight" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ServiceId" class="form-label">Chọn dịch vụ Spa</label>
+                <select asp-for="ServiceId" class="form-select" asp-items="@(new SelectList(ViewBag.SpaServices, "ServiceId", "Name"))" required>
+                    <option value="">Chọn dịch vụ</option>
+                </select>
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
+            </div>
+
+            <h4>3️⃣ Chọn thời gian</h4>
+            <div class="mb-3">
+                <label asp-for="AppointmentDate" class="form-label">Chọn ngày</label>
+                <input asp-for="AppointmentDate" class="form-control" type="date" required>
+                <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="AppointmentTime" class="form-label">Chọn giờ</label>
+                <input asp-for="AppointmentTime" class="form-control" type="time" required>
+                <span asp-validation-for="AppointmentTime" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                📅 Đặt lịch ngay
+            </button>
+        </form>
+    </div>
+</div>

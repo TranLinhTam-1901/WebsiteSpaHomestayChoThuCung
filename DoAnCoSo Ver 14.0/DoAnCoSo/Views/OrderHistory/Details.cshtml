@@ -1,0 +1,100 @@
+﻿@model DoAnCoSo.Models.Order
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng " + Model.Id;
+}
+<div class="container mt-4">
+
+<h1>Chi tiết đơn hàng #@Model.Id</h1>
+
+<div>
+    <h4>Thông tin tổng quan</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Mã đơn hàng:</dt>
+        <dd class="col-sm-9">@Model.Id</dd>
+
+        <dt class="col-sm-3">Ngày đặt:</dt>
+        <dd class="col-sm-9">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Tổng tiền:</dt>
+        <dd class="col-sm-9">@Model.TotalPrice.ToString("N0") VNĐ</dd>
+
+        <dt class="col-sm-3">Trạng thái:</dt>
+        <dd class="col-sm-9">
+            @if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+            {
+                <span>Chờ xác nhận</span>
+            }
+            else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+            {
+                <span>Đã xác nhận</span>
+            }
+            else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
+            {
+                <span>Đã hủy</span>
+            }
+            else
+            {
+                <span>@Model.Status.ToString()</span>
+            }
+        </dd>
+    </dl>
+
+    <h4>Thông tin người nhận & giao hàng</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Tên người nhận:</dt>
+        <dd class="col-sm-9">@Model.CustomerName</dd>
+
+        <dt class="col-sm-3">Số điện thoại:</dt>
+        <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+        <dt class="col-sm-3">Địa chỉ giao hàng:</dt>
+        <dd class="col-sm-9">@Model.ShippingAddress</dd>
+
+        <dt class="col-sm-3">Phương thức thanh toán:</dt>
+        <dd class="col-sm-9">@Model.PaymentMethod</dd>
+
+        <dt class="col-sm-3">Ghi chú:</dt>
+        <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Notes) ? "Không có" : Model.Notes)</dd>
+    </dl>
+
+    <h4>Chi tiết sản phẩm</h4>
+    <hr />
+    @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Vị/Màu sắc</th>
+                    <th>Tổng tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderDetails)
+                {
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Price.ToString("N0") VNĐ</td>
+                        <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "N/A" : item.SelectedFlavor)</td>
+                        <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>Không có sản phẩm nào trong đơn hàng này.</p>
+    }
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách đơn hàng</a>
+    </div>
+</div>
+</div>

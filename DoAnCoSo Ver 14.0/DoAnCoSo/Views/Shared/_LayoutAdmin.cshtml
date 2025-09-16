@@ -1,0 +1,753 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject DoAnCoSo.Models.ApplicationDbContext _context
+@using System.Security.Claims
+
+@{
+    string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var favoriteCount = userId != null
+        ? _context.Favorites.Count(f => f.UserId == userId)
+        : 0;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PawHouse</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    @* liên kết để lấy icon form đăng ký *@
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css">
+    <link rel="stylesheet" href="~/css/style.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="top-bar clearfix">
+            <div class="container">
+                <div class="evo-topbar-left">
+                    <span>PAWHOUSE xin chào, gọi ngay:</span>
+                    <a href="#" title="0987654321">098 765 4321</a>
+                    <span class="span-or">hoặc</span>
+                    <a href="mailto:info@pawhouse.vn" title="info@pawhouse.vn">info@pawhouse.vn</a>
+                </div>
+                <div class="evo-topbar-right d-lg-inline-block d-none">
+                    <ul class="nav">
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="header-mid evo-header-padding container">
+            <div class="row align-items-center">
+                <div class="header-logo evo-header-flex-item col-lg-3 col-sm-7 col-7">
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="logo-wrapper" title="PawHouse Pet | Dịch Vụ Thú Cưng Chuẩn 5 Sao">
+                        <img width="300" height="104" src="~/images/Logo.png"
+                             data-src="//bizweb.dktcdn.net/100/458/454/themes/869149/assets/logo.png?1742403164383"
+                             alt="PawHouse Pet | Dịch Vụ Thú Cưng Chuẩn 5 Sao"
+                             class="lazy img-responsive mx-auto d-block loaded" data-was-processed="true">
+                    </a>
+                </div>
+                <div class="evo-search-desktop col-lg-6 col-sm-12">
+                    <div class="evo-searchs">
+                        <form asp-controller="Product" asp-action="Search" method="get" class="evo-header-search-form has-validation-callback"
+                              role="search">
+                            <input type="text" aria-label="Tìm sản phẩm" name="searchTerm" class="search-auto form-control"
+                                   placeholder="Tìm sản phẩm..." autocomplete="off">
+                            <button class="btn btn-default" type="submit" aria-label="Tìm kiếm">
+                                <svg class="Icon Icon--search-desktop" viewBox="0 0 21 21">
+                                    <g transform="translate(1 1)" stroke="currentColor" stroke-width="2" fill="none"
+                                       fill-rule="evenodd" stroke-linecap="square">
+                                        <path d="M18 18l-5.7096-5.7096"></path>
+                                        <circle cx="7.2" cy="7.2" r="7.2"></circle>
+                                    </g>
+                                </svg>
+                            </button>
+                        </form>
+                        <div class="results-box" style="display: none;"></div>
+                    </div>
+                </div>
+                <div class="header-fill col-lg-3 col-sm-5 col-5">
+
+                    @* Thay thế toàn bộ đoạn mã HTML sản phẩm yêu thích bằng lời gọi View Component *@
+                    @await Component.InvokeAsync("FavoriteCount")
+
+                    <div class="evo-header-account d-none d-lg-inline-block">
+                        <a href="#" class="header-account d-none d-lg-inline-block" aria-label="Tài khoản" title="Tài khoản">
+                            <svg viewBox="0 0 512 512">
+                                <path d="M437.02,330.98c-27.883-27.882-61.071-48.523-97.281-61.018C378.521,243.251,404,198.548,404,148
+                C404,66.393,337.607,0,256,0S108,66.393,108,148c0,50.548,25.479,95.251,64.262,121.962
+                c-36.21,12.495-69.398,33.136-97.281,61.018C26.629,379.333,0,443.62,0,512h40c0-119.103,96.897-216,216-216s216,96.897,216,216
+                h40C512,443.62,485.371,379.333,437.02,330.98z M256,256c-59.551,0-108-48.448-108-108S196.449,40,256,40
+                c59.551,0,108,48.448,108,108S315.551,256,256,256z"
+                                      data-original="#222222" class="active-path" fill="#222222"></path>
+                            </svg>
+                        </a>
+
+                        <ul>
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                var user = await UserManager.GetUserAsync(User);
+                                var fullName = user?.FullName ?? user?.UserName ?? "Tài khoản";
+
+                                <li class="ng-scope">
+                                    <a rel="nofollow" id="manage" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                                        @fullName
+                                    </a>
+                                </li>
+                                <li class="ng-scope">
+                                    <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+                                        <a href="#" id="logout" rel="nofollow" onclick="document.getElementById('logoutForm').submit();">
+                                            Đăng xuất
+                                        </a>
+                                    </form>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="ng-scope">
+                                    <a rel="nofollow" id="login" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
+                                </li>
+                                <li class="ng-scope">
+                                    <a rel="nofollow" id="register" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    @* Thay thế toàn bộ đoạn mã HTML giỏ hàng bằng lời gọi View Component *@
+                    @await Component.InvokeAsync("CartCount")
+
+                    <a class="d-sm-inline-block d-lg-none menu-icon" href="javascript:void(0)" title="Menu"
+                       aria-label="Menu" id="trigger-mobile">
+                        <svg height="384pt" viewBox="0 -53 384 384" width="384pt"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path d="m368 154.667969h-352c-8.832031 0-16-7.167969-16-16s7.167969-16 16-16h352c8.832031 0 16 7.167969 16 16s-7.167969 16-16 16zm0 0">
+                            </path>
+                            <path d="m368 32h-352c-8.832031 0-16-7.167969-16-16s7.167969-16 16-16h352c8.832031 0 16 7.167969 16 16s-7.167969 16-16 16zm0 0">
+                            </path>
+                            <path d="m368 277.332031h-352c-8.832031 0-16-7.167969-16-16s7.167969-16 16-16h352c8.832031 0 16 7.167969 16 16s-7.167969 16-16 16zm0 0">
+                            </path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div class="ant-menu d-none d-lg-block">
+                <ul id="nav" class="nav">
+                    <li class="nav-item ">
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-link" title="PAWHOUSE">
+                            PAWHOUSE
+                        </a>
+                    </li>
+                    <li class=" nav-item has-childs has-mega">
+                        <a asp-area="" asp-controller="Product" asp-action="AllProducts" class="nav-link" title="SẢN PHẨM">
+                            SẢN PHẨM
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 490.656 490.656"
+                                 style="enable-background:new 0 0 490.656 490.656;" xml:space="preserve" width="25px"
+                                 height="25px">
+                            <path d="M487.536,120.445c-4.16-4.16-10.923-4.16-15.083,0L245.339,347.581L18.203,120.467c-4.16-4.16-10.923-4.16-15.083,0    c-4.16,4.16-4.16,10.923,0,15.083l234.667,234.667c2.091,2.069,4.821,3.115,7.552,3.115s5.461-1.045,7.531-3.136l234.667-234.667    C491.696,131.368,491.696,124.605,487.536,120.445z"
+                                  data-original="#000000" class="active-path" data-old_color="#000000" fill="#141414">
+                                </path>
+                            </svg>
+                        </a>
+                        <div class="mega-content">
+                            <div class="container">
+                                <ul class="level0">
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" href="#" title="Thức ăn cho thú cưng">Thức ăn cho thú cưng</a>
+                                        @* <ul class="level1"> *@
+                                        @*     <li class="level2"> *@
+                                        @*         <a href="#" title="Thức ăn khô cho chó">Thức ăn khô cho chó</a> *@
+                                        @*     </li> *@
+                                        @*     <li class="level2"> *@
+                                        @*         <a href="#" title="Thức ăn khô cho mèo">Thức ăn khô cho mèo</a> *@
+                                        @*     </li> *@
+                                        @*     <li class="level2"> *@
+                                        @*         <a href="#" title="Pate cho chó"> *@
+                                        @*             Pate *@
+                                        @*             cho chó *@
+                                        @*         </a> *@
+                                        @*     </li> *@
+                                        @*     <li class="level2"> *@
+                                        @*         <a href="#" title="Pate, súp thưởng cho mèo"> *@
+                                        @*             Pate, súp thưởng cho *@
+                                        @*             mèo *@
+                                        @*         </a> *@
+                                        @*     </li> *@
+                                        @*     <li class="level2"> *@
+                                        @*         <a href="#" title="Bánh thưởng cho chó">Bánh thưởng cho chó</a> *@
+                                        @*     </li> *@
+                                        @*     <li class="level2"> *@
+                                        @*         <a href="#" title="Bánh thưởng cho mèo">Bánh thưởng cho mèo</a> *@
+                                        @*     </li> *@
+                                        @* </ul> *@
+
+                                        <div class="sidebar-section">
+
+                                            @* --- GỌI VIEW COMPONENT ĐỂ RENDER DANH SÁCH DANH MỤC --- *@
+                                            @(await Component.InvokeAsync("CategoryMenu"))
+                                            @* ------------------------------------------------------ *@
+                                        </div>
+
+                                    </li>
+                                    @* <li class="level1 parent item fix-navs"> *@
+                                    @*     <a class="hmega" href="#" title="Phụ kiện cho thú cưng"> *@
+                                    @*         Phụ kiện cho thú *@
+                                    @*         cưng *@
+                                    @*     </a> *@
+                                    @*     <ul class="level1"> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Phụ kiện đeo cổ">Phụ kiện đeo cổ</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Quần áo thú cưng">Quần áo thú cưng</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Dây dẫn và Rọ mõm">Dây dẫn và Rọ mõm</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Dụng cụ ăn uống">Dụng cụ ăn uống</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Đồ chơi cho chó mèo">Đồ chơi cho chó mèo</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Nệm và thảm"> *@
+                                    @*                 Nệm và *@
+                                    @*                 thảm *@
+                                    @*             </a> *@
+                                    @*         </li> *@
+                                    @*     </ul> *@
+                                    @* </li> *@
+                                    @* <li class="level1 parent item fix-navs"> *@
+                                    @*     <a class="hmega" href="#" title="Vệ sinh cho thú cưng">Vệ sinh cho thú cưng</a> *@
+                                    @*     <ul class="level1"> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Cát vệ sinh mèo">Cát vệ sinh mèo</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Đồ dùng dọn vệ sinh">Đồ dùng dọn vệ sinh</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Khay vệ sinh cho chó">Khay vệ sinh cho chó</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Khay vệ sinh cho mèo">Khay vệ sinh cho mèo</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Tã, bỉm, miếng lót chuồng"> *@
+                                    @*                 Tã, bỉm, miếng lót *@
+                                    @*                 chuồng *@
+                                    @*             </a> *@
+                                    @*         </li> *@
+                                    @*     </ul> *@
+                                    @* </li> *@
+                                    @* <li class="level1 parent item fix-navs"> *@
+                                    @*     <a class="hmega" href="#" title="Làm đẹp cho thú cưng">Làm đẹp cho thú cưng</a> *@
+                                    @*     <ul class="level1"> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Chăm sóc tai, mắt, răng, miệng"> *@
+                                    @*                 Chăm sóc tai, mắt, *@
+                                    @*                 răng, *@
+                                    @*                 miệng *@
+                                    @*             </a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Chăm sóc lông và da">Chăm sóc lông và da</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Chăm sóc móng"> *@
+                                    @*                 Chăm *@
+                                    @*                 sóc móng *@
+                                    @*             </a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Nước hoa và khử mùi">Nước hoa và khử mùi</a> *@
+                                    @*         </li> *@
+                                    @*     </ul> *@
+                                    @* </li> *@
+                                    @* <li class="level1 parent item fix-navs"> *@
+                                    @*     <a class="hmega" href="#" title="Chăm sóc sức khỏe">Chăm sóc sức khỏe</a> *@
+                                    @*     <ul class="level1"> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Trị ve, rận, giun, nấm">Trị ve, rận, giun, nấm</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Thực phẩm chức năng">Thực phẩm chức năng</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Sữa tắm đặc trị">Sữa tắm đặc trị</a> *@
+                                    @*         </li> *@
+                                    @*         <li class="level2"> *@
+                                    @*             <a href="#" title="Dung dịch sát trùng">Dung dịch sát trùng</a> *@
+                                    @*         </li> *@
+                                    @*     </ul> *@
+                                    @* </li> *@
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item ">
+                        <a asp-area="" asp-controller="Service" asp-action="LuuTru" class="nav-link" title="HOMESTAY">
+                            HOMESTAY
+                        </a>
+                    </li>
+                    <li class="nav-item ">
+                        <a asp-area="" asp-controller="Service" asp-action="Spa" class="nav-link" title="SPA">
+                            SPA
+                        </a>
+                    </li>
+                    <li class="nav-item ">
+                        <a asp-area="Admin" asp-controller="Chat" asp-action="Index" class="nav-link" title="CSKH">
+                            TRANG CSKH
+                        </a>
+                    </li>
+                    @* <li class="nav-item "> *@
+                    @*     <a asp-area="" asp-controller="Service" asp-action="ThuY" class="nav-link" title="THÚ Y"> *@
+                    @*         THÚ Y *@
+                    @*     </a> *@
+                    @* </li> *@
+                    @* <li class="nav-item "> *@
+                    @*     <a asp-area="" asp-controller="Service" asp-action="KhuyenMai" class="nav-link" title="KHUYẾN MÃI"> *@
+                    @*         KHUYỄN MÃI *@
+                    @*     </a> *@
+                    @* </li> *@
+                    <li class=" nav-item has-childs has-mega">
+                        <a asp-area="Admin" asp-controller="Master" asp-action="Index" class="nav-link" title="TRANG QUẢN LÝ">
+                            TRANG QUẢN LÝ
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 490.656 490.656"
+                                 style="enable-background:new 0 0 490.656 490.656;" xml:space="preserve" width="25px"
+                                 height="25px">
+                            <path d="M487.536,120.445c-4.16-4.16-10.923-4.16-15.083,0L245.339,347.581L18.203,120.467c-4.16-4.16-10.923-4.16-15.083,0    c-4.16,4.16-4.16,10.923,0,15.083l234.667,234.667c2.091,2.069,4.821,3.115,7.552,3.115s5.461-1.045,7.531-3.136l234.667-234.667    C491.696,131.368,491.696,124.605,487.536,120.445z"
+                                  data-original="#000000" class="active-path" data-old_color="#000000" fill="#141414">
+                                </path>
+                            </svg>
+                        </a>
+                        <div class="mega-content">
+                            <div class="container">
+                                <ul class="level0">
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Categories" asp-action="" title="Quản lý danh mục sản phẩm">
+                                            Quản lý danh mục sản phẩm
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Product" asp-action="" title="Quản lý sản phẩm">
+                                            Quản lý sản phẩm
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="User" asp-action="UserList" title="Quản lý tài khoản">
+                                            Quản lý tài khoản
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Order" asp-action="Index" title="Quản lý Đơn hàng">
+                                            Quản lý Đơn hàng
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Revenue" asp-action="Index" title="Quản lý doanh thu">
+                                            Quản lý doanh thu
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Service" asp-action="PendingAppointments" title="Xác nhận đặt lịch">
+                                            Xác nhận đặt lịch
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Service" asp-action="AppointmentHistory" title="Lịch sử đặt lịch">
+                                            Lịch sử đặt lịch
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="nav-item booking-calendar-item ">
+                        <a class="nav-link" href="#" title="Đặt hẹn"
+                           data-bs-toggle="modal" data-bs-target="#bookingOptionsModal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-calendar3" viewBox="0 0 16 16">
+                                <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z">
+                                </path>
+                                <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z">
+                                </path>
+                            </svg>Đặt lịch
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
+    <div class="modal fade" id="bookingOptionsModal" tabindex="-1" aria-labelledby="bookingOptionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookingOptionsModalLabel">Chọn dịch vụ bạn muốn đặt lịch </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="lead mb-4">Vui lòng chọn loại dịch vụ bạn muốn đặt:</p>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i> <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
+                                    <p class="card-text text-muted">Nơi nghỉ ngơi thoải mái cho thú cưng của bạn.</p>
+                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments")" class="btn btn-homestay-theme mt-3">Chọn Homestay</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i> <h5 class="card-title mt-3">Đặt lịch Spa</h5>
+                                    <p class="card-text text-muted">Chăm sóc và làm đẹp cho thú cưng yêu.</p>
+                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments")" class="btn btn-spa-theme mt-3">Chọn Spa</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @RenderBody()
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-main">
+            <div class="row">
+                <div class="col-md-12 col-sm-6 col-lg-3 col-12 footer-nav-logo widget">
+                    <a href="#" class="logo-wrapper" title="PawHouse Pet | Dịch Vụ Thú Cưng Chuẩn 5 Sao">
+                        <img width="400" height="138" src="~/images/Footer-logo.png"
+                             data-src="//bizweb.dktcdn.net/100/458/454/themes/869149/assets/logo-footer.png?1741621752018"
+                             alt="PawHouse Pet | Dịch Vụ Thú Cưng Chuẩn 5 Sao" class="lazy">
+                    </a>
+                    <p class="footer-slogan">
+                        Nếu Chủ có bất kỳ câu hỏi nào, vui lòng liên hệ PawHouse nhé
+
+                        <a href="mailto:info@pawhouse.vn" title="info@pawhouse.vn">info@pawhouse.vn</a>
+
+                    </p>
+                    <p class="footer-tel">
+
+                        Hotline: <a href="tel:0987654321" title="0987654321">098 765 4321</a>
+
+                    </p>
+
+                    <p class="evo-in">Địa chỉ: 180/26F, p.10, q.11, TP Hồ Chí Minh</p>
+
+                    <div class="social">
+                        <a class="fb" rel="noreferrer" href="#" target="_blank" aria-label="Facebook" title="Facebook">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                 width="25px" height="25px" viewBox="0 0 96.124 96.123"
+                                 style="enable-background:new 0 0 96.124 96.123;" xml:space="preserve">
+                            <path d="M72.089,0.02L59.624,0C45.62,0,36.57,9.285,36.57,23.656v10.907H24.037c-1.083,0-1.96,0.878-1.96,1.961v15.803   c0,1.083,0.878,1.96,1.96,1.96h12.533v39.876c0,1.083,0.877,1.96,1.96,1.96h16.352c1.083,0,1.96-0.878,1.96-1.96V54.287h14.654   c1.083,0,1.96-0.877,1.96-1.96l0.006-15.803c0-0.52-0.207-1.018-0.574-1.386c-0.367-0.368-0.867-0.575-1.387-0.575H56.842v-9.246   c0-4.444,1.059-6.7,6.848-6.7l8.397-0.003c1.082,0,1.959-0.878,1.959-1.96V1.98C74.046,0.899,73.17,0.022,72.089,0.02z"
+                                  data-original="#000000" class="active-path" data-old_color="#000000" fill="#EBE7E7">
+                                </path>
+                            </svg>
+                        </a>
+                        <a class="tt" rel="noreferrer" href="#" target="_blank" aria-label="Twitter" title="Tiktok">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2859 3333"
+                                 shape-rendering="geometricPrecision" text-rendering="geometricPrecision"
+                                 image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd">
+                                <path d="M2081 0c55 473 319 755 778 785v532c-266 26-499-61-770-225v995c0 1264-1378 1659-1932 753-356-583-138-1606 1004-1647v561c-87 14-180 36-265 65-254 86-398 247-358 531 77 544 1075 705 992-358V1h551z"
+                                      data-original="#000000" class="active-path" data-old_color="#000000" fill="#EBE7E7">
+                                </path>
+                            </svg>
+                        </a>
+                        <a class="yt" rel="noreferrer" href="#" target="_blank" aria-label="Youtube" title="Địa chỉ">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                 viewBox="10 10 24 24" style="enable-background:new 0 0 96.124 96.123;"
+                                 xml:space="preserve">
+                            <path d="M22 10C17.0374 10 13 13.7367 13 18.3297C13 24.0297 21.0541 32.3978 21.397 32.7512C21.7191 33.0832 22.2815 33.0826 22.603 32.7512C22.9459 32.3978 31 24.0297 31 18.3297C30.9999 13.7367 26.9626 10 22 10ZM22 22.5206C19.5032 22.5206 17.4719 20.6406 17.4719 18.3297C17.4719 16.0188 19.5032 14.1388 22 14.1388C24.4968 14.1388 26.528 16.0189 26.528 18.3297C26.528 20.6406 24.4968 22.5206 22 22.5206Z"
+                                  data-original="#000000" class="active-path" data-old_color="#000000" fill="#EBE7E7">
+                                </path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 col-lg-3 col-12 footer-nav-menu widget">
+                    <p class="footer-title">Giới thiệu</p>
+                    <div class="footer-menu">
+                        <a asp-area="" asp-controller="Home" asp-action="Index">
+                            PAWHOUSE
+                        </a>
+
+                        <a asp-area="" asp-controller="Product" asp-action="AllProducts">
+                            SẢN PHẨM
+                        </a>
+
+                        <a asp-controller="Service" asp-action="LuuTru">
+                            HOMESTAY
+                        </a>
+
+                        <a asp-controller="Service" asp-action="Spa">
+                            SPA
+                        </a>
+
+                        <a asp-controller="Service" asp-action="ThuY">
+                            THÚ Y
+                        </a>
+
+                        <a asp-controller="Service" asp-action="KhuyenMai">
+                            KHUYẾN MÃI
+                        </a>
+
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 col-lg-3 col-12 footer-nav-menu widget">
+                    <p class="footer-title">Chính sách</p>
+                    <div class="footer-menu">
+
+                        <!-- <a href="#" title="🔥 Phân phối bán sỉ" rel="nofollow">🔥 Phân phối bán sỉ</a>
+
+                        <a href="#" title="🎁 Mua trả góp 0%" rel="nofollow">🎁 Mua trả
+                            góp 0%</a> -->
+
+                        <a href="#" title="Giao nhận và Thanh toán" rel="nofollow">Giao nhận và Thanh toán</a>
+
+                        <a href="#" title="Hướng dẫn đặt hàng" rel="nofollow">Hướng dẫn đặt hàng</a>
+
+                        <a href="#" title="Quy định đổi trả" rel="nofollow">
+                            Quy định
+                            đổi trả
+                        </a>
+
+                        <a href="#" title="Bảo mật thông tin" rel="nofollow">
+                            Bảo
+                            mật thông tin
+                        </a>
+
+                        <a href="#" title="Điểu khoản truy cập web" rel="nofollow">Điểu khoản truy cập web</a>
+
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 col-lg-3 col-12 footer-nav-menu widget">
+                    <p class="footer-title">Phương thức thanh toán</p>
+                    <div class="footer-menu">
+
+                        <ul class="f fw widget--icon-url-items ">
+                            <li class="widget--icon-url-item">
+                                <a href="#">
+                                    <span class="icon_svg">
+                                        <svg width="32"
+                                             height="33" viewBox="0 0 32 33" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <mask id="mask0" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="3"
+                                                  y="3" width="26" height="27">
+                                                <path d="M10.6917 3.6665L21.3083 3.6665C23.9829 3.6665 24.9528 3.94498 25.9305 4.4679C26.9083 4.99082 27.6757 5.75819 28.1986 6.73597C28.7215 7.71374 29 8.6836 29 11.3582V21.9748C29 24.6494 28.7215 25.6193 28.1986 26.597C27.6757 27.5748 26.9083 28.3422 25.9305 28.8651C24.9528 29.388 23.9829 29.6665 21.3083 29.6665H10.6917C8.0171 29.6665 7.04724 29.388 6.06946 28.8651C5.09169 28.3422 4.32432 27.5748 3.8014 26.597C3.27848 25.6193 3 24.6494 3 21.9748L3 11.3582C3 8.6836 3.27848 7.71374 3.8014 6.73597C4.32432 5.75819 5.09169 4.99082 6.06946 4.4679C7.04724 3.94498 8.0171 3.6665 10.6917 3.6665Z"
+                                                      fill="white"></path>
+                                            </mask>
+                                            <g mask="url(#mask0)">
+                                                <path d="M10.6917 3.6665L21.3083 3.6665C23.9829 3.6665 24.9528 3.94498 25.9305 4.4679C26.9083 4.99082 27.6757 5.75819 28.1986 6.73597C28.7215 7.71374 29 8.6836 29 11.3582V21.9748C29 24.6494 28.7215 25.6193 28.1986 26.597C27.6757 27.5748 26.9083 28.3422 25.9305 28.8651C24.9528 29.388 23.9829 29.6665 21.3083 29.6665H10.6917C8.0171 29.6665 7.04724 29.388 6.06946 28.8651C5.09169 28.3422 4.32432 27.5748 3.8014 26.597C3.27848 25.6193 3 24.6494 3 21.9748L3 11.3582C3 8.6836 3.27848 7.71374 3.8014 6.73597C4.32432 5.75819 5.09169 4.99082 6.06946 4.4679C7.04724 3.94498 8.0171 3.6665 10.6917 3.6665Z"
+                                                      fill="#A50064"></path>
+                                                <path d="M21.1624 8.6665C19.0427 8.6665 17.3247 10.2823 17.3247 12.2755C17.3247 14.269 19.0427 15.8849 21.1624 15.8849C23.2819 15.8849 25 14.269 25 12.2755C25 10.2823 23.2819 8.6665 21.1624 8.6665ZM21.1624 13.8159C20.2632 13.8159 19.5325 13.1289 19.5325 12.2833C19.5325 11.4376 20.2632 10.7505 21.1624 10.7505C22.0615 10.7505 22.7922 11.4376 22.7922 12.2833C22.7922 13.1289 22.0615 13.8161 21.1624 13.8161V13.8159ZM16.2168 15.8927H14.0089V11.3546C14.0089 11.0148 13.7198 10.7433 13.3587 10.7433C12.9974 10.7433 12.7083 11.0148 12.7083 11.3546V15.8927H10.5006V11.3546C10.5006 11.0148 10.2117 10.7433 9.85038 10.7433C9.48906 10.7433 9.19994 11.0148 9.19994 11.3546V15.8927H7V11.3772C7 9.8822 8.29262 8.6665 9.88225 8.6665C10.5325 8.6665 11.1267 8.87041 11.6084 9.21008C12.1645 8.84769 12.7399 8.6665 13.3345 8.6665C14.9241 8.6665 16.2168 9.8822 16.2168 11.3772V15.8927ZM21.1624 17.4481C19.0427 17.4481 17.3247 19.0638 17.3247 21.0571C17.3247 23.0506 19.0427 24.6665 21.1624 24.6665C23.2819 24.6663 25 23.0504 25 21.0571C25 19.0638 23.2819 17.4479 21.1624 17.4479V17.4481ZM13.3345 17.4397C14.9241 17.4397 16.2168 18.6554 16.2168 20.1504V24.6659H14.0089V20.1279C14.0089 19.788 13.7198 19.5165 13.3587 19.5165C12.9974 19.5165 12.7083 19.788 12.7083 20.1279V24.6659H10.5006V20.1279C10.5006 19.788 10.2117 19.5165 9.85038 19.5165C9.48906 19.5165 9.19994 19.788 9.19994 20.1279V24.6659H7V20.1504C7 18.6554 8.29262 17.4397 9.88225 17.4397C10.5325 17.4397 11.1267 17.6437 11.6084 17.9833C12.1645 17.6209 12.7399 17.4397 13.3345 17.4397ZM21.1624 19.532C22.0615 19.532 22.7922 20.2191 22.7922 21.0649C22.7922 21.9104 22.0615 22.5975 21.1624 22.5975C20.2632 22.5975 19.5325 21.9104 19.5325 21.0649C19.5325 20.2191 20.2632 19.532 21.1624 19.532Z"
+                                                      fill="white"></path>
+                                            </g>
+                                        </svg>
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="widget--icon-url-item">
+                                <a href="#">
+                                    <span class="icon_svg">
+                                        <svg width="32"
+                                             height="32" viewBox="0 0 32 32" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <mask id="mask0_1329:61134" style="mask-type:alpha"
+                                                  maskUnits="userSpaceOnUse" x="0" y="6" width="32" height="20">
+                                                <rect y="6" width="32" height="20" rx="1.81818" fill="white"></rect>
+                                            </mask>
+                                            <g mask="url(#mask0_1329:61134)">
+                                                <rect opacity="1" x="-1" y="4" width="34.04" height="23" fill="white">
+                                                </rect>
+                                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                                      d="M9.8116 10.6916L7.26655 17.2114L6.23703 11.6676C6.11637 11.0489 5.63944 10.6916 5.10955 10.6916H0.949103L0.891235 10.9696C1.74526 11.1578 2.7154 11.4606 3.30354 11.7849C3.66323 11.9827 3.76572 12.156 3.88411 12.6263L5.83384 20.2704H8.41786L12.3794 10.6916H9.8116ZM13.4285 10.6916L11.4062 20.2704H13.8514L15.8726 10.6916H13.4285ZM27.4466 13.2791L28.1868 16.8763H26.1588L27.4466 13.2791ZM27.0873 10.6916C26.6187 10.6916 26.2234 10.9688 26.0472 11.3943L22.3792 20.2704H24.945L25.4556 18.8405H28.5911L28.8876 20.2704H31.149L29.1754 10.6916H27.0873ZM16.5398 13.6828C16.5224 15.062 17.7528 15.8321 18.6794 16.2895C19.6318 16.7594 19.9514 17.0603 19.948 17.4805C19.9408 18.1229 19.1881 18.4066 18.4842 18.4177C17.2558 18.4373 16.5417 18.0815 15.9736 17.8128L15.5311 19.9112C16.1007 20.1776 17.1555 20.4095 18.2497 20.4199C20.8175 20.4199 22.4972 19.1353 22.5063 17.1431C22.5165 14.6154 19.0565 14.4755 19.0799 13.3455C19.0883 13.0031 19.4109 12.6374 20.1178 12.5447C20.4676 12.4975 21.4332 12.4615 22.5282 12.9725L22.9579 10.9423C22.3693 10.725 21.6125 10.5168 20.67 10.5168C18.2531 10.5168 16.5534 11.8186 16.5398 13.6828Z"
+                                                      fill="#1A1F71"></path>
+                                            </g>
+                                        </svg>
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="widget--icon-url-item">
+                                <a href="#">
+                                    <span class="icon_svg">
+                                        <svg width="32"
+                                             height="33" viewBox="0 0 32 33" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <rect opacity="0.01" x="1" y="6.6665" width="30" height="20" fill="white">
+                                            </rect>
+                                            <rect x="12.3877" y="10.1254" width="7.17949" height="12.9247"
+                                                  fill="#FF5F00"></rect>
+                                            <path d="M12.8434 16.5889C12.8407 14.0664 13.9964 11.6828 15.9773 10.1254C12.6131 7.47702 7.78209 7.86278 4.87927 11.0116C1.97644 14.1604 1.97644 19.0151 4.87927 22.1639C7.78209 25.3127 12.6131 25.6985 15.9773 23.0501C13.997 21.4931 12.8414 19.1106 12.8434 16.5889Z"
+                                                  fill="#EB001B"></path>
+                                            <path d="M29.2539 16.5889C29.2538 19.7358 27.46 22.6064 24.6343 23.9815C21.8087 25.3567 18.4472 24.995 15.9775 23.0501C17.9569 21.4918 19.1126 19.1096 19.1126 16.5877C19.1126 14.0659 17.9569 11.6837 15.9775 10.1254C18.4472 8.18045 21.8087 7.81875 24.6343 9.19392C27.46 10.5691 29.2538 13.4397 29.2539 16.5866V16.5889Z"
+                                                  fill="#F79E1B"></path>
+                                        </svg>
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="widget--icon-url-item">
+                                <a href="#">
+                                    <span class="icon_svg">
+                                        <svg width="32"
+                                             height="33" viewBox="0 0 32 33" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                                  d="M30 10.3615C30 8.8731 28.7934 7.6665 27.305 7.6665H4.695C3.20659 7.6665 2 8.8731 2 10.3615V22.9715C2 24.4599 3.20659 25.6665 4.695 25.6665H27.305C28.7934 25.6665 30 24.4599 30 22.9715V10.3615ZM4.695 8.6665H27.305L27.4513 8.67273C28.3189 8.74688 29 9.47465 29 10.3615V22.9715L28.9938 23.1178C28.9196 23.9854 28.1919 24.6665 27.305 24.6665H4.695L4.54875 24.6603C3.6811 24.5861 3 23.8584 3 22.9715V10.3615L3.00622 10.2153C3.08037 9.3476 3.80815 8.6665 4.695 8.6665Z"
+                                                  fill="#ffffff"></path>
+                                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                                  d="M8.67528 20.2746L8.14557 21.881H7L9.205 15.6665H10.4582L12.6632 21.881H11.4918L10.9621 20.2746H8.67528ZM8.93368 19.4176H10.6994L9.83377 16.7647H9.80362L8.93368 19.4176ZM15.9535 21.881V16.6054H17.8097V15.6665H12.9862V16.6054H14.8467V21.881H15.9535ZM19.5711 17.471V21.881H18.5676V15.6665H19.8553L21.7589 20.4081H21.7933L23.6968 15.6665H24.9802V21.881H23.9811V17.471H23.9509L22.1551 21.881H21.3971L19.6012 17.471H19.5711Z"
+                                                  fill="#ffffff"></path>
+                                            <rect x="22" y="10.6665" width="5" height="3" rx="1" fill="#ffffff"></rect>
+                                        </svg>
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="widget--icon-url-item">
+                                <a href="#">
+                                    <span class="icon_svg">
+                                        <svg width="32"
+                                             height="32" viewBox="0 0 32 32" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                                  d="M5.5 10.5C5.5 4.70101 10.201 0 16 0C21.799 0 26.5 4.70101 26.5 10.5C26.5 16.299 21.799 21 16 21C10.201 21 5.5 16.299 5.5 10.5ZM16 1C10.7533 1 6.5 5.25329 6.5 10.5C6.5 15.7467 10.7533 20 16 20C21.2467 20 25.5 15.7467 25.5 10.5C25.5 5.25329 21.2467 1 16 1Z"
+                                                  fill="#ffffff"></path>
+                                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                                  d="M22.4646 7.70199C22.6599 7.89725 22.6599 8.21383 22.4646 8.4091L17.5757 13.298C17.3805 13.4932 17.0639 13.4932 16.8686 13.298C16.6734 13.1027 16.6734 12.7861 16.8686 12.5909L21.7575 7.70199C21.9528 7.50673 22.2693 7.50673 22.4646 7.70199Z"
+                                                  fill="#ffffff"></path>
+                                            <path d="M18.5555 8.05547C18.5555 8.45435 18.2322 8.7777 17.8333 8.7777C17.4344 8.7777 17.1111 8.45435 17.1111 8.05547C17.1111 7.6566 17.4344 7.33325 17.8333 7.33325C18.2322 7.33325 18.5555 7.6566 18.5555 8.05547Z"
+                                                  fill="#ffffff" stroke="#ffffff"></path>
+                                            <path d="M22.2223 12.9445C22.2223 13.3434 21.8989 13.6667 21.5001 13.6667C21.1012 13.6667 20.7778 13.3434 20.7778 12.9445C20.7778 12.5456 21.1012 12.2223 21.5001 12.2223C21.8989 12.2223 22.2223 12.5456 22.2223 12.9445Z"
+                                                  fill="#ffffff" stroke="#ffffff"></path>
+                                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                                  d="M10.8541 8.29176C10.5279 8.90744 10.3889 9.73418 10.3889 10.4999C10.3889 11.2656 10.528 12.0924 10.8543 12.7081C11.1684 13.3007 11.6306 13.6666 12.3334 13.6666C13.0361 13.6666 13.4984 13.3007 13.8125 12.7081C14.1387 12.0924 14.2778 11.2656 14.2778 10.4999C14.2778 9.73418 14.1389 8.90744 13.8126 8.29176C13.4986 7.69915 13.0364 7.33325 12.3334 7.33325C11.6303 7.33325 11.1681 7.69915 10.8541 8.29176ZM9.97048 7.82355C10.4128 6.98878 11.1728 6.33325 12.3334 6.33325C13.4939 6.33325 14.2539 6.98878 14.6962 7.82355C15.1263 8.63525 15.2778 9.64185 15.2778 10.4999C15.2778 11.358 15.1262 12.3646 14.696 13.1763C14.2537 14.011 13.4937 14.6666 12.3334 14.6666C11.173 14.6666 10.413 14.011 9.97068 13.1763C9.54052 12.3646 9.38892 11.358 9.38892 10.4999C9.38892 9.64185 9.54038 8.63525 9.97048 7.82355Z"
+                                                  fill="#ffffff"></path>
+                                            <path d="M4.39832 26.1434H2.66946V30.9236H1.71363V26.1434H0V25.3645H4.39832V26.1434Z"
+                                                  fill="#ffffff"></path>
+                                            <path d="M7.16679 28.7817H6.09291V30.9236H5.12947V25.3645H7.0792C7.71896 25.3645 8.21274 25.5083 8.56054 25.796C8.90835 26.0836 9.08225 26.4998 9.08225 27.0445C9.08225 27.4161 8.99212 27.7279 8.81187 27.9799C8.63416 28.2294 8.38537 28.4215 8.06549 28.5564L9.31073 30.874V30.9236H8.27874L7.16679 28.7817ZM6.09291 28.0066H7.08301C7.40797 28.0066 7.66184 27.9252 7.84462 27.7623C8.02741 27.5968 8.11881 27.3716 8.11881 27.0865C8.11881 26.7887 8.03376 26.5583 7.86367 26.3954C7.69611 26.2325 7.44478 26.1485 7.10967 26.1434H6.09291V28.0066Z"
+                                                  fill="#ffffff"></path>
+                                            <path d="M13.0998 29.6293H10.952L10.5027 30.9236H9.50113L11.5956 25.3645H12.46L14.5583 30.9236H13.5529L13.0998 29.6293ZM11.2224 28.8504H12.8294L12.0259 26.5443L11.2224 28.8504ZM11.7098 24.9293L11.6832 24.3718C11.8685 24.3591 12.0018 24.3349 12.083 24.2993C12.1668 24.2636 12.2087 24.2013 12.2087 24.1122C12.2087 23.9289 12.0183 23.8373 11.6375 23.8373L11.6641 23.3677C12.0932 23.3677 12.4156 23.4339 12.6314 23.5662C12.8497 23.6986 12.9589 23.8768 12.9589 24.1007C12.9589 24.2535 12.9094 24.3795 12.8103 24.4787C12.7113 24.578 12.5704 24.6404 12.3877 24.6658V24.9293H11.7098Z"
+                                                  fill="#ffffff"></path>
+                                            <path d="M21.3823 30.202C21.1818 30.4642 20.9038 30.6627 20.5483 30.7976C20.1929 30.9325 19.7893 31 19.3374 31C18.8728 31 18.4615 30.8944 18.1036 30.6831C17.7456 30.4718 17.4689 30.1702 17.2734 29.7782C17.0805 29.3837 16.9802 28.9242 16.9726 28.3999V27.9646C16.9726 27.1247 17.1731 26.4692 17.5742 25.9983C17.9754 25.5249 18.5351 25.2882 19.2536 25.2882C19.8705 25.2882 20.3605 25.4409 20.7235 25.7463C21.0866 26.0518 21.3049 26.4921 21.3785 27.0674H20.4341C20.3275 26.398 19.9403 26.0632 19.2726 26.0632C18.8411 26.0632 18.5123 26.2198 18.2864 26.5329C18.0629 26.8434 17.9474 27.3003 17.9398 27.9035V28.3312C17.9398 28.9319 18.0655 29.399 18.3168 29.7324C18.5707 30.0633 18.9223 30.2287 19.3717 30.2287C19.8642 30.2287 20.2145 30.1168 20.4227 29.8928V28.8046H19.2803V28.0715H21.3823V30.202Z"
+                                                  fill="#ffffff"></path>
+                                            <path d="M26.8659 28.2892C26.8659 28.8339 26.772 29.3124 26.5841 29.7248C26.3963 30.1346 26.1272 30.4502 25.7768 30.6716C25.429 30.8905 25.0279 31 24.5735 31C24.1241 31 23.723 30.8905 23.3701 30.6716C23.0198 30.4502 22.7481 30.1358 22.5552 29.7286C22.3648 29.3213 22.2683 28.8517 22.2658 28.3197V28.0066C22.2658 27.4645 22.361 26.9859 22.5514 26.571C22.7443 26.1561 23.0147 25.8392 23.3625 25.6203C23.7129 25.3989 24.114 25.2882 24.5659 25.2882C25.0178 25.2882 25.4176 25.3976 25.7654 25.6165C26.1157 25.8329 26.3861 26.146 26.5765 26.5558C26.7669 26.963 26.8634 27.4377 26.8659 27.9799V28.2892ZM25.9025 27.999C25.9025 27.383 25.7857 26.9108 25.5522 26.5825C25.3211 26.2541 24.9924 26.09 24.5659 26.09C24.1495 26.09 23.8233 26.2541 23.5872 26.5825C23.3536 26.9083 23.2343 27.3703 23.2292 27.9685V28.2892C23.2292 28.9001 23.3473 29.3722 23.5834 29.7057C23.822 30.0391 24.1521 30.2058 24.5735 30.2058C25 30.2058 25.3275 30.0429 25.556 29.7171C25.787 29.3913 25.9025 28.9153 25.9025 28.2892V27.999ZM24.8477 23.8755H25.9025L24.8477 25.0324H24.1051L24.8477 23.8755Z"
+                                                  fill="#ffffff"></path>
+                                            <path d="M28.789 28.8581V30.9236H27.8256V25.3645H29.9467C30.5661 25.3645 31.0574 25.5262 31.4204 25.8494C31.786 26.1727 31.9688 26.6003 31.9688 27.1323C31.9688 27.677 31.7898 28.1008 31.4318 28.4037C31.0764 28.7066 30.5775 28.8581 29.9352 28.8581H28.789ZM28.789 28.083H29.9467C30.2894 28.083 30.5509 28.0028 30.7311 27.8425C30.9114 27.6796 31.0015 27.4454 31.0015 27.1399C31.0015 26.8396 30.9101 26.6003 30.7273 26.4221C30.5445 26.2414 30.2932 26.1485 29.9733 26.1434H28.789V28.083Z"
+                                                  fill="#ffffff"></path>
+                                        </svg>
+                                    </span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                    <div class="bo_cong_thuong">
+                        <a href="http://online.gov.vn/Home/WebDetails/99093" title="Bộ công thương" target="_blank">
+                            <img src="~/images/bo_cong_thuong.png">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="copyright text-center">
+
+            © Bản quyền thuộc về Công ty TNHH Thú Cưng PAWHOUSE - GP.ĐKKD số 0317360763 do Sở KH &amp; ĐT TP.HCM cấp
+            ngày
+            28/06/2022
+
+        </div>
+    </footer>
+
+    <!-- Swiper -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        var swiper = new Swiper(".mySwiper", {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            loop: false,
+            autoplay: { delay: 3000, disableOnInteraction: false },
+            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+            breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1200: { slidesPerView: 4 } }
+        });
+    </script>
+
+    <!-- Active nav menu -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const currentPath = window.location.pathname.toLowerCase();
+            document.querySelectorAll(".nav-item").forEach(item => {
+                let isActive = false;
+
+                const mainLink = item.querySelector(".nav-link");
+                if (mainLink) {
+                    const href = mainLink.getAttribute("href");
+                    if (href && href !== "#") {
+                        const fullPath = new URL(href, window.location.origin).pathname.toLowerCase();
+                        if (currentPath === fullPath || (fullPath === "/" && currentPath.includes("home"))) isActive = true;
+                    }
+                }
+
+                if (!isActive) {
+                    item.querySelectorAll(".hmega").forEach(subLink => {
+                        const href = subLink.getAttribute("href");
+                        if (href && href !== "#") {
+                            const fullPath = new URL(href, window.location.origin).pathname.toLowerCase();
+                            if (currentPath === fullPath) isActive = true;
+                        }
+                    });
+                }
+
+                if (isActive) item.classList.add("active");
+            });
+        });
+    </script>
+
+    <!-- SignalR ForceLogout -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chathub")
+            .build();
+
+        connection.on("ForceLogout", () => {
+            alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
+
+            // Redirect ngay sang trang login
+            window.location.href = "/Identity/Account/Login";
+        });
+
+        connection.start().catch(err => console.error("SignalR connection error:", err));
+    </script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

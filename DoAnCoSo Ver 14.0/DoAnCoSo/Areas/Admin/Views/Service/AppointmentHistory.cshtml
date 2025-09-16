@@ -1,0 +1,71 @@
+﻿@model List<DoAnCoSo.Models.Appointment>
+@using DoAnCoSo.Extensions
+@* Đảm bảo Model.Appointment có thuộc tính ServiceId *@
+
+@{
+    ViewData["Title"] = "Lịch sử đặt lịch";
+}
+<div class="container py-5">
+    <h2>Lịch sử đặt lịch</h2>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Mã đặt lịch</th>
+                <th>Thú cưng</th>
+                <th>Dịch vụ</th>
+                <th>Thời gian hẹn</th> @* Cột kết hợp Ngày bắt đầu/Kết thúc *@
+                <th>Trạng thái</th>
+                @* *** THÊM CỘT HÀNH ĐỘNG *** *@
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.AppointmentId</td>
+                    <td>@item.Pet.Name (@item.Pet.Type)</td>
+                    <td>@item.Service.Name</td>
+
+                    @* Nội dung của cột "Thời gian hẹn" (giữ nguyên logic kết hợp) *@
+                    <td>
+                        @if (item.ServiceId >= 1 && item.ServiceId <= 3)
+                        {
+                            @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A")
+                        }
+                        else
+                        {
+                            @if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
+                            {
+                                @(item.StartDate.ToShortDateString() + " - " + item.EndDate.ToShortDateString())
+                            }
+                            else if (item.StartDate != default(DateTime))
+                            {
+                                @(item.StartDate.ToShortDateString() + " - N/A")
+                            }
+                            else if (item.EndDate != default(DateTime))
+                            {
+                                @("N/A - " + item.EndDate.ToShortDateString())
+                            }
+                            else
+                            {
+                                @:N/A
+                            }
+                        }
+                    </td>
+
+                    <td>@item.Status.GetDisplayName()</td>
+
+                    @* *** NỘI DUNG CỘT HÀNH ĐỘNG *** *@
+                    <td>
+                        @* Tạo link hoặc button dẫn đến Action AppointmentDetails với ID của lịch đặt *@
+                        <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-info">
+                            Xem chi tiết
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
