@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Identity;
+﻿using DoAnCoSo.Data;
+using DoAnCoSo.Helpers;
 using DoAnCoSo.Models;
-using DoAnCoSo.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 public class ChatHub : Hub
 {
@@ -33,13 +35,15 @@ public class ChatHub : Hub
     {
         var senderId = Context.UserIdentifier;
 
-        // 🔹 Lấy 1 admin bất kỳ (có thể cải tiến để phân bổ)
-        var admin = _userManager.GetUsersInRoleAsync("Admin").Result.FirstOrDefault();
+        // 🔹 Lấy 1 admin bất kỳ
+        var admins = await _userManager.GetUsersInRoleAsync("Admin");
+        var admin = admins.FirstOrDefault();
         if (admin == null) return;
 
-        // 🔹 Tìm hoặc tạo conversation
-        var conversation = _context.Conversations
-            .FirstOrDefault(c => c.CustomerId == senderId && c.AdminId == admin.Id);
+        // 🔹 Tìm conversation (nếu AdminId chưa gán thì bind vào luôn)
+        var conversation = await _context.Conversations
+            .FirstOrDefaultAsync(c => c.CustomerId == senderId &&
+                                      (c.AdminId == admin.Id || c.AdminId == null));
 
         if (conversation == null)
         {
@@ -50,10 +54,13 @@ public class ChatHub : Hub
                 LastUpdated = DateTime.UtcNow
             };
             _context.Conversations.Add(conversation);
-            await _context.SaveChangesAsync(); // lưu conversation trước
+            await _context.SaveChangesAsync();
+        }
+        else if (conversation.AdminId == null)
+        {
+            conversation.AdminId = admin.Id;
         }
 
-        // 🔹 Lưu tin nhắn
         var sender = await _userManager.FindByIdAsync(senderId);
 
         var chatMessage = new ChatMessage
@@ -61,8 +68,8 @@ public class ChatHub : Hub
             ConversationId = conversation.Id,
             SenderId = senderId,
             ReceiverId = admin.Id,
-            SenderName = sender?.UserName, // 👈 thêm tên
-            Message = message,
+            SenderName = sender?.UserName,
+            Message = EncryptionHelper.Encrypt(message),
             SentAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "SE Asia Standard Time"),
             IsRead = false
         };
@@ -71,20 +78,21 @@ public class ChatHub : Hub
         conversation.LastUpdated = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        // 🔹 Gửi realtime cho admin
-        await Clients.Group("Admins").SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
-        await Clients.User(senderId).SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
-
+        // 🔹 Push realtime
+        await Clients.Group("Admins").SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
+        await Clients.Group("Admins").SendAsync("UpdateCustomerList");
+        await Clients.User(senderId).SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
     }
 
-    // Admin gửi tin nhắn cho khách
+    // ✅ Admin gửi tin nhắn cho khách
     public async Task SendMessageToCustomer(string customerId, string message)
     {
         var senderId = Context.UserIdentifier;
 
-        // Tìm hoặc tạo conversation
-        var conversation = _context.Conversations
-            .FirstOrDefault(c => c.CustomerId == customerId && c.AdminId == senderId);
+        // 🔹 Tìm conversation (có thể chưa gán AdminId)
+        var conversation = await _context.Conversations
+            .FirstOrDefaultAsync(c => c.CustomerId == customerId &&
+                                      (c.AdminId == senderId || c.AdminId == null));
 
         if (conversation == null)
         {
@@ -97,6 +105,10 @@ public class ChatHub : Hub
             _context.Conversations.Add(conversation);
             await _context.SaveChangesAsync();
         }
+        else if (conversation.AdminId == null)
+        {
+            conversation.AdminId = senderId;
+        }
 
         var sender = await _userManager.FindByIdAsync(senderId);
 
@@ -106,7 +118,7 @@ public class ChatHub : Hub
             SenderId = senderId,
             ReceiverId = customerId,
             SenderName = sender?.UserName,
-            Message = message,
+            Message = EncryptionHelper.Encrypt(message),
             SentAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "SE Asia Standard Time"),
             IsRead = false
         };
@@ -115,10 +127,9 @@ public class ChatHub : Hub
         conversation.LastUpdated = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        // 🔹 Gửi realtime cho khách
-        await Clients.User(customerId).SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
-
-        // 🔹 Gửi realtime cho admin (người gửi) để update chat ngay
-        await Clients.Caller.SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
+        // 🔹 Push realtime
+        await Clients.User(customerId).SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
+        await Clients.Caller.SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
+        await Clients.Group("Admins").SendAsync("UpdateCustomerList");
     }
 }
