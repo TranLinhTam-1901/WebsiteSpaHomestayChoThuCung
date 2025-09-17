@@ -1,4 +1,5 @@
 ﻿using DoAnCoSo.Data;
+using DoAnCoSo.Helpers;
 using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -48,7 +49,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 .Take(take)
                 .Select(m => new {
                     fromUserId = m.SenderId,
-                    message = m.Message,
+                    message = EncryptionHelper.Decrypt(m.Message),
                     sentAt = m.SentAt
                 })
                 .ToList();

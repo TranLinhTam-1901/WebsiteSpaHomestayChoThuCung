@@ -1,4 +1,5 @@
 ﻿using DoAnCoSo.Data;
+using DoAnCoSo.Helpers;
 using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -68,7 +69,7 @@ public class ChatHub : Hub
             SenderId = senderId,
             ReceiverId = admin.Id,
             SenderName = sender?.UserName,
-            Message = message,
+            Message = EncryptionHelper.Encrypt(message),
             SentAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "SE Asia Standard Time"),
             IsRead = false
         };
@@ -78,9 +79,9 @@ public class ChatHub : Hub
         await _context.SaveChangesAsync();
 
         // 🔹 Push realtime
-        await Clients.Group("Admins").SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
+        await Clients.Group("Admins").SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
         await Clients.Group("Admins").SendAsync("UpdateCustomerList");
-        await Clients.User(senderId).SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
+        await Clients.User(senderId).SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
     }
 
     // ✅ Admin gửi tin nhắn cho khách
@@ -117,7 +118,7 @@ public class ChatHub : Hub
             SenderId = senderId,
             ReceiverId = customerId,
             SenderName = sender?.UserName,
-            Message = message,
+            Message = EncryptionHelper.Encrypt(message),
             SentAt = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "SE Asia Standard Time"),
             IsRead = false
         };
@@ -127,8 +128,8 @@ public class ChatHub : Hub
         await _context.SaveChangesAsync();
 
         // 🔹 Push realtime
-        await Clients.User(customerId).SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
-        await Clients.Caller.SendAsync("ReceiveMessage", senderId, sender?.UserName, message, chatMessage.SentAt);
+        await Clients.User(customerId).SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
+        await Clients.Caller.SendAsync("ReceiveMessage", senderId, sender?.UserName, EncryptionHelper.Decrypt(chatMessage.Message), chatMessage.SentAt);
         await Clients.Group("Admins").SendAsync("UpdateCustomerList");
     }
 }

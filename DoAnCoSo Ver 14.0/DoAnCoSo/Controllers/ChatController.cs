@@ -1,4 +1,5 @@
 ﻿using DoAnCoSo.Data;
+using DoAnCoSo.Helpers;
 using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -80,7 +81,7 @@ namespace DoAnCoSo.Controllers
                 .OrderBy(m => m.SentAt)
                 .Select(m => new {
                     senderId = m.SenderId,
-                    message = m.Message,
+                    message = EncryptionHelper.Decrypt(m.Message),
                     sentAt = m.SentAt
                 })
                 .ToList();
