@@ -390,30 +390,30 @@ SET DATEFORMAT DMY
 INSERT INTO [dbo].[ProductReviews] ([ProductId], [UserId], [Rating], [CommentText], [CreatedDate])
 VALUES 
 -- Customer1
-(1, '2b1121ea-6032-4b46-8554-f496e463cc08', 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
-(2, '2b1121ea-6032-4b46-8554-f496e463cc08', 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 1:00:00'),
-(4, '2b1121ea-6032-4b46-8554-f496e463cc08', 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
-(6, '2b1121ea-6032-4b46-8554-f496e463cc08', 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 9:00:00'),
-(9, '2b1121ea-6032-4b46-8554-f496e463cc08', 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
-(12, '2b1121ea-6032-4b46-8554-f496e463cc08', 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
-(15, '2b1121ea-6032-4b46-8554-f496e463cc08', 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
+(1, 'c5aa193f-69ad-4b50-8964-9071dbe3960e', 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
+(2, 'c5aa193f-69ad-4b50-8964-9071dbe3960e', 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 1:00:00'),
+(4, 'c5aa193f-69ad-4b50-8964-9071dbe3960e', 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
+(6, 'c5aa193f-69ad-4b50-8964-9071dbe3960e', 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 9:00:00'),
+(9, 'c5aa193f-69ad-4b50-8964-9071dbe3960e', 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
+(12, 'c5aa193f-69ad-4b50-8964-9071dbe3960e', 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
+(15, 'c5aa193f-69ad-4b50-8964-9071dbe3960e', 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
 
 -- Customer2
-(3, 'bfcb44fb-0bce-45a7-9bbe-9d688c5eed16', 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
-(5, 'bfcb44fb-0bce-45a7-9bbe-9d688c5eed16', 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 7:30:00'),
-(8, 'bfcb44fb-0bce-45a7-9bbe-9d688c5eed16', 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
-(10,'bfcb44fb-0bce-45a7-9bbe-9d688c5eed16', 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
-(13,'bfcb44fb-0bce-45a7-9bbe-9d688c5eed16', 4, N'Mèo rất thích nhai loại này.', '2025-05-17 8:00:00'),
-(16,'bfcb44fb-0bce-45a7-9bbe-9d688c5eed16', 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
+(3, '2cdf5bb5-9349-48e4-8c93-397da567be78', 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
+(5, '2cdf5bb5-9349-48e4-8c93-397da567be78', 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 7:30:00'),
+(8, '2cdf5bb5-9349-48e4-8c93-397da567be78', 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
+(10, '2cdf5bb5-9349-48e4-8c93-397da567be78', 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
+(13, '2cdf5bb5-9349-48e4-8c93-397da567be78', 4, N'Mèo rất thích nhai loại này.', '2025-05-17 8:00:00'),
+(16, '2cdf5bb5-9349-48e4-8c93-397da567be78', 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
 
 -- Customer3
-(7, 'dad57b20-9224-4596-9c38-46f33d8d9b01', 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
-(11,'dad57b20-9224-4596-9c38-46f33d8d9b01', 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 9:30:00'),
-(14,'dad57b20-9224-4596-9c38-46f33d8d9b01', 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
-(17,'dad57b20-9224-4596-9c38-46f33d8d9b01', 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
-(18,'dad57b20-9224-4596-9c38-46f33d8d9b01', 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
-(19,'dad57b20-9224-4596-9c38-46f33d8d9b01', 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 8:30:00'),
-(20,'dad57b20-9224-4596-9c38-46f33d8d9b01', 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00');
+(7, '37e8f224-c255-4162-9fb8-9cad0e231811', 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
+(11, '37e8f224-c255-4162-9fb8-9cad0e231811', 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 9:30:00'),
+(14, '37e8f224-c255-4162-9fb8-9cad0e231811', 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
+(17, '37e8f224-c255-4162-9fb8-9cad0e231811', 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
+(18, '37e8f224-c255-4162-9fb8-9cad0e231811', 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
+(19, '37e8f224-c255-4162-9fb8-9cad0e231811', 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 8:30:00'),
+(20, '37e8f224-c255-4162-9fb8-9cad0e231811', 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00');
 
 --Thú cưng--
 --Lưu ý: Copy UserId ở trên xuống--

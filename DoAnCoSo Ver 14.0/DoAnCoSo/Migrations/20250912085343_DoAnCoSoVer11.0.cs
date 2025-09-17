@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class DoAnCoSoVer110 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -191,33 +191,6 @@ namespace DoAnCoSo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Conversations",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CustomerId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    AdminId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Conversations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Conversations_AspNetUsers_AdminId",
-                        column: x => x.AdminId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Conversations_AspNetUsers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Orders",
                 columns: table => new
                 {
@@ -314,43 +287,6 @@ namespace DoAnCoSo.Migrations
                         column: x => x.ServiceId,
                         principalTable: "Services",
                         principalColumn: "ServiceId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ChatMessages",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ConversationId = table.Column<int>(type: "int", nullable: false),
-                    SenderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SenderName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ReceiverId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ChatMessages", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ChatMessages_AspNetUsers_ReceiverId",
-                        column: x => x.ReceiverId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ChatMessages_AspNetUsers_SenderId",
-                        column: x => x.SenderId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ChatMessages_Conversations_ConversationId",
-                        column: x => x.ConversationId,
-                        principalTable: "Conversations",
-                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -668,31 +604,6 @@ namespace DoAnCoSo.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChatMessages_ConversationId",
-                table: "ChatMessages",
-                column: "ConversationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ChatMessages_ReceiverId",
-                table: "ChatMessages",
-                column: "ReceiverId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ChatMessages_SenderId",
-                table: "ChatMessages",
-                column: "SenderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Conversations_AdminId",
-                table: "Conversations",
-                column: "AdminId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Conversations_CustomerId",
-                table: "Conversations",
-                column: "CustomerId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Favorites_ProductId",
                 table: "Favorites",
                 column: "ProductId");
@@ -793,9 +704,6 @@ namespace DoAnCoSo.Migrations
                 name: "CartItems");
 
             migrationBuilder.DropTable(
-                name: "ChatMessages");
-
-            migrationBuilder.DropTable(
                 name: "Favorites");
 
             migrationBuilder.DropTable(
@@ -821,9 +729,6 @@ namespace DoAnCoSo.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "Conversations");
 
             migrationBuilder.DropTable(
                 name: "Orders");
