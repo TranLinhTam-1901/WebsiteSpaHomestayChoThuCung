@@ -1,4 +1,5 @@
 ﻿using DoAnCoSo.Data;
+using DoAnCoSo.Helpers;
 using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -72,17 +73,15 @@ namespace DoAnCoSo.Controllers
                 _context.SaveChanges();
             }
 
-            // Lấy tin nhắn mới nhất trước, skip/take tính từ cuối
             var messages = _context.ChatMessages
                 .Where(m => m.ConversationId == conversation.Id)
                 .OrderByDescending(m => m.SentAt)
                 .Skip(skip)
                 .Take(take)
-                .OrderBy(m => m.SentAt) // đảo lại để hiển thị từ cũ → mới
-                .Select(m => new
-                {
+                .OrderBy(m => m.SentAt)
+                .Select(m => new {
                     senderId = m.SenderId,
-                    message = m.Message,
+                    message = EncryptionHelper.Decrypt(m.Message),
                     sentAt = m.SentAt
                 })
                 .ToList();

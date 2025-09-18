@@ -1,4 +1,5 @@
 ﻿using DoAnCoSo.Data;
+using DoAnCoSo.Helpers;
 using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -48,7 +49,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 .Take(take)
                 .Select(m => new {
                     fromUserId = m.SenderId,
-                    message = m.Message,
+                    message = EncryptionHelper.Decrypt(m.Message),
                     sentAt = m.SentAt
                 })
                 .ToList();
@@ -66,23 +67,19 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             var result = await _context.Conversations
                 .Where(c => c.AdminId == adminId || c.CustomerId == adminId)
+                .OrderByDescending(c => c.LastUpdated) // 👈 sort ngay từ DB
                 .Select(c => new {
                     id = c.CustomerId == adminId ? c.AdminId : c.CustomerId,
-                    fullName = c.Customer.FullName,
+                    fullName = c.CustomerId == adminId ? c.Admin.FullName : c.Customer.FullName,
                     unreadCount = _context.ChatMessages.Count(m => m.ConversationId == c.Id && !m.IsRead && m.SenderId != adminId),
-                    lastMessageTime = _context.ChatMessages
-                        .Where(m => m.ConversationId == c.Id)
-                        .OrderByDescending(m => m.SentAt)
-                        .Select(m => m.SentAt)
-                        .FirstOrDefault()
+                    lastUpdated = c.LastUpdated
                 })
-                .OrderByDescending(c => c.lastMessageTime)
                 .ToListAsync();
 
             return Ok(result);
         }
 
-        //  Đánh dấu tất cả tin nhắn của khách đã đọc
+        // ✅ Đánh dấu tất cả tin nhắn của khách đã đọc
         [HttpPost]
         public async Task<IActionResult> MarkAsRead(string customerId)
         {
