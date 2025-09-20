@@ -1,13 +1,15 @@
 ﻿using DoAnCoSo.Data;
+using DoAnCoSo.Hubs;
 using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
+using DoAnCoSo.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
-using DoAnCoSo.Hubs;
+using DoAnCoSo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +81,13 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+
+// Bind EmailSettings từ appsettings.json
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
+// Đăng ký EmailService
+builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 

@@ -1,63 +1,75 @@
 ﻿@model List<DoAnCoSo.Models.Appointment>
 @using DoAnCoSo.Extensions
-@* Đảm bảo Model.Appointment có thuộc tính ServiceId *@
 
 @{
     ViewData["Title"] = "Lịch sử đặt lịch";
 }
+
 <div class="container py-5">
-    <h2>Lịch sử đặt lịch</h2>
+    <h2 class="mb-4">📅 Lịch sử đặt lịch</h2>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Thú cưng</th>
-                <th>Dịch vụ</th>
-                <th>Ngày hẹn</th> @* Cột kết hợp Ngày bắt đầu/Kết thúc *@
-                <th>Trạng thái</th>
-                @* *** THÊM CỘT HÀNH ĐỘNG *** *@
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Pet.Name (@item.Pet.Type)</td>
-                    <td>@item.Service.Name</td>
+    @if (!Model.Any())
+    {
+        <p>Bạn chưa có lịch hẹn nào.</p>
+    }
+    else
+    {
+        @foreach (var item in Model)
+        {
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@item.Pet.Name</strong> <small class="text-muted">(@item.Pet.Type)</small><br />
+                        <span>Dịch vụ: <strong>@item.Service.Name</strong></span>
+                    </div>
+                    <div>
+                        @if (item.Status.GetDisplayName() == "Chờ xác nhận")
+                        {
+                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                        }
+                        else if (item.Status.GetDisplayName() == "Đã xác nhận")
+                        {
+                            <span class="badge bg-success">Đã xác nhận</span>
+                        }
+                        else if (item.Status.GetDisplayName() == "Đã hủy")
+                        {
+                            <span class="badge bg-danger">Đã hủy</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@item.Status.GetDisplayName()</span>
+                        }
+                    </div>
+                </div>
 
-                    @* Nội dung của cột "Thời gian hẹn" (giữ nguyên logic kết hợp) *@
-                    <td>
+                <div class="card-body">
+                    <p>
+                        <strong>Thời gian hẹn:</strong><br />
                         @if (item.ServiceId >= 1 && item.ServiceId <= 3)
                         {
-                            
-                            @* Hiển thị Ngày từ AppointmentDate và Giờ từ AppointmentTime (TimeSpan) *@
-                            @* Đã xóa khối @{} bọc ngoài không cần thiết *@
                             string dateDisplay = item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A";
-                            // AppointmentTime là TimeSpan, kiểm tra với TimeSpan.Zero và định dạng giờ
                             string timeDisplay = item.AppointmentTime != TimeSpan.Zero ? item.AppointmentTime.ToString("hh\\:mm") : "N/A";
 
                             if (dateDisplay == "N/A" && timeDisplay == "N/A")
                             {
                                 @:N/A
                             }
-                            else if (dateDisplay == "N/A") // Chỉ có giờ (kịch bản ít xảy ra với lịch hẹn)
+                            else if (dateDisplay == "N/A")
                             {
                                 @timeDisplay
                             }
-                            else if (timeDisplay == "N/A") // Chỉ có ngày
+                            else if (timeDisplay == "N/A")
                             {
                                 @dateDisplay
                             }
-                            else // Có cả ngày và giờ
+                            else
                             {
                                 @(dateDisplay + " " + timeDisplay)
                             }
-                            @* @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A") *@
                         }
                         else
                         {
-                            @if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
+                            if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
                             {
                                 @(item.StartDate.ToShortDateString() + " - " + item.EndDate.ToShortDateString())
                             }
@@ -74,19 +86,16 @@
                                 @:N/A
                             }
                         }
-                    </td>
+                    </p>
+                </div>
 
-                    <td>@item.Status.GetDisplayName()</td>
-
-                    @* *** NỘI DUNG CỘT HÀNH ĐỘNG *** *@
-                    <td>
-                        @* Tạo link hoặc button dẫn đến Action AppointmentDetails với ID của lịch đặt *@
-                        <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn btn-sm btn-info">
-                            Xem chi tiết
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                <div class="card-footer bg-white text-end">
+                    <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId"
+                       class="btn btn-outline-primary btn-sm">
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        }
+    }
 </div>
