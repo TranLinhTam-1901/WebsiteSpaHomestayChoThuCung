@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DoAnCoSo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250916053355_Initial")]
-    partial class Initial
+    [Migration("20250923073228_AddServiceDetails")]
+    partial class AddServiceDetails
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -563,6 +563,44 @@ namespace DoAnCoSo.Migrations
                     b.ToTable("ProductReviewImages");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.Promotion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Discount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShortDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Promotions");
+                });
+
             modelBuilder.Entity("DoAnCoSo.Models.Review", b =>
                 {
                     b.Property<int>("Id")
@@ -600,25 +638,87 @@ namespace DoAnCoSo.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceId"));
 
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("nvarchar(21)");
+                    b.Property<string>("Image")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("SalePrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("ServiceId");
 
                     b.ToTable("Services");
+                });
 
-                    b.HasDiscriminator().HasValue("Service");
+            modelBuilder.Entity("DoAnCoSo.Models.ServiceDetail", b =>
+                {
+                    b.Property<int>("ServiceDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.UseTphMappingStrategy();
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceDetailId"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("SalePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ServiceDetailId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("ServiceDetail");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.SpaPricing", b =>
+                {
+                    b.Property<int>("SpaPricingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SpaPricingId"));
+
+                    b.Property<decimal?>("Price12To25kg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("Price5To12kg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PriceOver25kg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("PriceUnder5kg")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SpaPricingId");
+
+                    b.HasIndex("ServiceId")
+                        .IsUnique();
+
+                    b.ToTable("SpaPricing");
                 });
 
             modelBuilder.Entity("Favorite", b =>
@@ -776,32 +876,6 @@ namespace DoAnCoSo.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("DoAnCoSo.Models.HomestayService", b =>
-                {
-                    b.HasBaseType("DoAnCoSo.Models.Service");
-
-                    b.HasDiscriminator().HasValue("HomestayService");
-                });
-
-            modelBuilder.Entity("DoAnCoSo.Models.SpaService", b =>
-                {
-                    b.HasBaseType("DoAnCoSo.Models.Service");
-
-                    b.Property<decimal?>("Price12To25kg")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("Price5To12kg")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PriceOver25kg")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PriceUnder5kg")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasDiscriminator().HasValue("SpaService");
                 });
 
             modelBuilder.Entity("ChatMessage", b =>
@@ -1021,6 +1095,28 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.ServiceDetail", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Service", "Service")
+                        .WithMany("ServiceDetails")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.SpaPricing", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Service", "Service")
+                        .WithOne("SpaPricing")
+                        .HasForeignKey("DoAnCoSo.Models.SpaPricing", "ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+                });
+
             modelBuilder.Entity("Favorite", b =>
                 {
                     b.HasOne("DoAnCoSo.Models.Product", "Product")
@@ -1141,6 +1237,10 @@ namespace DoAnCoSo.Migrations
             modelBuilder.Entity("DoAnCoSo.Models.Service", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("ServiceDetails");
+
+                    b.Navigation("SpaPricing");
                 });
 #pragma warning restore 612, 618
         }

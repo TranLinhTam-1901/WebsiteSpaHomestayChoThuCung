@@ -780,7 +780,8 @@ header.header .header-mid.evo-header-padding .header-fill .evo-header-account {
         header.header .header-mid.evo-header-padding .header-fill .evo-header-account ul li a {
             display: block;
             padding: 5px 10px;
-            list-style: none;
+            text-decoration:none;
+            color: black
         }
 
             header.header .header-mid.evo-header-padding .header-fill .evo-header-account ul li a:hover,
@@ -1722,45 +1723,45 @@ footer .back-to-top {
     }
 }
 
-/* Hiệu ứng cho các nút nổi bên phải */
-.floating-buttons {
-    position: fixed;
-    right: 20px;
-    bottom: 100px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 1000;
+/*Form đăng ký, đăng nhập*/
+.btn-login-custom {
+    background-color: #FFB6C1 !important;
+    border: none;
+    color: #000;
+    font-weight:bold
 }
 
-    .floating-buttons .btn {
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
+    .btn-login-custom:hover {
+        color: #fff;
+        background-color: #FF6185 !important; /* màu hover */
     }
 
-.call-button {
-    position: relative;
+.link-register {
+    color: #FF6185 !important;
+    text-decoration: none;
 }
 
-    .call-button .tooltip {
-        position: absolute;
-        right: 60px;
-        background: black;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 12px;
-        white-space: nowrap;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease-in-out;
+    .link-register:hover {
+        text-decoration: underline;
     }
 
-    .call-button:hover .tooltip {
-        opacity: 1;
-        visibility: visible;
+.link-custom {
+    color: #FF6185 !important;
+    text-decoration: none;
+}
+
+    .link-custom:hover {
+        text-decoration: underline;
+    }
+
+.btn-custom {
+    background-color: #FFB6C1 !important;
+    border: none;
+    color: #000;
+    font-weight: bold
+}
+
+    .btn-custom:hover {
+        color: #fff;
+        background-color: #FF6185 !important; /* màu hover */
     }

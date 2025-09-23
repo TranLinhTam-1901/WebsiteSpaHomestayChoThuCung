@@ -90,7 +90,7 @@
                             </div>
 
                             <div class="text-end">
-                                <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-info btn-sm me-2">
+                                <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail">
                                     <i class="bi bi-eye"></i> Xem chi tiết
                                 </a>
 
@@ -98,25 +98,25 @@
                                 {
                                     <form asp-action="Confirm" asp-route-id="@order.Id" method="post" class="d-inline"
                                           onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận đơn hàng này?');">
-                                        <button type="submit" class="btn btn-success btn-sm me-2">
+                                        <button type="submit" class="btn-accept">
                                             <i class="bi bi-check2-circle"></i> Xác nhận
                                         </button>
                                     </form>
 
                                     <form asp-action="Cancel" asp-route-id="@order.Id" method="post" class="d-inline"
                                           onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?');">
-                                        <button type="submit" class="btn btn-warning btn-sm me-2">
+                                        <button type="submit" class="btn-cancel">
                                             <i class="bi bi-x-circle"></i> Hủy đơn hàng
                                         </button>
                                     </form>
                                 }
 
-                                <form asp-action="Delete" asp-route-id="@order.Id" method="post" class="d-inline"
+                                @* <form asp-action="Delete" asp-route-id="@order.Id" method="post" class="d-inline"
                                       onsubmit="return confirm('Bạn CÓ CHẮC CHẮN muốn xóa đơn hàng này vĩnh viễn?');">
                                     <button type="submit" class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash3"></i> Xóa
                                     </button>
-                                </form>
+                                </form> *@
                             </div>
                         </div>
                     </div>
@@ -125,3 +125,66 @@
         </div>
     }
 </div>
+
+<style>
+    /* Badge trạng thái lớn hơn */
+    .badge {
+        font-size: 12px; /* tăng chữ */
+        padding: 8px 8px; /* tăng padding */
+    }
+
+    /* Nút Xem chi tiết nhỏ hơn */
+    .btn-detail {
+        display: inline-block;
+        text-align: center;
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 8px 12px; /* giảm padding */
+        font-size: 12px; /* giảm chữ */
+        border-radius: 25px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-cancel {
+        display: inline-block;
+        text-align: center;
+        border: 2px solid red;
+        color: red;
+        font-weight: bold;
+        padding: 8px 12px; /* giảm padding */
+        font-size: 12px; /* giảm chữ */
+        border-radius: 25px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .btn-cancel:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .btn-accept {
+        display: inline-block;
+        text-align: center;
+        border: 2px solid green;
+        color: green;
+        font-weight: bold;
+        padding: 8px 12px; /* giảm padding */
+        font-size: 12px; /* giảm chữ */
+        border-radius: 25px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .btn-accept:hover {
+            background-color: green;
+            color: #fff;
+        }
+</style>

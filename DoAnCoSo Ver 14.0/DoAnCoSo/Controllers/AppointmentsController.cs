@@ -19,17 +19,17 @@ namespace DoAnCoSo.Controllers
 
         public IActionResult BookAppointmentSpa()
         {
-            // Lấy danh sách các dịch vụ Spa từ database
-            var spaServices = _context.SpaServices.ToList();
+            // Lấy danh sách các dịch vụ Spa từ bảng Services
+            var spaServices = _context.Services
+                .Where(s => s.Category == ServiceCategory.Spa)
+                .ToList();
 
-            // Tạo ViewModel
             var viewModel = new SpaBookingViewModel
             {
-                AppointmentDate = DateTime.Now ,// Gán ngày hiện tại làm giá trị mặc định
+                AppointmentDate = DateTime.Now,
                 AppointmentTime = new TimeSpan(9, 0, 0)
             };
 
-            // Truyền danh sách dịch vụ qua ViewBag
             ViewBag.SpaServices = spaServices;
 
             return View(viewModel);
@@ -38,7 +38,6 @@ namespace DoAnCoSo.Controllers
         [HttpPost]
         public async Task<IActionResult> BookAppointmentSpa(SpaBookingViewModel model)
         {
-            // Kiểm tra xem người dùng đã đăng nhập chưa
             if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
@@ -48,20 +47,15 @@ namespace DoAnCoSo.Controllers
             {
                 try
                 {
-                    // Lấy thông tin dịch vụ từ database dựa trên model.ServiceId
-                    var selectedService = await _context.SpaServices.FindAsync(model.ServiceId);
+                    var selectedService = await _context.Services
+                        .FirstOrDefaultAsync(s => s.ServiceId == model.ServiceId && s.Category == ServiceCategory.Spa);
 
                     if (selectedService == null)
                     {
-                        ModelState.AddModelError("", "Dịch vụ bạn chọn không tồn tại.");
-                        // Load lại dữ liệu cần thiết cho view (nếu cần hiển thị lại dropdown)
-                        ViewBag.SpaServices = _context.SpaServices.ToList();
+                        ViewBag.SpaServices = _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToList();
                         return View(model);
                     }
 
-                    
-
-                    // Tạo đối tượng Appointment mới
                     var appointment = new Appointment
                     {
                         AppointmentDate = model.AppointmentDate,
@@ -77,38 +71,28 @@ namespace DoAnCoSo.Controllers
                     _context.Appointments.Add(appointment);
                     await _context.SaveChangesAsync();
 
-                    // Chuyển hướng đến trang xác nhận
                     return RedirectToAction("AppointmentConfirmation");
                 }
-                catch (DbUpdateException ex)
+                catch (Exception)
                 {
-                    // Ghi log lỗi hoặc xử lý lỗi liên quan đến database
-                    ModelState.AddModelError("", "Đã có lỗi xảy ra khi lưu thông tin đặt lịch vào database. Vui lòng thử lại sau.");
-                    // Bạn có thể ghi log exception ex ở đây để xem chi tiết lỗi
-                }
-                catch (Exception ex)
-                {
-                    // Ghi log lỗi hoặc xử lý các lỗi khác
-                    ModelState.AddModelError("", "Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại sau.");
-                    // Bạn có thể ghi log exception ex ở đây để xem chi tiết lỗi
+                    ModelState.AddModelError("", "Đã có lỗi xảy ra khi lưu thông tin đặt lịch.");
                 }
             }
 
-            // Nếu ModelState không hợp lệ hoặc có lỗi xảy ra trong try-catch, load lại danh sách dịch vụ
-            ViewBag.SpaServices = _context.SpaServices.ToList();
+            ViewBag.SpaServices = _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToList();
             return View(model);
         }
 
         public IActionResult BookAppointmentHomestay()
         {
-            var homestayServices = _context.HomestayServices.ToList();
+            var homestayServices = _context.Services
+                .Where(s => s.Category == ServiceCategory.Homestay)
+                .ToList();
 
-            // Tạo ViewModel
             var viewModel = new HomestayBookingViewModel
             {
                 StartDate = DateTime.Now,
                 EndDate = DateTime.Now
-
             };
 
             ViewBag.HomestayServices = homestayServices;
@@ -116,10 +100,8 @@ namespace DoAnCoSo.Controllers
         }
 
         [HttpPost]
-        
         public async Task<IActionResult> BookAppointmentHomestay(HomestayBookingViewModel model)
         {
-            // Kiểm tra xem người dùng đã đăng nhập chưa
             if (!User.Identity.IsAuthenticated)
             {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
@@ -129,16 +111,15 @@ namespace DoAnCoSo.Controllers
             {
                 try
                 {
-                    // Lấy thông tin dịch vụ từ database dựa trên model.ServiceId
-                    var selectedService = await _context.HomestayServices.FindAsync(model.ServiceId);
+                    var selectedService = await _context.Services
+                        .FirstOrDefaultAsync(s => s.ServiceId == model.ServiceId && s.Category == ServiceCategory.Homestay);
 
                     if (selectedService == null)
                     {
-                        ViewBag.HomestayServices = _context.HomestayServices.ToList();
+                        ViewBag.HomestayServices = _context.Services.Where(s => s.Category == ServiceCategory.Homestay).ToList();
                         return View(model);
                     }
 
-                    // Tạo đối tượng Appointment mới
                     var appointment = new Appointment
                     {
                         StartDate = model.StartDate,
@@ -149,7 +130,6 @@ namespace DoAnCoSo.Controllers
                         UserId = _userManager.GetUserId(User),
                         CreatedDate = DateTime.UtcNow,
                         OwnerPhoneNumber = model.OwnerPhoneNumber
-
                     };
 
                     _context.Appointments.Add(appointment);
@@ -157,16 +137,13 @@ namespace DoAnCoSo.Controllers
 
                     return RedirectToAction("AppointmentConfirmation");
                 }
-                catch (DbUpdateException)
-                {
-                    ModelState.AddModelError("", "Đã có lỗi xảy ra khi lưu thông tin đặt lịch vào database. Vui lòng thử lại sau.");
-                }
                 catch (Exception)
                 {
-                    ModelState.AddModelError("", "Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại sau.");
+                    ModelState.AddModelError("", "Đã có lỗi xảy ra khi lưu thông tin đặt lịch.");
                 }
             }
-            ViewBag.HomestayServices = _context.HomestayServices.ToList();
+
+            ViewBag.HomestayServices = _context.Services.Where(s => s.Category == ServiceCategory.Homestay).ToList();
             return View(model);
         }
 
@@ -218,6 +195,5 @@ namespace DoAnCoSo.Controllers
             // Trả về View AppointmentDetails và truyền đối tượng appointment
             return View(appointment);
         }
-
     }
 }

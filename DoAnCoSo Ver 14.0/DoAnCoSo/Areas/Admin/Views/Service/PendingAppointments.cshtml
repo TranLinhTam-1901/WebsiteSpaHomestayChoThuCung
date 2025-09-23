@@ -35,7 +35,7 @@
                 <th>Mã đặt lịch </th>
                 <th>Thú cưng</th>
                 <th>Dịch vụ</th>
-                <th>Thời gian hẹn</th>
+                <th>Thời gian</th>
                 <th>Trạng thái</th>
                 <th>Hành động</th>
 
@@ -58,14 +58,6 @@
                     <td>
                         @if (item.ServiceId >= 1 && item.ServiceId <= 3)
                         {
-                            @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A")
-                            @if (item.AppointmentTime != default(TimeSpan))
-                            {
-                                @: @item.AppointmentTime.ToString(@"hh\:mm")
-                            }
-                        }
-                        else
-                        {
                             @if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
                             {
                                 @(item.StartDate.ToShortDateString() + " - " + item.EndDate.ToShortDateString())
@@ -81,6 +73,14 @@
                             else
                             {
                                 @:N/A
+                            }
+                        }
+                        else
+                        {
+                            @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A")
+                            @if (item.AppointmentTime != default(TimeSpan))
+                            {
+                                @: @item.AppointmentTime.ToString(@"hh\:mm")
                             }
                         }
                     </td>

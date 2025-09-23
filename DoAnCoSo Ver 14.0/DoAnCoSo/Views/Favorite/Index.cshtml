@@ -45,7 +45,7 @@
                                     <a asp-controller="Product" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm w-50">Xem Chi Tiết</a>
 
                                     <button class="btn btn-sm favorite-btn mx-auto w-20
-    @(ViewBag.FavoriteIds != null && ((List<int>)ViewBag.FavoriteIds).Contains(item.Id) ? "btn-danger" : "btn-outline-danger")"
+                                        @(ViewBag.FavoriteIds != null && ((List<int>)ViewBag.FavoriteIds).Contains(item.Id) ? "btn-danger" : "btn-outline-danger")"
                                             data-id="@item.Id"
                                             data-authenticated="@User.Identity.IsAuthenticated.ToString().ToLower()">
                                         <i class="@(ViewBag.FavoriteIds != null && ((List<int>)ViewBag.FavoriteIds).Contains(item.Id) ? "bi-heart-fill" : "bi-heart")"></i>

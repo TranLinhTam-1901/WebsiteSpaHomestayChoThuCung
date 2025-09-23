@@ -355,16 +355,17 @@
                         </a>
                     </li>
 
-                    @* <li class="nav-item "> *@
-                    @*     <a asp-area="" asp-controller="Service" asp-action="ThuY" class="nav-link" title="THÚ Y"> *@
-                    @*         THÚ Y *@
-                    @*     </a> *@
-                    @* </li> *@
-                    @* <li class="nav-item "> *@
-                    @*     <a asp-area="" asp-controller="Service" asp-action="#" class="nav-link" title="KHUYẾN MÃI"> *@
-                    @*         KHUYỄN MÃI *@
-                    @*     </a> *@
-                    @* </li> *@
+                    <li class="nav-item ">
+                        <a asp-area="" asp-controller="VetServices" asp-action="Index" class="nav-link" title="THÚ Y">
+                            THÚ Y
+                        </a>
+                    </li>
+
+                    <li class="nav-item ">
+                        <a asp-area="" asp-controller="Promotion" asp-action="Index" class="nav-link" title="KHUYẾN MÃI">
+                            KHUYỄN MÃI
+                        </a>
+                    </li>
 
                     <li class="nav-item ">
                         <a asp-area="" asp-controller="Appointments" asp-action="CustomerAppointmentHistory" class="nav-link" title="Lịch sử đặt lịch">
@@ -373,7 +374,6 @@
                     </li>
 
                     <li class="nav-item ">
-                        @* <-- ĐÂY LÀ PHẦN THÊM MỚI *@
                         <a asp-area="" asp-controller="OrderHistory" asp-action="Index" class="nav-link" title="Lịch sử đặt hàng">
                             LỊCH SỬ ĐẶT HÀNG 
                         </a>
@@ -414,7 +414,10 @@
                                 <div class="card-body">
                                     <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i> <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
                                     <p class="card-text text-muted">Nơi nghỉ ngơi thoải mái cho thú cưng của bạn.</p>
-                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments")" class="btn btn-homestay-theme mt-3">Chọn Homestay</a>
+                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments", new { area = "" })"
+                                       class="btn btn-homestay-theme mt-3">
+                                        Chọn Homestay
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -424,7 +427,10 @@
                                 <div class="card-body">
                                     <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i> <h5 class="card-title mt-3">Đặt lịch Spa</h5>
                                     <p class="card-text text-muted">Chăm sóc và làm đẹp cho thú cưng yêu.</p>
-                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments")" class="btn btn-spa-theme mt-3">Chọn Spa</a>
+                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments", new { area = "" })"
+                                       class="btn btn-homestay-theme mt-3">
+                                        Chọn Spa
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -438,9 +444,9 @@
     </div>
 
     <!-- Floating Button -->
-    <button id="chatFloatingBtn" class="btn shadow rounded-circle"
-            style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 10000; background-color:#FF6185; color:white;">
+    <button id="chatFloatingBtn" class="btn shadow">
         <i class="bi bi-chat-dots-fill" style="font-size: 24px;"></i>
+        <span id="unreadBadge">0</span>
     </button>
 
     <!-- Chatbox -->
@@ -459,6 +465,42 @@
     </div>
 
     <style>
+        /* Floating button */
+        #chatFloatingBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #FF6185;
+            color: white;
+            border-radius: 50%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            /* Badge đẹp gọn */
+            #chatFloatingBtn #unreadBadge {
+                position: absolute;
+                top: 0;
+                right: 0;
+                transform: translate(40%, -40%); /* đẩy ra ngoài một chút */
+                background: #dc3545;
+                color: #fff;
+                font-size: 12px;
+                font-weight: bold;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 5px;
+                border-radius: 50%;
+                line-height: 20px;
+                text-align: center;
+                display: none;
+                box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            }
+
         #chatBox {
             position: fixed;
             bottom: 80px;
@@ -935,14 +977,17 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             const chatBox = document.getElementById("chatBox");
             const chatFloatingBtn = document.getElementById("chatFloatingBtn");
             const minimizeBtn = document.getElementById("minimizeChat");
             const messagesList = document.getElementById("messagesList");
             const sendButton = document.getElementById("sendButton");
             const messageInput = document.getElementById("messageInput");
-            const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+            const unreadBadge = document.getElementById("unreadBadge");
+
+            // Razor-injected user id (string). Nếu null server sẽ in rỗng.
+            const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" || "";
 
             let skipCount = 0;
             const pageSize = 50;
@@ -950,23 +995,59 @@
             let noMoreMessages = false;
             let allMessages = [];
 
-            let customerAvatars = {};
+            // local unread count mirror
+            let unreadCount = 0;
 
+            function updateBadge(count) {
+                unreadCount = count;
+                if (count > 0) {
+                    unreadBadge.innerText = count > 99 ? "99+" : String(count);
+                    unreadBadge.style.display = "inline-block";
+                } else {
+                    unreadBadge.style.display = "none";
+                }
+            }
+
+            async function loadUnreadCount() {
+                try {
+                    const res = await fetch("/Chat/GetUnreadCount", { cache: "no-store" });
+                    if (!res.ok) {
+                        console.warn("LoadUnreadCount failed:", res.status);
+                        return;
+                    }
+                    const data = await res.json();
+                    updateBadge(Number(data.count || 0));
+                    console.debug("[unread] synced from server:", unreadCount);
+                } catch (err) {
+                    console.error("LoadUnreadCount error:", err);
+                }
+            }
+
+            async function markAllAsReadServer() {
+                try {
+                    const res = await fetch("/Chat/MarkAllAsRead", { method: "POST" });
+                    if (!res.ok) console.warn("MarkAllAsRead failed", res.status);
+                } catch (err) {
+                    console.error("MarkAllAsRead error:", err);
+                }
+            }
+
+            // --- message rendering helpers (kept same shape as before) ---
+            let customerAvatars = {};
             function getAvatarForCustomer(customerId) {
-                if(!customerAvatars[customerId]){
-                    customerAvatars[customerId] = `/images/avatar/avatar_${Math.floor(Math.random()*5+1)}.jpg`;
+                if (!customerAvatars[customerId]) {
+                    customerAvatars[customerId] = `/images/avatar/avatar_${Math.floor(Math.random() * 5 + 1)}.jpg`;
                 }
                 return customerAvatars[customerId];
             }
 
             function createMessageElement(msg) {
                 const date = new Date(msg.sentAt);
-                // Đảo vị trí: khách nằm bên phải, admin nằm bên trái
-                const isAdmin = msg.senderId === userId; // khách => admin=false, admin => admin=true
+                const isAdmin = msg.senderId === userId; // msg.senderId is sender's id
                 const row = document.createElement("div");
                 row.className = "message-row " + (isAdmin ? "admin" : "customer");
 
-                if(!isAdmin){ // avatar chỉ hiện khách (bên phải)
+                if (!isAdmin) {
                     const avatar = document.createElement("img");
                     avatar.className = "message-avatar";
                     avatar.src = getAvatarForCustomer(msg.senderId);
@@ -975,8 +1056,8 @@
 
                 const bubble = document.createElement("div");
                 bubble.className = "message-bubble " + (isAdmin ? "admin" : "customer");
-                bubble.innerHTML = msg.message +
-                    `<div class="message-time">${date.toLocaleTimeString("vi-VN",{hour12:false,hour:'2-digit',minute:'2-digit'})}</div>`;
+                bubble.innerHTML = (msg.message || "") +
+                    `<div class="message-time">${date.toLocaleTimeString("vi-VN", { hour12: false, hour: '2-digit', minute: '2-digit' })}</div>`;
                 row.appendChild(bubble);
 
                 return { row, date };
@@ -986,110 +1067,173 @@
                 const today = new Date();
                 const yesterday = new Date();
                 yesterday.setDate(today.getDate() - 1);
-
-                if(date.toDateString() === today.toDateString()) return "Hôm nay";
-                if(date.toDateString() === yesterday.toDateString()) return "Hôm qua";
-                return `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
+                if (date.toDateString() === today.toDateString()) return "Hôm nay";
+                if (date.toDateString() === yesterday.toDateString()) return "Hôm qua";
+                return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
             }
 
-            function addDateSeparator(date, prepend=false) {
+            function addDateSeparator(date, prepend = false) {
                 const dateText = formatDateSeparator(date);
                 const existing = Array.from(messagesList.querySelectorAll(".date-separator"))
                     .some(s => s.innerText === dateText);
-                if(existing) return;
-
+                if (existing) return;
                 const separator = document.createElement("div");
                 separator.className = "date-separator";
                 separator.innerText = dateText;
-
-                if(prepend) messagesList.insertBefore(separator, messagesList.firstChild);
+                if (prepend) messagesList.insertBefore(separator, messagesList.firstChild);
                 else messagesList.appendChild(separator);
             }
 
-            function renderMessages(scrollToBottom=false){
+            function renderMessages(scrollToBottom = false) {
                 messagesList.innerHTML = "";
-                allMessages.sort((a,b)=> new Date(a.sentAt) - new Date(b.sentAt));
-
+                allMessages.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
                 let lastDate = null;
                 allMessages.forEach(msg => {
                     const { row, date } = createMessageElement(msg);
-                    if(!lastDate || lastDate.toDateString() !== date.toDateString()){
+                    if (!lastDate || lastDate.toDateString() !== date.toDateString()) {
                         addDateSeparator(date);
                         lastDate = date;
                     }
                     messagesList.appendChild(row);
                 });
-
-                if(scrollToBottom) messagesList.scrollTop = messagesList.scrollHeight;
+                if (scrollToBottom) messagesList.scrollTop = messagesList.scrollHeight;
             }
 
-            async function loadMessages(prepend=false){
-                if(loadingOlder || noMoreMessages) return;
+            async function loadMessages(prepend = false) {
+                if (loadingOlder || noMoreMessages) return;
                 loadingOlder = true;
-
-                const res = await fetch(`/Chat/GetChatHistory?skip=${skipCount}&take=${pageSize}`);
-                const messages = await res.json();
-
-                if(messages.length === 0){
-                    noMoreMessages = true;
+                try {
+                    const res = await fetch(`/Chat/GetChatHistory?skip=${skipCount}&take=${pageSize}`, { cache: "no-store" });
+                    if (!res.ok) {
+                        console.warn("GetChatHistory failed", res.status);
+                        loadingOlder = false;
+                        return;
+                    }
+                    const messages = await res.json();
+                    if (!messages || messages.length === 0) {
+                        noMoreMessages = true;
+                        loadingOlder = false;
+                        return;
+                    }
+                    // ensure shape: senderId, message, sentAt
+                    if (prepend) allMessages = messages.concat(allMessages);
+                    else allMessages = allMessages.concat(messages);
+                    renderMessages(!prepend);
+                    skipCount += pageSize;
+                } catch (err) {
+                    console.error("LoadMessages error:", err);
+                } finally {
                     loadingOlder = false;
-                    return;
                 }
-
-                if(prepend) allMessages = messages.concat(allMessages);
-                else allMessages = allMessages.concat(messages);
-
-                renderMessages(!prepend);
-                skipCount += pageSize;
-                loadingOlder = false;
             }
 
-            chatFloatingBtn.addEventListener("click", ()=>{
+            // --- UI events ---
+            chatFloatingBtn.addEventListener("click", async () => {
                 chatBox.style.display = "flex";
                 chatFloatingBtn.style.display = "none";
                 allMessages = [];
                 skipCount = 0;
                 noMoreMessages = false;
-                loadMessages();
+                await loadMessages();
+                // mark read on open
+                await markAllAsReadServer();
+                updateBadge(0);
             });
 
-            minimizeBtn.addEventListener("click", ()=>{
+            minimizeBtn.addEventListener("click", () => {
                 chatBox.style.display = "none";
                 chatFloatingBtn.style.display = "block";
             });
 
-            const connection = new signalR.HubConnectionBuilder().withUrl("/chathub").build();
-            connection.start();
-
-            connection.on("ReceiveMessage", (senderId, senderName, message, sentAt)=>{
-                allMessages.push({ senderId, message, sentAt });
-                renderMessages(true);
-            });
-
-            sendButton.addEventListener("click", ()=> {
+            sendButton.addEventListener("click", () => {
                 const msg = messageInput.value.trim();
-                if(!msg) return;
-
-                // Gửi lên server, không push vào allMessages
-                connection.invoke("SendMessageToAdmin", msg);
+                if (!msg) return;
+                // send to hub
+                connection.invoke("SendMessageToAdmin", msg).catch(e => console.error(e));
                 messageInput.value = "";
+                // don't increment unread — server will echo message back to this client,
+                // and we ignore own messages in ReceiveMessage handler.
             });
 
-
-            messageInput.addEventListener("keydown", e=>{
-                if(e.key==="Enter" && !e.shiftKey){
+            messageInput.addEventListener("keydown", e => {
+                if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     sendButton.click();
                 }
             });
 
-            messagesList.addEventListener("scroll", async ()=>{
-                if(messagesList.scrollTop === 0 && !loadingOlder && !noMoreMessages){
+            messagesList.addEventListener("scroll", async () => {
+                if (messagesList.scrollTop === 0 && !loadingOlder && !noMoreMessages) {
                     const oldHeight = messagesList.scrollHeight;
                     await loadMessages(true);
                     messagesList.scrollTop = messagesList.scrollHeight - oldHeight;
                 }
             });
+
+            // --- SignalR setup ---
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chathub")
+                .withAutomaticReconnect()
+                .build();
+
+            // register handlers BEFORE start
+            connection.on("ReceiveMessage", async (senderId, senderName, message, sentAt) => {
+                try {
+                    // normalize types
+                    const sid = String(senderId || "");
+                    // append message to UI if open
+                    if (chatBox.style.display === "flex") {
+                        allMessages.push({ senderId: sid, message: message, sentAt: sentAt });
+                        renderMessages(true);
+                        // mark as read on server (messages intended for this customer)
+                        await markAllAsReadServer();
+                        updateBadge(0);
+                        console.debug("[ReceiveMessage] displayed and marked read (open). sender:", sid);
+                    } else {
+                        // chat closed -> only count if sender is someone else (not me)
+                        if (sid !== userId) {
+                            unreadCount = Number(unreadCount || 0) + 1;
+                            updateBadge(unreadCount);
+                            console.debug("[ReceiveMessage] chat closed -> increment unread. sender:", sid, "newUnread:", unreadCount);
+                        } else {
+                            // msg from myself; do nothing
+                            console.debug("[ReceiveMessage] ignored own echo (chat closed).");
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error in ReceiveMessage handler:", err);
+                }
+            });
+
+            // optional: log reconnect events
+            connection.onreconnecting(error => {
+                console.warn("SignalR reconnecting:", error && error.message);
+            });
+            connection.onreconnected(connectionId => {
+                console.info("SignalR reconnected. connectionId:", connectionId);
+                // resync unread after reconnect
+                loadUnreadCount();
+            });
+
+            connection.start()
+                .then(() => {
+                    console.info("SignalR connected.");
+                    // initial sync with server after connected
+                    loadUnreadCount();
+                    // periodic sync (optional)
+                    setInterval(loadUnreadCount, 30000);
+                })
+                .catch(err => {
+                    console.error("SignalR start error:", err.toString());
+                    // still try to load unread once (best-effort)
+                    loadUnreadCount();
+                });
+
+            // expose for debugging
+            window.__chatDebug = {
+                getUnread: () => unreadCount,
+                reloadUnread: loadUnreadCount
+            };
         });
     </script>
 

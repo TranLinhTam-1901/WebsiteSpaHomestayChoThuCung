@@ -111,42 +111,6 @@
         <a asp-controller="Product" asp-action="AllProducts" class="btn btn-outline-primary">Xem tất cả sản phẩm</a>
     </div>
 }
-<!-- CSS Custom -->
-<style>
-    .carousel-item {
-        text-align: center;
-    }
-
-    #featuredProductsCarousel .image-container1 {
-        width: 100%;
-        height: 200px;
-        position: relative;
-        overflow: hidden; /* Ẩn phần thừa */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #f8f9fa; /* Màu nền phòng trường hợp ảnh nhỏ */
-    }
-
-    #featuredProductsCarousel .product-image1 {
-        width: 100%; /* Chiếm đầy chiều ngang */
-        height: 100%; /* Chiếm đầy chiều dọc */
-        object-fit: cover; /* Lấp đầy container (có thể cắt ảnh) */
-        /* Hoặc dùng object-fit: contain nếu muốn hiển thị toàn bộ ảnh (có thể có khoảng trống) */
-        object-position: center; /* Căn giữa trọng tâm ảnh */
-    }
-    /* Định dạng card */
-    .card {
-        border-radius: 10px;
-    }
-
-    /* Giúp nút điều hướng dễ nhìn hơn */
-    .carousel-control-prev-icon,
-    .carousel-control-next-icon {
-        width: 40px;
-        height: 40px;
-    }
-</style>
 
 <!-- Swiper - Sản phẩm dành cho Mèo -->
 <div class="container text-start mt-4">
@@ -179,8 +143,6 @@
                 </a>
             </div>
         </div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
     </div>
 </div>
 
@@ -215,12 +177,39 @@
                 </a>
             </div>
         </div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
     </div>
 </div>
 
 <style>
+    #featuredProductsCarousel {
+        padding-top: 15px;
+        height: 600px; /* Chiều cao khung cố định */
+    }
+
+        #featuredProductsCarousel .carousel-inner,
+        #featuredProductsCarousel .carousel-item {
+            height: 100%; /* Cho các item full khung */
+        }
+
+            #featuredProductsCarousel .carousel-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain; /* hoặc cover tùy ý */
+                border-radius: 10px;
+            }
+
+    /* Định dạng card */
+    .card {
+        border-radius: 10px;
+    }
+
+    /* Giúp nút điều hướng dễ nhìn hơn */
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        width: 40px;
+        height: 40px;
+    }
+
     .carousel-item img {
         border-radius: 10px;
         width: 100%;
@@ -281,27 +270,8 @@
         padding: 15px;
     }
 
-    .swiper-button-prev,
-    .swiper-button-next {
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 0, 0, 0.5);
-        border-radius: 20px;
-        transition: background 0.3s;
-    }
-
-        .swiper-button-prev:hover,
-        .swiper-button-next:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-
-        .swiper-button-prev::after,
-        .swiper-button-next::after {
-            color: white;
-            font-size: 20px;
-        }
-
     .carousel-item {
+        text-align: center;
         transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out !important;
         opacity: 1 !important;
         /* Đảm bảo không bị mờ */

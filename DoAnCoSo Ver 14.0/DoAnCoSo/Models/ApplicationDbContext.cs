@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using DoAnCoSo.Models;
+
 namespace DoAnCoSo.Models
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>  
@@ -20,8 +22,7 @@ namespace DoAnCoSo.Models
         public DbSet<Pet> Pets { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Service> Services { get; set; }
-        public DbSet<SpaService> SpaServices { get; set; }
-        public DbSet<HomestayService> HomestayServices { get; set; }
+
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
@@ -34,6 +35,7 @@ namespace DoAnCoSo.Models
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
 
+        public DbSet<Promotion> Promotions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
