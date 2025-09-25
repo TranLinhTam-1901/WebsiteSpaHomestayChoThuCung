@@ -16,8 +16,8 @@
     {
         @foreach (var item in Model)
         {
-            <div class="card shadow-sm mb-4 border-0">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div class="appointment-card mb-4 shadow-sm border-0">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
                     <div>
                         <strong>@item.Pet.Name</strong> <small class="text-muted">(@item.Pet.Type)</small><br />
                         <span>Dịch vụ: <strong>@item.Service.Name</strong></span>
@@ -43,31 +43,9 @@
                 </div>
 
                 <div class="card-body">
-                    <p>
+                    <p class="mb-2">
                         <strong>Thời gian hẹn:</strong><br />
                         @if (item.ServiceId >= 1 && item.ServiceId <= 3)
-                        {
-                            string dateDisplay = item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A";
-                            string timeDisplay = item.AppointmentTime != TimeSpan.Zero ? item.AppointmentTime.ToString("hh\\:mm") : "N/A";
-
-                            if (dateDisplay == "N/A" && timeDisplay == "N/A")
-                            {
-                                @:N/A
-                            }
-                            else if (dateDisplay == "N/A")
-                            {
-                                @timeDisplay
-                            }
-                            else if (timeDisplay == "N/A")
-                            {
-                                @dateDisplay
-                            }
-                            else
-                            {
-                                @(dateDisplay + " " + timeDisplay)
-                            }
-                        }
-                        else
                         {
                             if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
                             {
@@ -86,12 +64,32 @@
                                 @:N/A
                             }
                         }
+                        else
+                        {
+                            string dateDisplay = item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A";
+                            string timeDisplay = item.AppointmentTime != TimeSpan.Zero ? item.AppointmentTime.ToString("hh\\:mm") : "N/A";
+                            if (dateDisplay == "N/A" && timeDisplay == "N/A")
+                            {
+                                @:N/A
+                            }
+                            else if (dateDisplay == "N/A")
+                            {
+                                @timeDisplay
+                            }
+                            else if (timeDisplay == "N/A")
+                            {
+                                @dateDisplay
+                            }
+                            else
+                            {
+                                @(dateDisplay + " " + timeDisplay)
+                            }
+                        }
                     </p>
                 </div>
 
                 <div class="card-footer bg-white text-end">
-                    <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId"
-                       class="btn btn-outline-primary btn-sm">
+                    <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn-detail">
                         Xem chi tiết
                     </a>
                 </div>
@@ -99,3 +97,50 @@
         }
     }
 </div>
+
+<style>
+    .appointment-card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        font-weight: 500;
+        font-size: 1rem;
+    }
+
+    .card-body {
+        font-size: 0.95rem;
+        color: #333;
+    }
+
+    .card-footer {
+        background-color: #fff;
+        padding: 12px 15px;
+    }
+
+    /* Badge trạng thái lớn hơn */
+    .badge {
+        font-size: 12px; /* tăng chữ */
+        padding:8px 8px; /* tăng padding */
+    }
+
+    /* Nút Xem chi tiết nhỏ hơn */
+    .btn-detail {
+        display: inline-block;
+        text-align: center;
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 8px 12px; /* giảm padding */
+        font-size: 12px; /* giảm chữ */
+        border-radius: 25px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+</style>

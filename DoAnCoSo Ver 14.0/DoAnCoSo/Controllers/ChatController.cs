@@ -88,5 +88,34 @@ namespace DoAnCoSo.Controllers
 
             return Json(messages);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUnreadCount()
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var unreadCount = await _context.ChatMessages
+                .Where(m => m.ReceiverId == customerId && !m.IsRead)
+                .CountAsync();
+
+            return Ok(new { count = unreadCount });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarkAllAsRead()
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(customerId)) return Unauthorized();
+
+            var messages = await _context.ChatMessages
+                .Where(m => m.ReceiverId == customerId && !m.IsRead)
+                .ToListAsync();
+
+            foreach (var m in messages) m.IsRead = true;
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
     }
 }

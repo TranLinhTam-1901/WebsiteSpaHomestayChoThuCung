@@ -14,9 +14,8 @@
                 <th>Mã đặt lịch</th>
                 <th>Thú cưng</th>
                 <th>Dịch vụ</th>
-                <th>Thời gian hẹn</th> @* Cột kết hợp Ngày bắt đầu/Kết thúc *@
+                <th>Thời gian</th>
                 <th>Trạng thái</th>
-                @* *** THÊM CỘT HÀNH ĐỘNG *** *@
                 <th>Hành động</th>
             </tr>
         </thead>
@@ -31,10 +30,6 @@
                     @* Nội dung của cột "Thời gian hẹn" (giữ nguyên logic kết hợp) *@
                     <td>
                         @if (item.ServiceId >= 1 && item.ServiceId <= 3)
-                        {
-                            @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A")
-                        }
-                        else
                         {
                             @if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
                             {
@@ -52,6 +47,10 @@
                             {
                                 @:N/A
                             }
+                        }
+                        else
+                        {
+                            @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A")
                         }
                     </td>
 

@@ -4,6 +4,7 @@ using DoAnCoSo.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DoAnCoSo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250923060207_AddSpaPricing")]
+    partial class AddSpaPricing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -659,34 +662,6 @@ namespace DoAnCoSo.Migrations
                     b.ToTable("Services");
                 });
 
-            modelBuilder.Entity("DoAnCoSo.Models.ServiceDetail", b =>
-                {
-                    b.Property<int>("ServiceDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceDetailId"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("SalePrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ServiceDetailId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.ToTable("ServiceDetail");
-                });
-
             modelBuilder.Entity("DoAnCoSo.Models.SpaPricing", b =>
                 {
                     b.Property<int>("SpaPricingId")
@@ -1092,17 +1067,6 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DoAnCoSo.Models.ServiceDetail", b =>
-                {
-                    b.HasOne("DoAnCoSo.Models.Service", "Service")
-                        .WithMany("ServiceDetails")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Service");
-                });
-
             modelBuilder.Entity("DoAnCoSo.Models.SpaPricing", b =>
                 {
                     b.HasOne("DoAnCoSo.Models.Service", "Service")
@@ -1234,8 +1198,6 @@ namespace DoAnCoSo.Migrations
             modelBuilder.Entity("DoAnCoSo.Models.Service", b =>
                 {
                     b.Navigation("Appointments");
-
-                    b.Navigation("ServiceDetails");
 
                     b.Navigation("SpaPricing");
                 });

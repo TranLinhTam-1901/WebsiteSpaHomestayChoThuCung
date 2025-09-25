@@ -1,0 +1,142 @@
+﻿@model List<DoAnCoSo.Models.Service>
+
+@{
+    ViewData["Title"] = "Thú Y - PawHouse";
+}
+
+<section class="vet-services-section py-5">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">DỊCH VỤ THÚ Y</h2>
+
+        <div class="row">
+            @foreach (var service in Model.Where(s => s.Category == DoAnCoSo.Models.ServiceCategory.Vet))
+            {
+                <div class="col-12 mb-4">
+                    <div class="vet-service-card">
+                        <!-- Tên dịch vụ chính -->
+                        <div class="service-header text-center">
+                            <h3 class="service-name">@service.Name</h3>
+                        </div>
+
+                        <!-- Thanh ngang -->
+                        <hr class="service-divider" />
+
+                        <div class="service-details p-3">
+                            @if (service.ServiceDetails != null && service.ServiceDetails.Any())
+                            {
+                                @foreach (var detail in service.ServiceDetails)
+                                {
+                                    <div class="service-row d-flex justify-content-between align-items-center mb-2">
+                                        <div class="detail-name">@detail.Name</div>
+                                        <div class="detail-price">
+                                            @if (detail.SalePrice.HasValue)
+                                            {
+                                                <span class="old-price">@detail.Price.ToString("N0")</span>
+                                                <span class="sale-price">@detail.SalePrice.Value.ToString("N0")</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@detail.Price.ToString("N0")</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="service-row d-flex justify-content-between align-items-center mb-2">
+                                    <div class="detail-name">@service.Name</div>
+                                    <div class="detail-price">
+                                        @if (service.SalePrice.HasValue)
+                                        {
+                                            <span class="old-price">@service.Price.ToString("N0")</span>
+                                            <span class="sale-price">@service.SalePrice.Value.ToString("N0")</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@service.Price.ToString("N0")</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<style>
+    .vet-services-section {
+        background-color: transparent;
+    }
+
+    .section-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .vet-service-card {
+        background-color: #fff;
+        border: 1px solid #e0dcd0;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .service-header {
+        background-color: #FFB6C1; /* background tên dịch vụ chính */
+        padding: 15px;
+    }
+
+    .service-name {
+        color: #000; /* chữ đen */
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .service-divider {
+        margin: 0;
+        border: 0;
+        border-top: 2px solid #ff6b6b; /* thanh ngang */
+    }
+
+    .service-details {
+        padding: 15px;
+    }
+
+    .service-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed #ddd;
+    }
+
+        .service-row:last-child {
+            border-bottom: none;
+        }
+
+    .detail-name {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .detail-price {
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .old-price {
+        text-decoration: line-through;
+        color: #999;
+        margin-right: 5px;
+    }
+
+    .sale-price {
+        color: #FF6185;
+        font-weight: 700;
+    }
+</style>

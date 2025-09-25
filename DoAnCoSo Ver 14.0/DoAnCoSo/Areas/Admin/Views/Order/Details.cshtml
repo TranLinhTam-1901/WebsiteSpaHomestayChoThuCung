@@ -6,102 +6,110 @@
     ViewData["Title"] = "Chi tiết đơn hàng (Admin)";
 }
 <div class="container mt-4">
-<h1>Chi tiết đơn hàng</h1>
+    <h1>Chi tiết đơn hàng</h1>
 
-<div>
-    <h4>Đơn hàng #@Model.Id</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-3">Mã đơn hàng</dt>
-        <dd class="col-sm-9">@Model.Id</dd>
+    <div>
+        <h4>Đơn hàng #@Model.Id</h4>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">Mã đơn hàng</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
 
-        <dt class="col-sm-3">Người đặt</dt>
-        <dd class="col-sm-9">@Model.User?.FullName</dd> @* Đã sửa thuộc tính User trong Order model *@
+            <dt class="col-sm-3">Người đặt</dt>
+            <dd class="col-sm-9">@Model.User?.FullName</dd> @* Đã sửa thuộc tính User trong Order model *@
 
-        <dt class="col-sm-3">Ngày đặt</dt>
-        <dd class="col-sm-9">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+            <dt class="col-sm-3">Ngày đặt</dt>
+            <dd class="col-sm-9">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
 
-        <dt class="col-sm-3">Tổng tiền</dt>
-        <dd class="col-sm-9">@Model.TotalPrice.ToString("N0") VNĐ</dd>
+            <dt class="col-sm-3">Tổng tiền</dt>
+            <dd class="col-sm-9">@Model.TotalPrice.ToString("N0") VNĐ</dd>
 
-        <dt class="col-sm-3">Trạng thái</dt>
-        <dd class="col-sm-9">
-            @if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
-            {
-                <span class="badge bg-warning text-dark">Chờ xác nhận</span>
-            }
-            else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
-            {
-                <span class="badge bg-success">Đã xác nhận</span>
-            }
-            else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
-            {
-                <span class="badge bg-secondary">Đã hủy</span>
-            }
-            else
-            {
-                <span>@Model.Status.GetDisplayName()</span> @* Sử dụng GetDisplayName() *@
-            }
-        </dd>
-
-        <dt class="col-sm-3">Người nhận</dt>
-        <dd class="col-sm-9">@Model.CustomerName</dd>
-
-        <dt class="col-sm-3">Số điện thoại</dt>
-        <dd class="col-sm-9">@Model.PhoneNumber</dd>
-
-        <dt class="col-sm-3">Địa chỉ giao hàng</dt>
-        <dd class="col-sm-9">@Model.ShippingAddress</dd>
-
-        <dt class="col-sm-3">Phương thức thanh toán</dt>
-        <dd class="col-sm-9">@Model.PaymentMethod</dd>
-
-        <dt class="col-sm-3">Ghi chú</dt>
-        <dd class="col-sm-9">@Model.Notes</dd>
-    </dl>
-
-    <h5>Chi tiết sản phẩm:</h5>
-    @if (Model.OrderDetails != null && Model.OrderDetails.Any())
-    {
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Sản phẩm</th>
-                    <th>Vị</th>
-                    <th>Số lượng</th>
-                    <th>Giá</th>
-                    <th>Tổng phụ</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.OrderDetails)
+            <dt class="col-sm-3">Trạng thái</dt>
+            <dd class="col-sm-9">
+                @if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
                 {
-                    <tr>
-                        <td>@item.Product.Name</td>
-                        <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "N/A" : item.SelectedFlavor)</td>
-                        <td>@item.Quantity</td>
-                        <td>@item.Price.ToString("N0") VNĐ</td> @* Đã sửa UnitPrice thành Price*@
-                        <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td> @* Đã sửa UnitPrice thành Price*@
-                    </tr>
+                    <span class="badge bg-warning text-dark">Chờ xác nhận</span>
                 }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>Không có chi tiết sản phẩm cho đơn hàng này.</p>
-    }
+                else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                {
+                    <span class="badge bg-success">Đã xác nhận</span>
+                }
+                else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
+                {
+                    <span class="badge bg-secondary">Đã hủy</span>
+                }
+                else
+                {
+                    <span>@Model.Status.GetDisplayName()</span> @* Sử dụng GetDisplayName() *@
+                }
+            </dd>
+
+            <dt class="col-sm-3">Người nhận</dt>
+            <dd class="col-sm-9">@Model.CustomerName</dd>
+
+            <dt class="col-sm-3">Số điện thoại</dt>
+            <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+            <dt class="col-sm-3">Địa chỉ giao hàng</dt>
+            <dd class="col-sm-9">@Model.ShippingAddress</dd>
+
+            <dt class="col-sm-3">Phương thức thanh toán</dt>
+            <dd class="col-sm-9">@Model.PaymentMethod</dd>
+
+            <dt class="col-sm-3">Ghi chú</dt>
+            <dd class="col-sm-9">@Model.Notes</dd>
+        </dl>
+
+        <h5>Chi tiết sản phẩm:</h5>
+        @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Vị</th>
+                        <th>Số lượng</th>
+                        <th>Giá</th>
+                        <th>Tổng phụ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderDetails)
+                    {
+                        <tr>
+                            <td>@item.Product.Name</td>
+                            <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "N/A" : item.SelectedFlavor)</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.Price.ToString("N0") VNĐ</td> @* Đã sửa UnitPrice thành Price*@
+                            <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td> @* Đã sửa UnitPrice thành Price*@
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>Không có chi tiết sản phẩm cho đơn hàng này.</p>
+        }
+    </div>
+    <div>
+        @if (Model.Status == OrderStatusEnum.ChoXacNhan)
+        {
+            <form asp-action="Confirm" asp-route-id="@Model.Id" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận đơn hàng này?');">
+                <button type="submit" class="btn btn-success">Xác nhận đơn hàng</button>
+            </form>
+        }
+        @* <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline;" onsubmit="return confirm('Bạn CÓ CHẮC CHẮN muốn xóa đơn hàng này vĩnh viễn? Hành động này không thể hoàn tác!');">
+            <button type="submit" class="btn btn-danger">Xóa đơn hàng</button>
+        </form> *@
+        <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
+    </div>
 </div>
-<div>
-    @if (Model.Status == OrderStatusEnum.ChoXacNhan)
-    {
-        <form asp-action="Confirm" asp-route-id="@Model.Id" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận đơn hàng này?');">
-            <button type="submit" class="btn btn-success">Xác nhận đơn hàng</button>
-        </form>
+
+<style>
+    /* Badge trạng thái lớn hơn */
+    .badge {
+        font-size: 12px; /* tăng chữ */
+        padding: 8px 8px; /* tăng padding */
     }
-    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="display:inline;" onsubmit="return confirm('Bạn CÓ CHẮC CHẮN muốn xóa đơn hàng này vĩnh viễn? Hành động này không thể hoàn tác!');">
-        <button type="submit" class="btn btn-danger">Xóa đơn hàng</button>
-    </form>
-    <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
-</div>
-</div>
+</style>
