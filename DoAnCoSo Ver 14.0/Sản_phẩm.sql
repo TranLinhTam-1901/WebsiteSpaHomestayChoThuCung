@@ -679,7 +679,7 @@ VALUES
 SELECT * FROM Services;
 SELECT * FROM Products;
 SELECT * FROM ProductImages;
-SELECT * FROM Reviews;
+SELECT * FROM Reviews
 SELECT * FROM Pets;
 SELECT * FROM PetServiceRecords;
 SELECT * FROM SpaPricings;

@@ -5,24 +5,6 @@
 
 @{
     ViewData["Title"] = "Đơn đặt lịch chờ xác nhận";
-
-    TimeZoneInfo vietnamTimeZone = null;
-    bool timeZoneFound = false;
-    try
-    {
-        vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-        timeZoneFound = true;
-    }
-    catch (TimeZoneNotFoundException)
-    {
-        try
-        {
-            vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
-            timeZoneFound = true;
-        }
-        catch (TimeZoneNotFoundException) { }
-    }
-    catch (InvalidTimeZoneException) { }
 }
 
 <div class="appointment-wrapper py-5">
