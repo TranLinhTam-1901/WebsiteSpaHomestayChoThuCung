@@ -1,35 +1,81 @@
 ﻿@model DoAnCoSo.Models.Product
-<div class="container py-5">
 
-<h2>Xóa Sản Phẩm</h2>
-<form asp-action="DeleteConfirmed" method="post">
-	<input type="hidden" asp-for="Id" />
-	<p>Bạn có chắc chắn muốn xóa sản phẩm sau không?</p>
-	<ul>
-		<li><strong>Tên sản phẩm:</strong> @Model.Name</li>
-		<li>
-			<strong>Giá:</strong>
-			@if (Model.PriceReduced.HasValue && Model.PriceReduced < Model.Price)
-			{
-				<span style="text-decoration: line-through; color: gray;">@Model.Price</span>
-				<br />
-				<span style="color: red; font-weight: bold;">@Model.PriceReduced</span>
-			}
-			else
-			{
-				<span>@Model.Price</span>
-			}
-		</li>
-		@if (!string.IsNullOrEmpty(Model.Description))
-		{
-			<li><strong>Mô tả:</strong> @Model.Description</li>
-		}
-		@if (!string.IsNullOrEmpty(Model.ImageUrl))
-		{
-			<li><strong>Hình ảnh:</strong> <img src="@Model.ImageUrl" alt="Hình ảnh sản phẩm" style="max-width:100px;" /></li>
-		}
-	</ul>
-	<button type="submit" class="btn btn-danger">Xóa</button>
-	<a asp-action="Index" class="btn btn-secondary">Hủy</a>
-</form>
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4 w-75">
+        <div class="card-header bg-gradient-pink text-white text-center rounded-top-4">
+            <h2 class="mb-0">⚠️ Xóa sản phẩm</h2>
+        </div>
+        <div class="card-body p-4 text-center">
+            <input type="hidden" asp-for="Id" />
+            <p class="fs-5">Bạn có chắc chắn muốn xóa sản phẩm sau không?</p>
+
+            <ul class="list-group list-group-flush text-start mb-4">
+                <li class="list-group-item"><strong>Tên sản phẩm:</strong> @Model.Name</li>
+                <li class="list-group-item">
+                    <strong>Giá:</strong>
+                    @if (Model.PriceReduced.HasValue && Model.PriceReduced < Model.Price)
+                    {
+                        <span class="text-muted text-decoration-line-through">@Model.Price.ToString("N0") đ</span>
+                    
+                        <br />
+                        <span class="text-danger fw-bold">@Model.PriceReduced.Value.ToString("N0") đ</span>
+                    }
+                    else
+                    {
+                        <span>@Model.Price.ToString("N0") đ</span>
+                    }
+                </li>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <li class="list-group-item"><strong>Mô tả:</strong> @Model.Description</li>
+                }
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <li class="list-group-item">
+                        <strong>Hình ảnh:</strong><br />
+                        <img src="@Model.ImageUrl" alt="Hình ảnh sản phẩm"
+                             class="img-fluid rounded shadow-sm mt-2" style="max-width:150px;" />
+                    </li>
+                }
+            </ul>
+
+            <form asp-action="DeleteConfirmed" method="post" class="d-inline">
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm me-2">
+                    🗑️ Xóa
+                </button>
+            </form>
+            <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill shadow-sm">
+                ✖ Hủy
+            </a>
+        </div>
+    </div>
 </div>
+
+<style>
+    :root {
+        --pink-main: #FF6185;
+        --pink-accent: #FF6B6B;
+    }
+
+    .bg-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+    }
+
+    .btn-outline-pink {
+        border: 1px solid var(--pink-main);
+        color: var(--pink-main);
+        background-color: #fff;
+        transition: 0.3s;
+    }
+
+        .btn-outline-pink:hover {
+            background-color: var(--pink-accent);
+            border-color: var(--pink-accent);
+            color: #fff;
+        }
+
+    .card {
+        border-radius: 1rem;
+    }
+</style>

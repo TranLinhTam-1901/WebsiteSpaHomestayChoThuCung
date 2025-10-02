@@ -17,174 +17,212 @@ namespace DoAnCoSo.Controllers
             _userManager = userManager;
         }
 
+        // --- SPA ---
         public IActionResult BookAppointmentSpa()
         {
-            // Lấy danh sách các dịch vụ Spa từ database
-            var spaServices = _context.SpaServices.ToList();
+            var userId = _userManager.GetUserId(User);
+            var user = _userManager.FindByIdAsync(userId).Result;
 
-            // Tạo ViewModel
-            var viewModel = new SpaBookingViewModel
+            var spaServices = _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToList();
+            var spaPricings = _context.SpaPricings.ToList(); // phải tồn tại DbSet<SpaPricing> SpaPricings trong ApplicationDbContext
+            var userPets = _context.Pets.Where(p => p.UserId == userId).ToList();
+
+            var vm = new SpaBookingViewModel
             {
-                AppointmentDate = DateTime.Now ,// Gán ngày hiện tại làm giá trị mặc định
-                AppointmentTime = new TimeSpan(9, 0, 0)
+                OwnerPhoneNumber = user?.PhoneNumber,
+                AppointmentDate = DateTime.Now,
+                AppointmentTime = new TimeSpan(9, 0, 0),
+                UserPets = userPets
             };
 
-            // Truyền danh sách dịch vụ qua ViewBag
             ViewBag.SpaServices = spaServices;
+            ViewBag.SpaPricings = spaPricings;
 
-            return View(viewModel);
+            return View(vm);
         }
 
         [HttpPost]
         public async Task<IActionResult> BookAppointmentSpa(SpaBookingViewModel model)
         {
-            // Kiểm tra xem người dùng đã đăng nhập chưa
             if (!User.Identity.IsAuthenticated)
-            {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var userId = _userManager.GetUserId(User);
+            var user = await _userManager.FindByIdAsync(userId);
+            model.OwnerPhoneNumber = user?.PhoneNumber;
+
+            var selectedService = await _context.Services
+                .FirstOrDefaultAsync(s => s.ServiceId == model.ServiceId && s.Category == ServiceCategory.Spa);
+
+            if (selectedService == null)
+            {
+                ModelState.AddModelError("", "Dịch vụ không hợp lệ.");
+                ViewBag.SpaServices = _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToList();
+                model.UserPets = _context.Pets.Where(p => p.UserId == userId).ToList();
+                return View(model);
             }
 
-            if (ModelState.IsValid)
+            Pet pet;
+            if (model.ExistingPetId.HasValue)
             {
-                try
+                pet = await _context.Pets
+                    .FirstOrDefaultAsync(p => p.PetId == model.ExistingPetId && p.UserId == userId);
+
+                if (pet == null)
                 {
-                    // Lấy thông tin dịch vụ từ database dựa trên model.ServiceId
-                    var selectedService = await _context.SpaServices.FindAsync(model.ServiceId);
-
-                    if (selectedService == null)
-                    {
-                        ModelState.AddModelError("", "Dịch vụ bạn chọn không tồn tại.");
-                        // Load lại dữ liệu cần thiết cho view (nếu cần hiển thị lại dropdown)
-                        ViewBag.SpaServices = _context.SpaServices.ToList();
-                        return View(model);
-                    }
-
-                    
-
-                    // Tạo đối tượng Appointment mới
-                    var appointment = new Appointment
-                    {
-                        AppointmentDate = model.AppointmentDate,
-                        AppointmentTime = model.AppointmentTime,
-                        Status = AppointmentStatus.Pending,
-                        ServiceId = model.ServiceId,
-                        Pet = new Pet { Name = model.PetName, Type = model.PetType },
-                        UserId = _userManager.GetUserId(User),
-                        CreatedDate = DateTime.UtcNow,
-                        OwnerPhoneNumber = model.OwnerPhoneNumber
-                    };
-
-                    _context.Appointments.Add(appointment);
-                    await _context.SaveChangesAsync();
-
-                    // Chuyển hướng đến trang xác nhận
-                    return RedirectToAction("AppointmentConfirmation");
+                    ModelState.AddModelError("", "Chọn thú cưng không hợp lệ.");
+                    ViewBag.SpaServices = _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToList();
+                    model.UserPets = _context.Pets.Where(p => p.UserId == userId).ToList();
+                    return View(model);
                 }
-                catch (DbUpdateException ex)
+
+                model.PetName = pet.Name;
+                model.PetType = pet.Type;
+                model.PetBreed = pet.Breed;
+                model.PetAge = pet.Age;
+                model.PetWeight = pet.Weight; // ✅ vì giờ là decimal?, ko cần parse chuỗi nữa
+            }
+            else
+            {
+                pet = new Pet
                 {
-                    // Ghi log lỗi hoặc xử lý lỗi liên quan đến database
-                    ModelState.AddModelError("", "Đã có lỗi xảy ra khi lưu thông tin đặt lịch vào database. Vui lòng thử lại sau.");
-                    // Bạn có thể ghi log exception ex ở đây để xem chi tiết lỗi
-                }
-                catch (Exception ex)
-                {
-                    // Ghi log lỗi hoặc xử lý các lỗi khác
-                    ModelState.AddModelError("", "Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại sau.");
-                    // Bạn có thể ghi log exception ex ở đây để xem chi tiết lỗi
-                }
+                    Name = model.PetName,
+                    Type = model.PetType,
+                    Breed = model.PetBreed,
+                    Age = model.PetAge,
+                    Weight = model.PetWeight, // ✅ decimal? mapping thẳng
+                    UserId = userId
+                };
+                _context.Pets.Add(pet);
+                await _context.SaveChangesAsync();
             }
 
-            // Nếu ModelState không hợp lệ hoặc có lỗi xảy ra trong try-catch, load lại danh sách dịch vụ
-            ViewBag.SpaServices = _context.SpaServices.ToList();
-            return View(model);
-        }
-
-        public IActionResult BookAppointmentHomestay()
-        {
-            var homestayServices = _context.HomestayServices.ToList();
-
-            // Tạo ViewModel
-            var viewModel = new HomestayBookingViewModel
+            var appointment = new Appointment
             {
-                StartDate = DateTime.Now,
-                EndDate = DateTime.Now
-
+                AppointmentDate = model.AppointmentDate,
+                AppointmentTime = model.AppointmentTime,
+                Status = AppointmentStatus.Pending,
+                ServiceId = model.ServiceId,
+                UserId = userId,
+                CreatedDate = DateTime.UtcNow,
+                OwnerPhoneNumber = model.OwnerPhoneNumber,
+                PetId = pet.PetId
             };
 
-            ViewBag.HomestayServices = homestayServices;
-            return View(viewModel);
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("AppointmentConfirmation");
+        }
+
+        // --- HOMESTAY ---
+        public async Task<IActionResult> BookAppointmentHomestay()
+        {
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var userId = _userManager.GetUserId(User);
+            var user = await _userManager.FindByIdAsync(userId);
+
+            var model = new HomestayBookingViewModel
+            {
+                StartDate = DateTime.Now,
+                EndDate = DateTime.Now,
+                OwnerPhoneNumber = user?.PhoneNumber
+            };
+
+            ViewBag.HomestayServices = _context.Services
+                .Where(s => s.Category == ServiceCategory.Homestay)
+                .ToList();
+
+            ViewBag.UserPets = _context.Pets
+                .Where(p => p.UserId == userId)
+                .ToList();
+
+            return View(model);
         }
 
         [HttpPost]
-        
-        public async Task<IActionResult> BookAppointmentHomestay(HomestayBookingViewModel model)
+        public async Task<IActionResult> BookAppointmentHomestay(HomestayBookingViewModel model, int? existingPetId)
         {
-            // Kiểm tra xem người dùng đã đăng nhập chưa
             if (!User.Identity.IsAuthenticated)
-            {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
-            }
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    // Lấy thông tin dịch vụ từ database dựa trên model.ServiceId
-                    var selectedService = await _context.HomestayServices.FindAsync(model.ServiceId);
+                var userId = _userManager.GetUserId(User);
+                var user = await _userManager.FindByIdAsync(userId);
 
-                    if (selectedService == null)
+                // <-- Thêm dòng này
+                model.OwnerPhoneNumber = user?.PhoneNumber;
+
+                var selectedService = await _context.Services
+                    .FirstOrDefaultAsync(s => s.ServiceId == model.ServiceId && s.Category == ServiceCategory.Homestay);
+
+                if (selectedService == null)
+                {
+                    ViewBag.HomestayServices = _context.Services.Where(s => s.Category == ServiceCategory.Homestay).ToList();
+                    return View(model);
+                }
+
+                Pet pet;
+
+                if (existingPetId.HasValue)
+                {
+                    pet = await _context.Pets.FirstOrDefaultAsync(p => p.PetId == existingPetId.Value && p.UserId == userId);
+                    if (pet == null)
                     {
-                        ViewBag.HomestayServices = _context.HomestayServices.ToList();
+                        ModelState.AddModelError("", "Chọn thú cưng không hợp lệ.");
+                        ViewBag.HomestayServices = _context.Services.Where(s => s.Category == ServiceCategory.Homestay).ToList();
                         return View(model);
                     }
-
-                    // Tạo đối tượng Appointment mới
-                    var appointment = new Appointment
+                }
+                else
+                {
+                    pet = new Pet
                     {
-                        StartDate = model.StartDate,
-                        EndDate = model.EndDate,
-                        Status = AppointmentStatus.Pending,
-                        ServiceId = model.ServiceId,
-                        Pet = new Pet { Name = model.PetName, Type = model.PetType },
-                        UserId = _userManager.GetUserId(User),
-                        CreatedDate = DateTime.UtcNow,
-                        OwnerPhoneNumber = model.OwnerPhoneNumber
-
+                        Name = model.PetName,
+                        Type = model.PetType,
+                        UserId = userId
                     };
-
-                    _context.Appointments.Add(appointment);
+                    _context.Pets.Add(pet);
                     await _context.SaveChangesAsync();
+                }
 
-                    return RedirectToAction("AppointmentConfirmation");
-                }
-                catch (DbUpdateException)
+                var appointment = new Appointment
                 {
-                    ModelState.AddModelError("", "Đã có lỗi xảy ra khi lưu thông tin đặt lịch vào database. Vui lòng thử lại sau.");
-                }
-                catch (Exception)
-                {
-                    ModelState.AddModelError("", "Đã có lỗi không mong muốn xảy ra. Vui lòng thử lại sau.");
-                }
+                    StartDate = model.StartDate,
+                    EndDate = model.EndDate,
+                    Status = AppointmentStatus.Pending,
+                    ServiceId = model.ServiceId,
+                    UserId = userId,
+                    CreatedDate = DateTime.UtcNow,
+                    OwnerPhoneNumber = model.OwnerPhoneNumber,
+                    PetId = pet.PetId
+                };
+
+                _context.Appointments.Add(appointment);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction("AppointmentConfirmation");
             }
-            ViewBag.HomestayServices = _context.HomestayServices.ToList();
+
+            ViewBag.HomestayServices = _context.Services.Where(s => s.Category == ServiceCategory.Homestay).ToList();
             return View(model);
         }
 
-        public IActionResult AppointmentConfirmation()
-        {
-            return View();
-        }
+        public IActionResult AppointmentConfirmation() => View();
 
-        public IActionResult AppointmentSuccess()
-        {
-            return View();
-        }
+        public IActionResult AppointmentSuccess() => View();
+
         public IActionResult CustomerAppointmentHistory()
         {
             var userId = _userManager.GetUserId(User);
 
             var customerHistory = _context.Appointments
                 .Include(a => a.Pet)
+                    .ThenInclude(p => p.ServiceRecords)
+                        .ThenInclude(sr => sr.Service)
                 .Include(a => a.Service)
                 .Where(a => a.UserId == userId)
                 .ToList();
@@ -192,32 +230,24 @@ namespace DoAnCoSo.Controllers
             return View(customerHistory);
         }
 
-        public async Task<IActionResult> AppointmentDetails(int id) // 'id' sẽ nhận giá trị từ asp-route-id="@item.AppointmentId"
+        public async Task<IActionResult> AppointmentDetails(int id)
         {
-            // Kiểm tra xem người dùng đã đăng nhập chưa (Chỉ cho phép xem lịch sử của họ)
             if (!User.Identity.IsAuthenticated)
-            {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
-            }
 
             var userId = _userManager.GetUserId(User);
 
-            // Tìm lịch đặt theo ID VÀ đảm bảo nó thuộc về người dùng hiện tại
             var appointment = await _context.Appointments
-                .Include(a => a.Pet)     // Nạp thông tin Pet
-                .Include(a => a.Service) // Nạp thông tin Service
-                                         // .Include(a => a.ApplicationUser) // Nạp thông tin người dùng (để lấy SDT)
-                .FirstOrDefaultAsync(a => a.AppointmentId == id && a.UserId == userId); // Hoặc a.ApplicationUserId == userId
+                .Include(a => a.Pet)
+                    .ThenInclude(p => p.ServiceRecords)
+                        .ThenInclude(sr => sr.Service)
+                .Include(a => a.Service)
+                .FirstOrDefaultAsync(a => a.AppointmentId == id && a.UserId == userId);
 
-            // Xử lý nếu không tìm thấy lịch đặt hoặc lịch đặt không thuộc về người dùng
             if (appointment == null)
-            {
-                return NotFound(); // Hoặc chuyển hướng về trang lịch sử với thông báo lỗi
-            }
+                return NotFound();
 
-            // Trả về View AppointmentDetails và truyền đối tượng appointment
             return View(appointment);
         }
-
     }
 }

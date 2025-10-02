@@ -3,7 +3,7 @@
     ViewData["Title"] = "Tất Cả Sản Phẩm";
 }
 <div class="container mt-4">
-    <h2 class="text-center">TẤT CẢ SẢN PHẨM</h2>
+    <h2 class="text-center section-title">TẤT CẢ SẢN PHẨM</h2>
     @if (Model != null && Model.Count > 0)
     {
         <div class="row row-cols-1 row-cols-md-4 g-2" style="margin-left: 0 !important;">
@@ -67,6 +67,17 @@
         </p>
     }
 </div>
+
+<style>
+    .section-title {
+        padding-top: 20px;
+        padding-bottom: 20px;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #000;
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');

@@ -1,42 +1,249 @@
 ﻿@model List<DoAnCoSo.ViewModels.UserInfoViewModel>
-<div class="container py-5">
 
-<!-- Tài khoản -->
-<div class="tab-pane fade show active" id="taikhoan">
-    <h3>Quản lý Tài khoản</h3>
+<div class="user-wrapper py-5">
+    <h2 class="section-title">👤 Quản lý tài khoản</h2>
 
-    @* <a asp-action="AddUser" class="btn btn-primary mb-3">+ Thêm tài khoản</a> *@
+    <div class="user-card">
+        <div class="card-header">
+            <h4 class="mb-0 fw-bold">Danh sách người dùng</h4>
+        </div>
 
-    <table class="table table-bordered align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Tên người dùng</th>
-                <th>Tên đăng nhập</th>
-                <th>Email</th>
-                <th>Vai trò</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Model)
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <input type="text" class="form-control search-input" placeholder="Tìm theo tên, email hoặc vai trò...">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center user-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width: 24%">ID</th>
+                            <th style="width: 18%">Tên người dùng</th>
+                            <th style="width: 18%">Tên đăng nhập</th>
+                            <th style="width: 22%">Email</th>
+                            <th style="width: 10%">Vai trò</th>
+                            <th style="width: 8%">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td class="id-cell">
+                                    <span class="id-text" title="@user.Id">@user.Id</span>
+                                    <button type="button" class="btn-copy" onclick="navigator.clipboard.writeText('@user.Id')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                                <td class="text-truncate" title="@user.FullName">@user.FullName</td>
+                                <td class="text-truncate" title="@user.UserName">@user.UserName</td>
+                                <td class="text-truncate" title="@user.Email">@user.Email</td>
+                                <td>
+                                    @if (string.Equals(user.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge role-admin">Admin</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge role-customer">Customer</span>
+                                    }
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="actions">
+                                        <a asp-action="EditUser" asp-route-id="@user.Id" class="btn-accept btn-sm">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="d-inline-block"
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa người dùng này?');">
+                                            <button type="submit" class="btn-cancel btn-sm">
+                                                <i class="fas fa-trash-alt"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model == null || !Model.Any())
             {
-                <tr>
-                    <td>@user.Id</td>
-                    <td>@user.FullName</td>
-                    <td>@user.UserName</td>
-                    <td>@user.Email</td>
-                    <td>@user.Role</td>
-                    <td>
-                        <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-warning btn-sm">Chỉnh sửa</a>
-
-                        <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')">Xóa</button>
-                        </form>
-                    </td>
-                </tr>
+                <p class="no-users">Không có người dùng nào.</p>
             }
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
-</div>
+
+<style>
+    .user-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .user-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        font-weight: 600;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .table-responsive {
+        border-radius: 12px;
+        overflow: auto;
+    }
+
+    .user-table {
+        font-size: 0.95rem;
+    }
+
+        .user-table thead.table-pink {
+            background-color: #FFE4E9;
+        }
+
+        .user-table th, .user-table td {
+            vertical-align: middle;
+        }
+
+        .user-table tbody tr:nth-child(even) {
+            background-color: #FFF7F9;
+        }
+
+        .user-table tbody tr:nth-child(odd) {
+            background-color: #FFFFFF;
+        }
+
+    /* ID cell: ellipsis + copy, gọn vừa phải */
+    .id-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .id-text {
+        display: inline-block;
+        max-width: clamp(180px, 22vw, 320px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        color: #333;
+    }
+
+    .btn-copy {
+        border: 1px solid #FFB6C1;
+        background: #FFF0F5;
+        color: #C04B68;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+        .btn-copy:hover {
+            background: #FFB6C1;
+            color: #fff;
+        }
+
+    /* Badge vai trò */
+    .badge {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 12px;
+    }
+
+    .role-admin {
+        background-color: #FF6185;
+        color: #fff;
+    }
+
+    .role-customer {
+        background-color: #E6A9EC;
+        color: #fff;
+    }
+
+    /* Hành động: nằm ngang, không xuống dòng */
+    .actions-cell {
+        white-space: nowrap;
+    }
+
+    .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Nút hành động: giữ hover */
+    .btn-cancel {
+        border: 2px solid red;
+        color: red;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        background-color: transparent;
+    }
+
+        .btn-cancel:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .btn-accept {
+        border: 2px solid green;
+        color: green;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        background-color: transparent;
+    }
+
+        .btn-accept:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .no-users {
+        text-align: center;
+        color: #777;
+        margin-top: 16px;
+    }
+</style>

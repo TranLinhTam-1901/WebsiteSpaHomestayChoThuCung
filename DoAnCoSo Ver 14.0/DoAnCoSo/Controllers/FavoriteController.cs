@@ -1,4 +1,5 @@
-﻿using DoAnCoSo.Models;
+﻿using DoAnCoSo.DTO;
+using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

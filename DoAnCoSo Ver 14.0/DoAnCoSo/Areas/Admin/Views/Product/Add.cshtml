@@ -1,65 +1,126 @@
 ﻿@model DoAnCoSo.Models.Product
 @using Microsoft.AspNetCore.Mvc.Rendering
 @{
- ViewData["Title"] = "Add Product";
+    ViewData["Title"] = "Thêm sản phẩm";
 }
-<div class="container py-5">
 
-<h2>Thêm sản phẩm</h2>
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4 w-75">
+        <div class="card-header bg-gradient-pink text-white text-center rounded-top-4">
+            <h2 class="mb-0">🌸 Thêm sản phẩm 🌸</h2>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Add" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="Name" class="form-label fw-semibold">Tên sản phẩm</label>
+                    <input id="Name" name="Name" class="form-control border-pink" placeholder="Nhập tên sản phẩm..." />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
 
-<form asp-action="Add" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="Price" class="form-label fw-semibold">Giá sản phẩm</label>
+                    <input id="Price" name="Price" class="form-control border-pink" placeholder="Nhập giá..." />
+                    <span asp-validation-for="Price" class="text-danger small"></span>
+                </div>
 
-	<div class="form-group">
-		<label for="Name">Tên sản phẩm</label>
-		<input id="Name" name="Name" class="form-control"  />
-		<span asp-validation-for="Name" class="text-danger"></span>
-	</div>
+                <div class="mb-3">
+                    <label for="PriceReduced" class="form-label fw-semibold">Giá giảm (nếu có)</label>
+                    <input id="PriceReduced" name="PriceReduced" class="form-control border-pink" placeholder="Nhập giá giảm..." />
+                    <span asp-validation-for="PriceReduced" class="text-danger small"></span>
+                </div>
 
-	<div class="form-group">
-		<label for="Price">Giá sản phẩm</label>
-		<input id="Price" name="Price" class="form-control" />
-		<span asp-validation-for="Price" class="text-danger"></span>
-	</div>
+                <div class="mb-3">
+                    <label for="Trademark" class="form-label fw-semibold">Thương hiệu</label>
+                    <input id="Trademark" name="Trademark" class="form-control border-pink" placeholder="Nhập thương hiệu..." />
+                    <span asp-validation-for="Trademark" class="text-danger small"></span>
+                </div>
 
-	<div class="form-group">
-		<label for="PriceReduced">Giá giảm (nếu có)</label>
-		<input id="PriceReduced" name="PriceReduced" class="form-control"  />
-		<span asp-validation-for="PriceReduced" class="text-danger"></span>
-	</div>
+                <div class="mb-3">
+                    <label for="Description" class="form-label fw-semibold">Mô tả sản phẩm</label>
+                    <textarea id="Description" name="Description" class="form-control border-pink" rows="3" placeholder="Nhập mô tả..."></textarea>
+                </div>
 
-	<div class="form-group">
-		<label for="Trademark">Thương hiệu</label>
-		<input id="Trademark" name="Trademark" class="form-control"  />
-		<span asp-validation-for="Trademark" class="text-danger"></span>
-	</div>
+                <div class="mb-3">
+                    <label asp-for="CategoryId" class="form-label fw-semibold">Loại sản phẩm</label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-control border-pink"></select>
+                </div>
 
-	<div class="form-group">
-		<label for="Description">Mô tả sản phẩm</label>
-		<textarea id="Description" name="Description" class="form-control"></textarea>
-	</div>
+                <div class="mb-3">
+                    <label for="imageInput" class="form-label fw-semibold">Ảnh đại diện</label>
+                    <input type="file" name="imageUrl" class="form-control border-pink" id="imageInput" />
+                </div>
 
-	<div class="form-group">
-		<label asp-for="CategoryId">Loại sản phẩm</label>
-		<select asp-for="CategoryId" asp-items="ViewBag.Categories"
-				class="form-control"></select>
-	</div>
+                <div class="mb-3">
+                    <label for="additionalImagesInput" class="form-label fw-semibold">Ảnh sản phẩm khác (Upload nhiều file)</label>
+                    <input type="file" id="additionalImagesInput" name="images" class="form-control border-pink" multiple />
+                </div>
 
-	<div class="form-group">
-		<label for="imageInput">Ảnh đại diện </label>
-		<input type="file" name="imageUrl" class="form-control" id="imageInput" />
-	</div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Hương vị</label>
+                    @for (int i = 0; i < 3; i++)
+                    {
+                        <input type="text" name="flavorsList[@i]" class="form-control border-pink mb-2" placeholder="Nhập hương vị..." />
+                    }
+                </div>
 
-	 <div class="form-group">
-        <label for="additionalImagesInput">Ảnh sản phẩm khác (Upload Nhiều File)</label>
-        <input type="file" id="additionalImagesInput" name="images" class="form-control-file" multiple /> 
+                <div class="text-center">
+                    <button type="submit" class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
+                        + Thêm sản phẩm
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill ms-2">
+                        ← Trở lại
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-
-	<label for="flavorsList">Hương vị</label>
-	@for (int i = 0; i < 3; i++) // Hiển thị 3 ô nhập
-	{
-		<input type="text" name="flavorsList[@i]" class="form-control" />
-	}
-
-	<button type="submit" class="btn btn-primary">Thêm</button>
-</form>
 </div>
+
+<style>
+    :root {
+        --pink-main: #FF6185;
+        --pink-accent: #FF6B6B;
+    }
+
+    .bg-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+    }
+
+    .btn-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+        color: #fff;
+        border: none;
+        transition: 0.3s;
+    }
+
+        .btn-gradient-pink:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+    .btn-outline-pink {
+        border: 1px solid var(--pink-main);
+        color: var(--pink-main);
+        background-color: #fff;
+        transition: 0.3s;
+    }
+
+        .btn-outline-pink:hover {
+            background-color: var(--pink-accent);
+            border-color: var(--pink-accent);
+            color: #fff;
+        }
+
+    .border-pink {
+        border: 1px solid var(--pink-main);
+    }
+
+        .border-pink:focus {
+            border-color: var(--pink-accent);
+            box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+        }
+
+    .card {
+        border-radius: 1rem;
+    }
+</style>

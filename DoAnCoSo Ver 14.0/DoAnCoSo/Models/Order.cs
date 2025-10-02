@@ -30,7 +30,7 @@ namespace DoAnCoSo.Models
         [ForeignKey("UserId")]
         [ValidateNever]
         public ApplicationUser User { get; set; }
-        public List<OrderDetail> OrderDetails { get; set; }
+        public List<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
         public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();

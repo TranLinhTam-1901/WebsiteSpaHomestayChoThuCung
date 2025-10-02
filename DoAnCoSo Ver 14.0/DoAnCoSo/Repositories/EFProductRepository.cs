@@ -15,6 +15,12 @@ namespace DoAnCoSo.Repositories
             return await _context.Products.Include(p=>p.Category).ToListAsync();    
         }
 
+        public async Task AddReviewAsync(Review review)
+        {
+            _context.Reviews.Add(review);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<Product?> GetByIdAsync(int id)
         {
             return await _context.Products
@@ -43,18 +49,16 @@ namespace DoAnCoSo.Repositories
 
         }
 
-        public async Task<Product?> GetProductWithReviewsAndImagesAsync(int id) 
+        public async Task<Product?> GetProductWithReviewsAndImagesAsync(int id)
         {
-            // Giả sử _context là DbContext của bạn được inject vào Repository
             return await _context.Products
-                                 .Include(p => p.Images)
-
-                                 .Include(p => p.Reviews) 
-                                     .ThenInclude(r => r.User)
-
-                                 .Include(p => p.Reviews)
-                                     .ThenInclude(r => r.Images)                                   
-                                 .FirstOrDefaultAsync(p => p.Id == id);
+                .Include(p => p.Images)
+                .Include(p => p.Category) // ✅ thêm Include Category
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.User)
+                .Include(p => p.Reviews)
+                    .ThenInclude(r => r.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(string categoryName)

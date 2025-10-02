@@ -1,4 +1,4 @@
-﻿namespace DoAnCoSo.Models
+﻿namespace DoAnCoSo.DTO
 {
     public class FavoriteToggleRequest
     {

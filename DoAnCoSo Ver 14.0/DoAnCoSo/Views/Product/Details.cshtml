@@ -212,9 +212,9 @@
                             </span>
                             (@review.Rating/5)
                         </p>
-                        @if (!string.IsNullOrEmpty(review.CommentText))
+                        @if (!string.IsNullOrEmpty(review.Comment))
                         {
-                            <p class="mb-1">@review.CommentText</p>
+                            <p class="mb-1">@review.Comment</p>
                         }
 
                         @* {{-- --- Hiển thị hình ảnh bình luận (nếu có) --- --}} *@
@@ -236,7 +236,7 @@
                             </div>
                         }
 
-                        <p class="mb-0"><small class="text-muted">Ngày: @(review.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</small></p>
+                        <p class="mb-0"><small class="text-muted">Ngày: @(review.CreatedDate.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</small></p>
                     </div>
                     @* { { --End single review --} } *@
                 }
@@ -258,10 +258,10 @@
                 @Html.AntiForgeryToken()
 
                 @* {{-- Input ẩn cho ProductId --}} *@
-                <input type="hidden" asp-for="NewReview.ProductId" value="@Model.Product.Id" />
+                <input type="hidden" asp-for="NewReview.TargetId" value="@Model.Product.Id" />
+                <input type="hidden" asp-for="NewReview.TargetType" value="Product" />
                 <input type="hidden" asp-for="NewReview.UserId" />
                 @* {{-- Nếu UserId là null (người dùng chưa đăng nhập), input này sẽ không được tạo, hoặc tạo với value rỗng --}} *@
-
 
                 @* Input cho đánh giá sao *@
                 <div class="form-group mb-3">
@@ -280,9 +280,9 @@
 
                 @* {{-- Input cho nội dung bình luận --}} *@
                 <div class="form-group mb-3">
-                    <label asp-for="NewReview.CommentText" class="form-label">Nội dung bình luận:</label>
-                    <textarea asp-for="NewReview.CommentText" class="form-control" rows="4"></textarea>
-                    <span asp-validation-for="NewReview.CommentText" class="text-danger"></span>
+                    <label asp-for="NewReview.Comment" class="form-label">Nội dung bình luận:</label>
+                    <textarea asp-for="NewReview.Comment" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="NewReview.Comment" class="text-danger"></span>
                 </div>
 
 

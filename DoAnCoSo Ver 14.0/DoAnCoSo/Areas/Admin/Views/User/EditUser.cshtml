@@ -5,35 +5,38 @@
     var allRoles = ViewBag.AllRoles as List<string>;
 }
 
-<div class="container mt-5">
-    <h2>Chỉnh sửa thông tin người dùng</h2>
- 
-    <div class="row">
-        <div class="col-md-6">
+<div class="user-edit-wrapper py-5">
+    <h2 class="section-title">✏️ Chỉnh sửa thông tin người dùng</h2>
+
+    <div class="edit-card">
+        <div class="card-header">
+            <h5 class="mb-0 fw-bold">Thông tin người dùng</h5>
+        </div>
+        <div class="card-body">
             <form asp-action="EditUser" method="post">
                 <input type="hidden" asp-for="Id" />
 
                 <div class="mb-3">
-                    <label asp-for="FullName" class="form-label">Tên người dùng</label>
+                    <label asp-for="FullName" class="form-label fw-semibold">Tên người dùng</label>
                     <input asp-for="FullName" class="form-control" />
                     <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="UserName" class="form-label">Tên đăng nhập</label>
+                    <label asp-for="UserName" class="form-label fw-semibold">Tên đăng nhập</label>
                     <input asp-for="UserName" class="form-control" />
                     <span asp-validation-for="UserName" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email</label>
+                    <label asp-for="Email" class="form-label fw-semibold">Email</label>
                     <input asp-for="Email" type="email" class="form-control" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Role" class="form-label">Vai trò</label>
-                    <select asp-for="Role" class="form-control">
+                    <label asp-for="Role" class="form-label fw-semibold">Vai trò</label>
+                    <select asp-for="Role" class="form-select">
                         <option value="">-- Chọn vai trò --</option>
                         @if (allRoles != null)
                         {
@@ -46,11 +49,104 @@
                     <span asp-validation-for="Role" class="text-danger"></span>
                 </div>
 
-                <div class="mb-3">   
-                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-                    <a asp-action="UserList" class="btn btn-secondary">Quay lại</a>
+                <div class="text-end">
+                    <button type="submit" class="btn-accept me-2">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
+                    <a asp-action="UserList" class="btn-detail">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    .user-edit-wrapper {
+        max-width: 700px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 70px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .edit-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        font-weight: 600;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .form-label {
+        color: #444;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #FFB6C1;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #FF6185;
+            box-shadow: 0 0 0 0.2rem rgba(255,97,133,0.25);
+        }
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        text-decoration: none;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-accept {
+        border: 2px solid green;
+        color: green;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        background-color: transparent;
+    }
+
+        .btn-accept:hover {
+            background-color: green;
+            color: #fff;
+        }
+</style>
