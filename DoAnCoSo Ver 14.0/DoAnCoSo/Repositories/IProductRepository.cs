@@ -10,6 +10,7 @@ namespace DoAnCoSo.Repositories
         Task UpdateAsync(Product product);
         Task DeleteAsync(int id);
         Task<Product?> GetProductWithReviewsAndImagesAsync(int id);
+        Task AddReviewAsync(Review review);
 
         Task<IEnumerable<Product>> GetProductsByCategoryAsync(string categoryName);
     }

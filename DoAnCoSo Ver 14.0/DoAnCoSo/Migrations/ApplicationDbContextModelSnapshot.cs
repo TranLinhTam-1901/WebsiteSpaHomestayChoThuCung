@@ -416,23 +416,103 @@ namespace DoAnCoSo.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PetId"));
 
+                    b.Property<string>("AI_AnalysisResult")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("Age")
                         .HasColumnType("int");
 
+                    b.Property<string>("Allergies")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Breed")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DietPreferences")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DistinguishingMarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HealthNotes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Height")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MedicalHistory")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("VaccinationRecords")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Weight")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("PetId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Pets");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.PetServiceRecord", b =>
+                {
+                    b.Property<int>("RecordId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecordId"));
+
+                    b.Property<string>("AI_Feedback")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateUsed")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PetId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("PriceAtThatTime")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecordId");
+
+                    b.HasIndex("PetId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("PetServiceRecords");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Product", b =>
@@ -450,6 +530,7 @@ namespace DoAnCoSo.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Flavors")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
@@ -496,68 +577,6 @@ namespace DoAnCoSo.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
-                });
-
-            modelBuilder.Entity("DoAnCoSo.Models.ProductReview", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CommentText")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<byte>("Rating")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ProductReviews");
-                });
-
-            modelBuilder.Entity("DoAnCoSo.Models.ProductReviewImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Caption")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int?>("ProductReviewId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReviewId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductReviewId");
-
-                    b.ToTable("ProductReviewImages");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Promotion", b =>
@@ -607,24 +626,61 @@ namespace DoAnCoSo.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
-                    b.Property<int>("ServiceId")
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TargetType")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ServiceId");
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ReviewImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Caption")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("ReviewImages");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Service", b =>
@@ -646,7 +702,8 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -669,7 +726,8 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -715,7 +773,7 @@ namespace DoAnCoSo.Migrations
                     b.HasIndex("ServiceId")
                         .IsUnique();
 
-                    b.ToTable("SpaPricing");
+                    b.ToTable("SpaPricings");
                 });
 
             modelBuilder.Entity("Favorite", b =>
@@ -1024,9 +1082,30 @@ namespace DoAnCoSo.Migrations
                 {
                     b.HasOne("DoAnCoSo.Models.ApplicationUser", "User")
                         .WithMany("Pets")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.PetServiceRecord", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Pet", "Pet")
+                        .WithMany("ServiceRecords")
+                        .HasForeignKey("PetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DoAnCoSo.Models.Service", "Service")
+                        .WithMany("PetServiceRecords")
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Pet");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Product", b =>
@@ -1051,45 +1130,52 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("DoAnCoSo.Models.ProductReview", b =>
+            modelBuilder.Entity("DoAnCoSo.Models.Review", b =>
                 {
-                    b.HasOne("DoAnCoSo.Models.Product", "Product")
+                    b.HasOne("DoAnCoSo.Models.Product", null)
                         .WithMany("Reviews")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductId");
 
                     b.HasOne("DoAnCoSo.Models.ApplicationUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Product");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DoAnCoSo.Models.ProductReviewImage", b =>
+            modelBuilder.Entity("DoAnCoSo.Models.ReviewImage", b =>
                 {
-                    b.HasOne("DoAnCoSo.Models.ProductReview", null)
+                    b.HasOne("DoAnCoSo.Models.Review", "Review")
                         .WithMany("Images")
-                        .HasForeignKey("ProductReviewId");
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
                 });
 
-            modelBuilder.Entity("DoAnCoSo.Models.Review", b =>
+            modelBuilder.Entity("DoAnCoSo.Models.ServiceDetail", b =>
                 {
                     b.HasOne("DoAnCoSo.Models.Service", "Service")
-                        .WithMany()
+                        .WithMany("ServiceDetails")
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DoAnCoSo.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.SpaPricing", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Service", "Service")
+                        .WithOne("SpaPricing")
+                        .HasForeignKey("DoAnCoSo.Models.SpaPricing", "ServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Service");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.ServiceDetail", b =>
@@ -1215,6 +1301,8 @@ namespace DoAnCoSo.Migrations
             modelBuilder.Entity("DoAnCoSo.Models.Pet", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("ServiceRecords");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Product", b =>
@@ -1226,7 +1314,7 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Reviews");
                 });
 
-            modelBuilder.Entity("DoAnCoSo.Models.ProductReview", b =>
+            modelBuilder.Entity("DoAnCoSo.Models.Review", b =>
                 {
                     b.Navigation("Images");
                 });
@@ -1234,6 +1322,8 @@ namespace DoAnCoSo.Migrations
             modelBuilder.Entity("DoAnCoSo.Models.Service", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("PetServiceRecords");
 
                     b.Navigation("ServiceDetails");
 

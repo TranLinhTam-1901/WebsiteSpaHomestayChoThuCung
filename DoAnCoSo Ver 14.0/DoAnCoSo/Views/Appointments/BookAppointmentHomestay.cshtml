@@ -1,108 +1,139 @@
 ﻿@model DoAnCoSo.ViewModels.HomestayBookingViewModel
+@using DoAnCoSo.Models
 
 @{
-    ViewData["Title"] = "🐱 Đặt lịch cho dịch vụ Homestay 🐶 🏨";
+    ViewData["Title"] = "🏨 Đặt lịch Homestay cho thú cưng 🐶🐱";
+    var userPets = ViewBag.UserPets as List<Pet> ?? new List<Pet>();
+    var services = ViewBag.HomestayServices as List<Service> ?? new List<Service>();
 }
-<div class="container mt-5">
-    <div class="card shadow-lg p-4 w-50 mx-auto">
-        <h2 class="text-center">@ViewData["Title"]</h2>
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
 
         <form asp-action="BookAppointmentHomestay" method="post">
-
+            <!-- 1️⃣ Chủ nuôi -->
+            <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
             <div class="mb-3">
                 <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
-                <input asp-for="OwnerPhoneNumber" class="form-control" required>
-                <span asp-validation-for="OwnerPhoneNumber" class="text-danger"></span>
+                <input asp-for="OwnerPhoneNumber" class="form-control" required />
             </div>
 
+            <!-- 2️⃣ Thú cưng -->
+            <h5><span class="section-icon">🐾</span>Chọn thú cưng</h5>
             <div class="mb-3">
-                <label asp-for="PetName" class="form-label"></label>
-                <input asp-for="PetName" class="form-control" required>
-                <span asp-validation-for="PetName" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="PetType" class="form-label">Loại thú cưng</label>
-                <input asp-for="PetType" class="form-control" required>
-                <span asp-validation-for="PetType" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="ServiceId" class="form-label">Chọn loại phòng</label>
-                <select asp-for="ServiceId" class="form-select" asp-items="@(new SelectList(ViewBag.HomestayServices, "ServiceId", "Name"))" required>
-                    <option value="">Chọn loại phòng</option>
+                <label class="form-label">Thú cưng có sẵn</label>
+                <select id="existingPetSelect" class="form-select">
+                    @foreach (var pet in userPets)
+                    {
+                        <option value="@pet.PetId"
+                                data-name="@pet.Name"
+                                data-type="@pet.Type"
+                                data-breed="@pet.Breed"
+                                data-age="@pet.Age"
+                                data-weight="@pet.Weight">
+                            @pet.Name
+                        </option>
+                    }
                 </select>
-                <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
 
-            <h4>3️⃣ Chọn thời gian</h4>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PetName" class="form-label">Tên thú cưng</label>
+                    <input asp-for="PetName" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PetType" class="form-label">Loại</label>
+                    <input asp-for="PetType" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PetBreed" class="form-label">Giống</label>
+                    <input asp-for="PetBreed" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PetAge" class="form-label">Tuổi</label>
+                    <input asp-for="PetAge" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PetWeight" class="form-label">Cân nặng</label>
+                    <div class="input-group">
+                        <input asp-for="PetWeight" class="form-control" readonly />
+                        <span class="input-group-text">kg</span>
+                    </div>
+                </div>
+            </div>
 
+            <input type="hidden" name="existingPetId" id="existingPetId" />
+
+            <!-- 3️⃣ Loại phòng -->
+            <h5><span class="section-icon">🛏️</span>Chọn loại phòng Homestay</h5>
             <div class="mb-3">
-                <label asp-for="StartDate" class="form-label"></label>
-                <input asp-for="StartDate" class="form-control" type="date" required>
-                <span asp-validation-for="StartDate" class="text-danger"></span>
+                <label asp-for="ServiceId" class="form-label">Loại phòng</label>
+                <select asp-for="ServiceId" class="form-select" id="serviceSelect" required
+                        asp-items="@(new SelectList(services, "ServiceId", "Name"))">
+                </select>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="EndDate" class="form-label"></label>
-                <input asp-for="EndDate" class="form-control" type="date" required>
-                <span asp-validation-for="EndDate" class="text-danger"></span>
+            <!-- 4️⃣ Thời gian -->
+            <h5><span class="section-icon">📅</span>Thời gian lưu trú</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="StartDate" class="form-label">Ngày bắt đầu</label>
+                    <input asp-for="StartDate" type="date" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EndDate" class="form-label">Ngày kết thúc</label>
+                    <input asp-for="EndDate" type="date" class="form-control" required />
+                </div>
             </div>
 
-            @* <div class="mb-3"> *@
-            @* 	<label asp-for="StartDate" class="form-label"></label> *@
-            @* 	@* Thay đổi type="date" thành type="text" và thêm ID *@ 
-            @* 	<input asp-for="StartDate" class="form-control" type="text" id="startDateInput" required>  *@
-            @*           <span asp-validation-for="StartDate" class="text-danger"></span> *@
-            @*         </div> *@
-
-            @* <div class="mb-3"> *@
-            @* 	<label asp-for="EndDate" class="form-label"></label> *@
-            @* 	@* Thay đổi type="date" thành type="text" và thêm ID *@ 
-            @* 	<input asp-for="EndDate" class="form-control" type="text" id="appointmentDateInput" required> *@
-            @* 	<span asp-validation-for="EndDate" class="text-danger"></span> *@
-            @* </div> *@
-
-            <button type="submit" class="btn btn-primary">
-                📅 Đặt lịch
-            </button>
+            <button type="submit" class="btn btn-pink w-100 mt-4">📦 Đặt lịch ngay</button>
         </form>
     </div>
 </div>
 
-@* <script> *@
-@* 	document.addEventListener('DOMContentLoaded', function() { *@
-@* 		// Lấy giá trị ngày mặc định từ Model Razor và định dạng sang 'yyyy-MM-dd' *@
-@* 		// Sử dụng 'toISOString().split('T')[0]' là một cách phổ biến để format DateTime của JS sang 'yyyy-MM-dd' *@
-@* 		// Tuy nhiên, nếu Model.StartDate là null, cần xử lý cẩn thận. *@
-@* 		// Đảm bảo Model.StartDate và Model.EndDate không phải là null khi trang render. *@
-@* 		// Giả sử Model.StartDate và Model.EndDate luôn có giá trị (ví dụ: DateTime.Now) *@
+<!-- JS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const petSelect = document.getElementById("existingPetSelect");
+        const existingPetIdInput = document.getElementById("existingPetId");
 
-@* 		var defaultStartDate = null; *@
-@* 		// Kiểm tra nếu Model.StartDate có giá trị (không null) và là Date *@
-@* 		// @Model.StartDate là đối tượng DateTime của C#, cần chuyển nó sang chuỗi hoặc timestamp JS *@
-@* 		// Cách an toàn nhất là render nó thành chuỗi 'yyyy-MM-dd' ngay trong Razor *@
-@* 		var initialStartDateString = "@Model.StartDate.ToString("yyyy-MM-dd")"; // Format C# DateTime sang yyyy-MM-dd *@
-@* 		if (initialStartDateString) { *@
-@* 			 defaultStartDate = initialStartDateString; *@
-@* 		} *@
+        const petName = document.getElementById("PetName");
+        const petType = document.getElementById("PetType");
+        const petBreed = document.getElementById("PetBreed");
+        const petAge = document.getElementById("PetAge");
+        const petWeight = document.getElementById("PetWeight");
 
-@* 		var defaultEndDate = null; *@
-@* 		 var initialEndDateString = "@Model.EndDate.ToString("yyyy-MM-dd")"; // Format C# DateTime sang yyyy-MM-dd *@
-@* 		if (initialEndDateString) { *@
-@* 			 defaultEndDate = initialEndDateString; *@
-@* 		} *@
+        function fillPetInfo(opt) {
+            if (!opt || !opt.value) {
+                petName.value = "";
+                petType.value = "";
+                petBreed.value = "";
+                petAge.value = "";
+                petWeight.value = "";
+                existingPetIdInput.value = "";
+            } else {
+                petName.value = opt.dataset.name || "";
+                petType.value = opt.dataset.type || "";
+                petBreed.value = opt.dataset.breed || "";
+                petAge.value = opt.dataset.age || "";
+                petWeight.value = opt.dataset.weight || "";
+                existingPetIdInput.value = opt.value;
+            }
+        }
 
-@* 		// Khởi tạo Flatpickr cho StartDate *@
-@* 		flatpickr("#startDateInput", { *@
-@* 			dateFormat: "d/m/Y", // Định dạng hiển thị *@
-@* 			defaultDate: defaultStartDate, // Sử dụng giá trị mặc định từ Model *@
-@* 			// Các tùy chọn khác *@
-@* 		}); *@
+        // Khi đổi thú cưng
+        petSelect.addEventListener("change", function () {
+            fillPetInfo(this.selectedOptions[0]);
+        });
 
-@* 		// Khởi tạo Flatpickr cho EndDate *@
-@* 		flatpickr("#endDateInput", { // Hoặc ID bạn đã dùng cho ô End Date *@
-@* 			dateFormat: "d/m/Y", // Định dạng hiển thị *@
-@* 			defaultDate: defaultEndDate, // Sử dụng giá trị mặc định từ Model *@
-@* 			// Các tùy chọn khác *@
-@* 		}); *@
-@* 	}); *@
-@* </script> *@
+        // Khởi tạo mặc định khi vào trang
+        if (petSelect.options.length > 0) {
+            petSelect.selectedIndex = 0; // bỏ qua option "-- Thêm thú cưng mới --"
+            fillPetInfo(petSelect.selectedOptions[0]);
+        }
+    });
+</script>

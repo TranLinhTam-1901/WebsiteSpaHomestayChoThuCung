@@ -12,7 +12,8 @@ img {
 
 body {
     color: #333f48;
-    font-family: "AntTeam"
+    font-family: "AntTeam";
+    background-color: #fff0f5;
 }
 
 @media (min-width: 1400px) {
@@ -31,7 +32,7 @@ ol, ul {
 
 header.header {
     position: relative;
-    background-color: #fff
+    background-color: #fff0f5;
 }
 
     header.header .header-notice {
@@ -1411,11 +1412,11 @@ header.header .ant-menu .nav .nav-item.booking-calendar-item {
 
 footer {
     margin-top: 35px;
-    background-color: #292a2d;
-    background-image: url(//bizweb.dktcdn.net/100/458/454/themes/869149/assets/banner-6.jpg?1741621752018);
+    background-color: #fff0f5;
+    background-image: url('/images/Footer.png');
     background-position: top center;
     background-repeat: no-repeat;
-    padding: 70px 0 0
+    padding: 70px 0 0;
 }
 
 @media (min-width: 768px) and (max-width: 991px) {

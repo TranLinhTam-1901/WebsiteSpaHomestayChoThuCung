@@ -67,7 +67,7 @@
     bool isUserCustomer = userRoleFilter?.ToLower() == "customer";
 }
 <div class="container py-4">
-    <h2 class="text-center mb-4">Trang Quản Lý Tổng Hợp</h2>
+    <h2 class="text-center mb-4" style="color: black">Trang Quản Lý Tổng Hợp</h2>
 
     <!-- Tổng quan thống kê -->
     <div class="row g-4 mb-4">
@@ -106,7 +106,7 @@
     </div>
 
     <!-- Filter Đơn hàng -->
-    <h4>Lọc đơn hàng</h4>
+    <h4 style="color: black">Lọc đơn hàng</h4>
     <form method="get" class="row g-3 align-items-center mb-4">
         <input type="hidden" name="appointmentCustomerName" value="@appointmentCustomerName" />
         <input type="hidden" name="appointmentStatus" value="@appointmentStatus" />
@@ -162,7 +162,7 @@
     </div>
 
     <!-- Filter Lịch hẹn -->
-    <h4 style=" padding-top: 20px;">
+    <h4 style=" padding-top: 20px; color: black">
         Lọc lịch hẹn
     </h4>
     @{
@@ -228,7 +228,7 @@
     </div>
 
     <!-- Filter Người dùng -->
-    <h4 style=" padding-top: 20px;">
+    <h4 style=" padding-top: 20px; color: black">
         Lọc người dùng
     </h4>
     <form method="get" class="row g-3 align-items-center mb-4">

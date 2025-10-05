@@ -8,17 +8,21 @@ namespace DoAnCoSo.Models
         [Key]
         public int ServiceDetailId { get; set; }
 
+        [ForeignKey("Service")]
         public int ServiceId { get; set; }
 
         [Required]
-        public string Name { get; set; }
+        [MaxLength(200)]
+        public string Name { get; set; } // Ví dụ: "Tắm gội cơ bản", "Cạo lông"
 
         [Required]
+        [Range(0, double.MaxValue)]
         public decimal Price { get; set; }
 
+        [Range(0, double.MaxValue)]
         public decimal? SalePrice { get; set; }
 
-        [ForeignKey("ServiceId")]
+        // Quan hệ
         public Service Service { get; set; }
     }
 }

@@ -1,11 +1,133 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.Order>
 
 @{
-    ViewData["Title"] = "Lịch sử đặt hàng";
+    ViewData["Title"] = "🛒 Lịch sử đặt hàng";
 }
 
-<div class="container py-5">
-    <h2 class="mb-4">🛒 Lịch sử đặt hàng</h2>
+<style>
+    .order-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .order-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #fff0f5;
+        font-weight: 500;
+        font-size: 1rem;
+        padding: 15px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .card-body {
+        font-size: 0.95rem;
+        color: #333;
+        padding: 15px 20px;
+    }
+
+    .card-footer {
+        background-color: #fff;
+        padding: 12px 20px;
+        border-top: 1px solid #FFB6C1;
+    }
+
+    .badge {
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 12px;
+    }
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-cancel {
+        border: 2px solid red;
+        color: red;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        background-color: transparent;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .btn-cancel:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .list-group-item {
+        font-size: 0.9rem;
+    }
+
+    .no-orders {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #666;
+        margin-top: 40px;
+    }
+
+    @@media (max-width: 768px) {
+        .section-title
+
+        {
+            font-size: 1.6rem;
+        }
+
+        .card-header, .card-body, .card-footer {
+            padding: 12px;
+        }
+
+        .btn-detail, .btn-cancel {
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+    }
+</style>
+
+<div class="order-wrapper py-5">
+    <h2 class="section-title">🛒 Lịch sử đặt hàng</h2>
 
     @if (TempData["SuccessMessage"] != null)
     {
@@ -18,18 +140,18 @@
 
     @if (!Model.Any())
     {
-        <p>Bạn chưa có đơn hàng nào.</p>
+        <p class="no-orders">Bạn chưa có đơn hàng nào.</p>
     }
     else
     {
         @foreach (var order in Model)
         {
-            <div class="card shadow-sm mb-4 border-0">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div class="order-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <strong>Mã đơn:</strong> @order.Id <br />
+                        <strong><i class="fas fa-receipt me-1"></i> Mã đơn:</strong> @order.Id <br />
                         <small class="text-muted">
-                            Ngày đặt: @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            <i class="fas fa-calendar-alt me-1"></i> Ngày đặt: @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                         </small>
                     </div>
                     <div>
@@ -51,15 +173,16 @@
                         }
                     </div>
                 </div>
+
                 <div class="card-body">
-                    <p><strong>Người nhận:</strong> @order.CustomerName</p>
-                    <p><strong>Tổng tiền:</strong> <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span></p>
+                    <p><strong><i class="fas fa-user me-1"></i> Người nhận:</strong> @order.CustomerName</p>
+                    <p><strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong> <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span></p>
 
                     <div>
-                        <strong>Chi tiết sản phẩm:</strong>
+                        <strong><i class="fas fa-box-open me-1"></i> Chi tiết sản phẩm:</strong>
                         @if (order.OrderDetails != null && order.OrderDetails.Any())
                         {
-                            <ul class="list-group list-group-flush">
+                            <ul class="list-group list-group-flush mt-2">
                                 @foreach (var item in order.OrderDetails)
                                 {
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -79,12 +202,15 @@
                         }
                         else
                         {
-                            <p class="text-muted">Không có chi tiết sản phẩm.</p>
+                            <p class="text-muted mt-2">Không có chi tiết sản phẩm.</p>
                         }
                     </div>
                 </div>
-                <div class="card-footer text-end bg-white">
-                    <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail">Xem chi tiết</a>
+
+                <div class="card-footer text-end">
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail me-2">
+                        <i class="fas fa-info-circle me-1"></i> Xem chi tiết
+                    </a>
                     @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
                     {
                         <form asp-action="CancelOrder" asp-route-id="@order.Id" method="post"
@@ -98,48 +224,3 @@
         }
     }
 </div>
-
-<style>
-    /* Badge trạng thái lớn hơn */
-    .badge {
-        font-size: 12px; /* tăng chữ */
-        padding: 8px 8px; /* tăng padding */
-    }
-
-    /* Nút Xem chi tiết nhỏ hơn */
-    .btn-detail {
-        display: inline-block;
-        text-align: center;
-        background-color: #FFB6C1;
-        color: #000;
-        font-weight: bold;
-        padding: 8px 12px; /* giảm padding */
-        font-size: 12px; /* giảm chữ */
-        border-radius: 25px;
-        text-decoration: none;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-        .btn-detail:hover {
-            background-color: #FF6185;
-            color: #fff;
-        }
-
-    .btn-cancel {
-        display: inline-block;
-        text-align: center;
-        border: 2px solid red;
-        color: red;
-        font-weight: bold;
-        padding: 8px 12px; /* giảm padding */
-        font-size: 12px; /* giảm chữ */
-        border-radius: 25px;
-        text-decoration: none;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-        .btn-cancel:hover {
-            background-color: red;
-            color: #fff;
-        }
-</style>

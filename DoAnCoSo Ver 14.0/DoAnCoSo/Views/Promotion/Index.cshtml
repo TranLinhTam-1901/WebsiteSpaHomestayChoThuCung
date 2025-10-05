@@ -1,8 +1,8 @@
 ﻿@model List<DoAnCoSo.Models.Promotion>
 
-<section class="promotion-section">
+<section class="promotion-section py-5">
     <div class="container">
-        <h2 class="section-title">KHUYỄN MÃI NỔI BẬT</h2>
+        <h2 class="section-title">Khuyến mãi nổi bật</h2>
         <div class="promotion-grid">
             @foreach (var promo in Model)
             {
@@ -20,17 +20,23 @@
 </section>
 
 <style>
-    .promotion-section {
-        padding: 60px 10px;
-        background-color: #f9f9f9;
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
     }
 
-        .promotion-section .section-title {
-            font-size: 35px;
-            font-weight: 700;
-            color: #FF6185;
-            text-align: center;
-            margin-bottom: 40px;
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
         }
 
     .promotion-grid {
