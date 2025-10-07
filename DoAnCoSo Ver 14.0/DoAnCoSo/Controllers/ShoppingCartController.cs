@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System; // Thêm using này cho DateTime
-
+using DoAnCoSo.Services;
 
 namespace DoAnCoSo.Controllers
 {
@@ -18,12 +18,17 @@ namespace DoAnCoSo.Controllers
         private readonly IProductRepository _productRepository;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly EmailService _emailService;
 
-        public ShoppingCartController(IProductRepository productRepository, UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+        public ShoppingCartController(IProductRepository productRepository,
+                                      UserManager<ApplicationUser> userManager,
+                                      ApplicationDbContext context,
+                                      EmailService emailService)
         {
             _productRepository = productRepository;
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // Helper method để lấy sản phẩm từ database (giữ nguyên)
@@ -128,7 +133,6 @@ namespace DoAnCoSo.Controllers
             return RedirectToAction("Index");
         }
 
-        
         [HttpPost]
         public async Task<IActionResult> BuyNow(int productId, int quantity = 1)
         {
@@ -198,10 +202,7 @@ namespace DoAnCoSo.Controllers
             }
         }
 
-
-
         // Trong ShoppingCartController.cs
-
         [HttpGet]
         public async Task<IActionResult> Checkout(
             [FromQuery] List<int> selectedCartItemIds, // Dành cho giỏ hàng có tích chọn
@@ -296,7 +297,6 @@ namespace DoAnCoSo.Controllers
         }
 
         // Trong ShoppingCartController.cs
-
         [HttpPost]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
@@ -309,24 +309,24 @@ namespace DoAnCoSo.Controllers
 
             List<CartItem> itemsForOrder = new List<CartItem>();
 
+            // --- Lấy sản phẩm ---
             if (model.IsBuyNowCheckout)
             {
                 if (model.BuyNowProductId.HasValue && model.BuyNowQuantity.HasValue && model.BuyNowQuantity.Value > 0)
                 {
                     var product = await GetProductFromDatabase(model.BuyNowProductId.Value);
-
                     if (product != null)
                     {
-                        var buyNowItem = new CartItem
+                        itemsForOrder.Add(new CartItem
                         {
                             ProductId = model.BuyNowProductId.Value,
                             Quantity = model.BuyNowQuantity.Value,
                             Product = product,
                             SelectedFlavor = model.BuyNowFlavor ?? ""
-                        };
-                        itemsForOrder.Add(buyNowItem);
+                        });
                     }
                 }
+
                 if (!itemsForOrder.Any())
                 {
                     TempData["ErrorMessage"] = "Không tìm thấy sản phẩm 'Mua ngay' hợp lệ để thanh toán.";
@@ -342,36 +342,41 @@ namespace DoAnCoSo.Controllers
                 }
 
                 itemsForOrder = await _context.CartItems
-                                               .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
-                                               .Include(ci => ci.Product)
-                                               .ToListAsync();
+                    .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
+                    .Include(ci => ci.Product)
+                    .ToListAsync();
 
-                if (itemsForOrder == null || !itemsForOrder.Any())
+                if (!itemsForOrder.Any())
                 {
                     TempData["ErrorMessage"] = "Không tìm thấy sản phẩm hợp lệ nào trong giỏ hàng đã chọn.";
                     return RedirectToAction("Index");
                 }
             }
 
+            // --- Tạo Order ---
             var order = model.Order;
             order.UserId = userId;
             order.OrderDate = DateTime.UtcNow;
             order.Status = OrderStatusEnum.ChoXacNhan;
-
             order.OrderDetails = new List<OrderDetail>();
-            decimal total = 0;
 
+            decimal total = 0;
             foreach (var item in itemsForOrder)
             {
                 if (item.Product != null)
                 {
+                    var price = item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0
+                        ? (decimal)item.Product.PriceReduced.Value
+                        : item.Product.Price;
+
                     var orderDetail = new OrderDetail
                     {
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
-                        Price = item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? (decimal)item.Product.PriceReduced.Value : item.Product.Price,
-                        SelectedFlavor = item.SelectedFlavor ?? "",
+                        Price = price,
+                        SelectedFlavor = item.SelectedFlavor ?? ""
                     };
+
                     order.OrderDetails.Add(orderDetail);
                     total += orderDetail.Price * orderDetail.Quantity;
                 }
@@ -386,14 +391,62 @@ namespace DoAnCoSo.Controllers
 
             try
             {
+                // 1. Lưu đơn hàng
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // 2. Gửi email xác nhận (nếu lỗi → chỉ log, không phá Checkout)
+                try
+                {
+                    var customerEmail = user.Email;
+
+                    // ✅ Chuyển giờ UTC sang giờ VN
+                    var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
+                    var vnDate = TimeZoneInfo.ConvertTimeFromUtc(order.OrderDate.ToUniversalTime(), vnTimeZone);
+
+                    string body = $@"
+                    <h2>🎉 Cảm ơn {user.FullName} đã đặt hàng tại PawHouse!</h2>
+                    <p><b>Mã đơn:</b> {order.Id}</p>
+                    <p><b>Ngày đặt:</b> {vnDate:dd/MM/yyyy HH:mm}</p>
+                    <p><b>Chi tiết đơn hàng:</b></p>
+                    <table border='1' cellpadding='5' cellspacing='0'>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Số lượng</th>
+                            <th>Giá</th>
+                            <th>Thành tiền</th>
+                        </tr>";
+
+                                        foreach (var detail in order.OrderDetails)
+                                        {
+                                            var product = await _context.Products.FindAsync(detail.ProductId);
+                                            body += $@"
+                        <tr>
+                            <td>{product?.Name}</td>
+                            <td>{detail.Quantity}</td>
+                            <td>{detail.Price:N0}đ</td>
+                            <td>{(detail.Price * detail.Quantity):N0}đ</td>
+                        </tr>";
+                                        }
+
+                                        body += $@"
+                    </table>
+                    <p><b>Tổng cộng:</b> {order.TotalPrice:N0}đ</p>
+                    <p>Chúng tôi sẽ liên hệ để xác nhận đơn hàng trong thời gian sớm nhất.</p>";
+
+                    await _emailService.SendEmailAsync(customerEmail, "Đặt thành công đơn hàng #" + order.Id, body);
+                }
+                catch (Exception exMail)
+                {
+                    Console.WriteLine($"⚠️ Lỗi gửi mail: {exMail.Message}");
+                }
+
+                // 3. Xóa sản phẩm trong giỏ hàng nếu không phải "Mua ngay"
                 if (!model.IsBuyNowCheckout)
                 {
                     var cartItemsToRemove = await _context.CartItems
-                                                          .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
-                                                          .ToListAsync();
+                        .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
+                        .ToListAsync();
 
                     if (cartItemsToRemove.Any())
                     {
@@ -402,20 +455,13 @@ namespace DoAnCoSo.Controllers
                     }
                 }
 
+                // 4. Trả về trang hoàn tất
                 return View("OrderCompleted", order);
-            }
-            catch (DbUpdateException ex)
-            {
-                Console.WriteLine($"DbUpdateException error: {ex.Message}");
-                Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
-                ModelState.AddModelError("", "Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.");
-                await LoadCheckoutViewModelForError(model, userId);
-                return View("Checkout", model);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi khi xử lý đơn hàng: {ex.Message}");
-                ModelState.AddModelError("", "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
+                Console.WriteLine($"❌ Lỗi khi xử lý đơn hàng: {ex.Message}");
+                ModelState.AddModelError("", "Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.");
                 await LoadCheckoutViewModelForError(model, userId);
                 return View("Checkout", model);
             }
@@ -459,7 +505,6 @@ namespace DoAnCoSo.Controllers
                 }
             }
         }
-
 
         [HttpPost]
         public async Task<IActionResult> UpdateQuantity([FromBody] UpdateQuantityRequest request)

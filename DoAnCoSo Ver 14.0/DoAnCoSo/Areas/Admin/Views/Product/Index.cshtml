@@ -1,14 +1,17 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.Product>
 
-<!-- Sản phẩm -->
 <div class="container py-5">
-    <div class="tab-pane fade show active" id="sanpham">
-        <h3>Quản lý Sản phẩm</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-gradient-pink fw-bold">🌸 Quản lý Sản phẩm</h2>
+        <a asp-area="Admin" asp-controller="Product" asp-action="Add"
+           class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
+            + Thêm sản phẩm
+        </a>
+    </div>
 
-        <a asp-area="Admin" asp-controller="Product" asp-action="Add" class="btn btn-primary mb-3">+ Thêm sản phẩm</a>
-
-        <table class="table table-bordered align-middle">
-            <thead class="table-dark">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle shadow-sm rounded-3 overflow-hidden">
+            <thead class="bg-gradient-pink text-white">
                 <tr>
                     <th>ID</th>
                     <th>Tên sản phẩm</th>
@@ -24,29 +27,33 @@
                 {
                     <tr>
                         <td>@product.Id</td>
-                        <td>@product.Name</td>
+                        <td class="fw-semibold">@product.Name</td>
                         <td>
-                            <img src="@product.ImageUrl" alt="pic" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;" />
+                            <img src="@product.ImageUrl" alt="pic"
+                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" />
                         </td>
                         <td>
                             @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
                             {
-                                <span style="text-decoration: line-through; color: gray;">@product.Price.ToString("N0")</span>
-
+                                <span class="text-muted text-decoration-line-through">@product.Price.ToString("N0")</span>
+                        
                                 <br />
-                                <span style="color: red; font-weight: bold;">@product.PriceReduced.Value.ToString("N0")</span>
+                                <span class="text-danger fw-bold">@product.PriceReduced.Value.ToString("N0")</span>
                             }
                             else
                             {
                                 <span>@product.Price.ToString("N0")</span>
                             }
                         </td>
-                        <td style="max-width: 200px;">@product.Description</td>
+                        <td style="max-width: 200px;" class="text-truncate">@product.Description</td>
                         <td>@product.Category?.Name</td>
                         <td>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id" class="btn btn-info btn-sm">Xem</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id" class="btn btn-warning btn-sm">Sửa</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger btn-sm">Xóa</a>
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id"
+                               class="btn btn-outline-pink btn-sm me-1">Xem</a>
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id"
+                               class="btn btn-outline-warning btn-sm me-1">Sửa</a>
+                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id"
+                               class="btn btn-outline-danger btn-sm">Xóa</a>
                         </td>
                     </tr>
                 }
@@ -54,3 +61,55 @@
         </table>
     </div>
 </div>
+
+<style>
+    :root {
+        --pink-main: #FF6185;
+        --pink-accent: #FF6B6B;
+    }
+
+    .bg-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+    }
+
+    .text-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .btn-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+        color: #fff;
+        border: none;
+        transition: 0.3s;
+    }
+
+        .btn-gradient-pink:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+    .btn-outline-pink {
+        border: 1px solid var(--pink-main);
+        color: var(--pink-main);
+        background-color: #fff;
+        transition: 0.3s;
+    }
+
+        .btn-outline-pink:hover {
+            background-color: var(--pink-accent);
+            border-color: var(--pink-accent);
+            color: #fff;
+        }
+
+    table {
+        border-radius: 0.75rem;
+        overflow: hidden;
+        font-size: 0.95rem;
+    }
+
+        table tbody tr:hover {
+            background-color: #fff0f4;
+        }
+</style>

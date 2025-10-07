@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -66,18 +66,36 @@ namespace DoAnCoSo.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Promotions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ShortDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Discount = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Promotions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Services",
                 columns: table => new
                 {
                     ServiceId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Discriminator = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
-                    PriceUnder5kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Price5To12kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Price12To25kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    PriceOver25kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SalePrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Category = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -249,10 +267,24 @@ namespace DoAnCoSo.Migrations
                 {
                     PetId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Age = table.Column<int>(type: "int", nullable: true)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Breed = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Age = table.Column<int>(type: "int", nullable: true),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Weight = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Height = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DistinguishingMarks = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    VaccinationRecords = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MedicalHistory = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Allergies = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DietPreferences = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    HealthNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AI_AnalysisResult = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -261,7 +293,8 @@ namespace DoAnCoSo.Migrations
                         name: "FK_Pets_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -277,7 +310,7 @@ namespace DoAnCoSo.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
-                    Flavors = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Flavors = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -291,26 +324,44 @@ namespace DoAnCoSo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reviews",
+                name: "ServiceDetail",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    ServiceDetailId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     ServiceId = table.Column<int>(type: "int", nullable: false),
-                    Rating = table.Column<int>(type: "int", nullable: false),
-                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SalePrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reviews", x => x.Id);
+                    table.PrimaryKey("PK_ServiceDetail", x => x.ServiceDetailId);
                     table.ForeignKey(
-                        name: "FK_Reviews_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        name: "FK_ServiceDetail_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "ServiceId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SpaPricing",
+                columns: table => new
+                {
+                    SpaPricingId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ServiceId = table.Column<int>(type: "int", nullable: false),
+                    PriceUnder5kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Price5To12kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Price12To25kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    PriceOver25kg = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SpaPricing", x => x.SpaPricingId);
                     table.ForeignKey(
-                        name: "FK_Reviews_Services_ServiceId",
+                        name: "FK_SpaPricing_Services_ServiceId",
                         column: x => x.ServiceId,
                         principalTable: "Services",
                         principalColumn: "ServiceId",
@@ -446,6 +497,29 @@ namespace DoAnCoSo.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PetProfiles",
+                columns: table => new
+                {
+                    PetProfileId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PetId = table.Column<int>(type: "int", nullable: false),
+                    Breed = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Age = table.Column<int>(type: "int", nullable: false),
+                    Weight = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MedicalHistory = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PetProfiles", x => x.PetProfileId);
+                    table.ForeignKey(
+                        name: "FK_PetProfiles_Pets_PetId",
+                        column: x => x.PetId,
+                        principalTable: "Pets",
+                        principalColumn: "PetId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CartItems",
                 columns: table => new
                 {
@@ -550,52 +624,91 @@ namespace DoAnCoSo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProductReviews",
+                name: "Reviews",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ProductId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    Rating = table.Column<byte>(type: "tinyint", nullable: false),
-                    CommentText = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TargetType = table.Column<int>(type: "int", nullable: false),
+                    TargetId = table.Column<int>(type: "int", nullable: false),
+                    Rating = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProductId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProductReviews", x => x.Id);
+                    table.PrimaryKey("PK_Reviews", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProductReviews_AspNetUsers_UserId",
+                        name: "FK_Reviews_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_ProductReviews_Products_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Products",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProductReviewImages",
+                name: "PetServiceRecords",
+                columns: table => new
+                {
+                    RecordId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PetId = table.Column<int>(type: "int", nullable: false),
+                    PetProfileId = table.Column<int>(type: "int", nullable: false),
+                    ServiceId = table.Column<int>(type: "int", nullable: false),
+                    DateUsed = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PriceAtThatTime = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    AI_Feedback = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PetServiceRecords", x => x.RecordId);
+                    table.ForeignKey(
+                        name: "FK_PetServiceRecords_PetProfiles_PetProfileId",
+                        column: x => x.PetProfileId,
+                        principalTable: "PetProfiles",
+                        principalColumn: "PetProfileId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PetServiceRecords_Pets_PetId",
+                        column: x => x.PetId,
+                        principalTable: "Pets",
+                        principalColumn: "PetId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PetServiceRecords_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "ServiceId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReviewImages",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ReviewId = table.Column<int>(type: "int", nullable: false),
                     ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Caption = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
-                    ProductReviewId = table.Column<int>(type: "int", nullable: true)
+                    Caption = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProductReviewImages", x => x.Id);
+                    table.PrimaryKey("PK_ReviewImages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProductReviewImages_ProductReviews_ProductReviewId",
-                        column: x => x.ProductReviewId,
-                        principalTable: "ProductReviews",
-                        principalColumn: "Id");
+                        name: "FK_ReviewImages_Reviews_ReviewId",
+                        column: x => x.ReviewId,
+                        principalTable: "Reviews",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -728,9 +841,29 @@ namespace DoAnCoSo.Migrations
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PetProfiles_PetId",
+                table: "PetProfiles",
+                column: "PetId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Pets_UserId",
                 table: "Pets",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PetServiceRecords_PetId",
+                table: "PetServiceRecords",
+                column: "PetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PetServiceRecords_PetProfileId",
+                table: "PetServiceRecords",
+                column: "PetProfileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PetServiceRecords_ServiceId",
+                table: "PetServiceRecords",
+                column: "ServiceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductImages_ProductId",
@@ -738,34 +871,35 @@ namespace DoAnCoSo.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProductReviewImages_ProductReviewId",
-                table: "ProductReviewImages",
-                column: "ProductReviewId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductReviews_ProductId",
-                table: "ProductReviews",
-                column: "ProductId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductReviews_UserId",
-                table: "ProductReviews",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Products_CategoryId",
                 table: "Products",
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_ServiceId",
+                name: "IX_ReviewImages_ReviewId",
+                table: "ReviewImages",
+                column: "ReviewId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_ProductId",
                 table: "Reviews",
-                column: "ServiceId");
+                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_UserId",
                 table: "Reviews",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServiceDetail_ServiceId",
+                table: "ServiceDetail",
+                column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SpaPricing_ServiceId",
+                table: "SpaPricing",
+                column: "ServiceId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -808,16 +942,22 @@ namespace DoAnCoSo.Migrations
                 name: "Payments");
 
             migrationBuilder.DropTable(
+                name: "PetServiceRecords");
+
+            migrationBuilder.DropTable(
                 name: "ProductImages");
 
             migrationBuilder.DropTable(
-                name: "ProductReviewImages");
+                name: "Promotions");
 
             migrationBuilder.DropTable(
-                name: "Reviews");
+                name: "ReviewImages");
 
             migrationBuilder.DropTable(
-                name: "Pets");
+                name: "ServiceDetail");
+
+            migrationBuilder.DropTable(
+                name: "SpaPricing");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -829,16 +969,22 @@ namespace DoAnCoSo.Migrations
                 name: "Orders");
 
             migrationBuilder.DropTable(
-                name: "ProductReviews");
+                name: "PetProfiles");
+
+            migrationBuilder.DropTable(
+                name: "Reviews");
 
             migrationBuilder.DropTable(
                 name: "Services");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Pets");
 
             migrationBuilder.DropTable(
                 name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Categories");

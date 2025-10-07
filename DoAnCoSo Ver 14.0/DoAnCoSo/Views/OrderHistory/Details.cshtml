@@ -1,100 +1,215 @@
 ﻿@model DoAnCoSo.Models.Order
 
 @{
-    ViewData["Title"] = "Chi tiết đơn hàng " + Model.Id;
+    ViewData["Title"] = "📦 Chi tiết đơn hàng #" + Model.Id;
 }
-<div class="container mt-4">
 
-<h1>Chi tiết đơn hàng #@Model.Id</h1>
+<style>
+    .order-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
 
-<div>
-    <h4>Thông tin tổng quan</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-3">Mã đơn hàng:</dt>
-        <dd class="col-sm-9">@Model.Id</dd>
+    .order-detail-box {
+        background-color: #fff;
+        border: 2px solid #FFB6C1;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(255, 182, 193, 0.3);
+        padding: 30px;
+    }
 
-        <dt class="col-sm-3">Ngày đặt:</dt>
-        <dd class="col-sm-9">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+    .order-detail-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
 
-        <dt class="col-sm-3">Tổng tiền:</dt>
-        <dd class="col-sm-9">@Model.TotalPrice.ToString("N0") VNĐ</dd>
+        .order-detail-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
 
-        <dt class="col-sm-3">Trạng thái:</dt>
-        <dd class="col-sm-9">
-            @if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #FF6185;
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .section-subtitle {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #FF6185;
+        margin-top: 30px;
+        margin-bottom: 10px;
+    }
+
+    .table th {
+        background-color: #fff0f5;
+        color: #FF6185;
+        vertical-align: middle;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 12px;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: none;
+        transition: background-color 0.3s ease;
+        text-decoration: none;
+    }
+
+        .btn-back:hover {
+            background-color: #e75478;
+            color: #fff;
+        }
+
+    dt {
+        font-weight: 600;
+        color: #444;
+    }
+
+    dd {
+        margin-bottom: 10px;
+    }
+
+    @@media (max-width: 768px) {
+        .section-title {
+            font-size: 1.6rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .table th, .table td {
+            font-size: 0.95rem;
+            padding: 8px;
+        }
+
+        .btn-back {
+            font-size: 0.95rem;
+            padding: 8px 16px;
+        }
+    }
+</style>
+
+<div class="order-wrapper py-5">
+    <div class="order-detail-box">
+        <h2 class="order-detail-title">📦 Chi tiết đơn hàng #@Model.Id</h2>
+
+        <div>
+            <h4 class="section-title">📋 Thông tin tổng quan</h4>
+            <hr />
+            <dl class="row">
+                <dt class="col-sm-4">Mã đơn hàng:</dt>
+                <dd class="col-sm-8">@Model.Id</dd>
+
+                <dt class="col-sm-4">Ngày đặt:</dt>
+                <dd class="col-sm-8">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+
+                <dt class="col-sm-4">Tổng tiền:</dt>
+                <dd class="col-sm-8">@Model.TotalPrice.ToString("N0") VNĐ</dd>
+
+                <dt class="col-sm-4">Trạng thái:</dt>
+                <dd class="col-sm-8">
+                    @if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                    {
+                        <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                    }
+                    else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                    {
+                        <span class="badge bg-success">Đã xác nhận</span>
+                    }
+                    else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
+                    {
+                        <span class="badge bg-danger">Đã hủy</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">@Model.Status.ToString()</span>
+                    }
+                </dd>
+            </dl>
+
+            <h4 class="section-title">🚚 Thông tin người nhận & giao hàng</h4>
+            <hr />
+            <dl class="row">
+                <dt class="col-sm-4">Tên người nhận:</dt>
+                <dd class="col-sm-8">@Model.CustomerName</dd>
+
+                <dt class="col-sm-4">Số điện thoại:</dt>
+                <dd class="col-sm-8">@Model.PhoneNumber</dd>
+
+                <dt class="col-sm-4">Địa chỉ giao hàng:</dt>
+                <dd class="col-sm-8">@Model.ShippingAddress</dd>
+
+                <dt class="col-sm-4">Phương thức thanh toán:</dt>
+                <dd class="col-sm-8">@Model.PaymentMethod</dd>
+
+                <dt class="col-sm-4">Ghi chú:</dt>
+                <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Notes) ? "Không có" : Model.Notes)</dd>
+            </dl>
+
+            <h4 class="section-title">🧾 Chi tiết sản phẩm</h4>
+            <hr />
+            @if (Model.OrderDetails != null && Model.OrderDetails.Any())
             {
-                <span>Chờ xác nhận</span>
-            }
-            else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
-            {
-                <span>Đã xác nhận</span>
-            }
-            else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
-            {
-                <span>Đã hủy</span>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Số lượng</th>
+                            <th>Đơn giá</th>
+                            <th>Vị/Màu sắc</th>
+                            <th>Tổng tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderDetails)
+                        {
+                            <tr>
+                                <td>@item.Product.Name</td>
+                                <td>@item.Quantity</td>
+                                <td>@item.Price.ToString("N0") VNĐ</td>
+                                <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "N/A" : item.SelectedFlavor)</td>
+                                <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             }
             else
             {
-                <span>@Model.Status.ToString()</span>
+                <p class="text-muted">Không có sản phẩm nào trong đơn hàng này.</p>
             }
-        </dd>
-    </dl>
 
-    <h4>Thông tin người nhận & giao hàng</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-3">Tên người nhận:</dt>
-        <dd class="col-sm-9">@Model.CustomerName</dd>
-
-        <dt class="col-sm-3">Số điện thoại:</dt>
-        <dd class="col-sm-9">@Model.PhoneNumber</dd>
-
-        <dt class="col-sm-3">Địa chỉ giao hàng:</dt>
-        <dd class="col-sm-9">@Model.ShippingAddress</dd>
-
-        <dt class="col-sm-3">Phương thức thanh toán:</dt>
-        <dd class="col-sm-9">@Model.PaymentMethod</dd>
-
-        <dt class="col-sm-3">Ghi chú:</dt>
-        <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Notes) ? "Không có" : Model.Notes)</dd>
-    </dl>
-
-    <h4>Chi tiết sản phẩm</h4>
-    <hr />
-    @if (Model.OrderDetails != null && Model.OrderDetails.Any())
-    {
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Sản phẩm</th>
-                    <th>Số lượng</th>
-                    <th>Đơn giá</th>
-                    <th>Vị/Màu sắc</th>
-                    <th>Tổng tiền</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.OrderDetails)
-                {
-                    <tr>
-                        <td>@item.Product.Name</td>
-                        <td>@item.Quantity</td>
-                        <td>@item.Price.ToString("N0") VNĐ</td>
-                        <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "N/A" : item.SelectedFlavor)</td>
-                        <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>Không có sản phẩm nào trong đơn hàng này.</p>
-    }
-
-    <div class="mt-3">
-        <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách đơn hàng</a>
+            <div class="text-center mt-4">
+                <a asp-action="Index" class="btn-back">🔙 Quay lại danh sách đơn hàng</a>
+            </div>
+        </div>
     </div>
-</div>
 </div>

@@ -8,7 +8,7 @@ namespace DoAnCoSo.Models
         [Key]
         public int AppointmentId { get; set; }
 
-        public string UserId { get; set; }  // Tham chiếu đến AspNetUsers
+        public string UserId { get; set; }
         [ForeignKey("UserId")]
         public virtual ApplicationUser User { get; set; }
 
@@ -18,19 +18,18 @@ namespace DoAnCoSo.Models
 
         public int ServiceId { get; set; }
         [ForeignKey("ServiceId")]
-   
         public virtual Service Service { get; set; }
 
         public DateTime AppointmentDate { get; set; }
-        [DataType(DataType.Time)] // Thêm attribute này nếu bạn muốn định dạng hiển thị thời gian
-        public TimeSpan AppointmentTime { get; set; } // Thêm thuộc tính này
+        [DataType(DataType.Time)]
+        public TimeSpan AppointmentTime { get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+
         public AppointmentStatus Status { get; set; }
 
         public DateTime CreatedDate { get; set; }
-
         public string OwnerPhoneNumber { get; set; }
-
     }
 }

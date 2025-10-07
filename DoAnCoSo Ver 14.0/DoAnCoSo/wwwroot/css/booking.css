@@ -1,0 +1,54 @@
+﻿.booking-card {
+    border-radius: 20px;
+    background: #fff;
+    border: 2px solid #FFB6C1;
+    box-shadow: 0 8px 20px rgba(255, 182, 193, 0.4);
+    padding: 30px;
+}
+
+.booking-title {
+    font-weight: bold;
+    color: #FF6185;
+    font-size: 1.8rem;
+}
+
+h5:has(.section-icon) {
+    color: #FF6185;
+    font-weight: 600;
+    margin-top: 30px;
+}
+
+label {
+    font-weight: 600;
+    color: #444;
+}
+
+.form-control,
+.form-select {
+    border-radius: 10px;
+    border: 1px solid #FFB6C1;
+}
+
+.btn-pink {
+    background-color: #FF6185;
+    color: white;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+    .btn-pink:hover {
+        background-color: #e75478;
+    }
+
+#calculatedPrice {
+    color: #FF6185;
+    font-weight: bold;
+}
+
+.section-icon {
+    font-size: 1.2rem;
+    margin-right: 5px;
+}

@@ -1,5 +1,66 @@
 ﻿@model DoAnCoSo.Models.Order
-<div class="container py-4">
-	<h2>Đơn hàng đã hoàn thành</h2>
-	<p>Đơn hàng của bạn với Mã đơn hàng: <strong>@Model.Id</strong> đã được đặt thành công.</p>
+
+@{
+    ViewData["Title"] = "🎉 Đơn hàng đã hoàn thành";
+}
+
+<style>
+    .order-confirm-card {
+        max-width: 750px;
+        margin: auto;
+        background-color: #fff;
+        border: 2px solid #FFB6C1;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(255, 182, 193, 0.4);
+        padding: 30px;
+        text-align: center;
+    }
+
+    .order-confirm-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #FF6185;
+        margin-bottom: 20px;
+    }
+
+    .order-confirm-message {
+        font-size: 1.1rem;
+        color: #444;
+        line-height: 1.6;
+    }
+
+        .order-confirm-message strong {
+            color: #FF6185;
+        }
+
+    .btn-back-home {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        padding: 12px 24px;
+        border-radius: 12px;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-back-home:hover {
+            background-color: #e75478;
+        }
+</style>
+
+<div class="container py-5">
+    <div class="order-confirm-card">
+        <h2 class="order-confirm-title">@ViewData["Title"]</h2>
+        <p class="order-confirm-message">
+            Cảm ơn bạn đã đặt hàng! 🎁<br />
+            Đơn hàng của bạn với <strong>Mã đơn hàng: @Model.Id</strong> đã được đặt thành công.
+        </p>
+        <p class="order-confirm-message mt-3">
+            Chúng tôi sẽ liên hệ với bạn để xác nhận và tiến hành giao hàng sớm nhất.
+        </p>
+
+        <div class="mt-4">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-back-home">🏠 Quay lại trang chủ</a>
+        </div>
+    </div>
 </div>

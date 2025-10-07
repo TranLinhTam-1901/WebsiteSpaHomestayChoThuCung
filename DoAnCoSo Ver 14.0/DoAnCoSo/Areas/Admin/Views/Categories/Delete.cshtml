@@ -1,10 +1,58 @@
 ﻿@model DoAnCoSo.Models.Category
-<div class="container py-5">
-<h2>Xóa Danh Mục</h2>
 
-<form asp-action="DeleteConfirmed" method="post">
-    <input type="hidden" asp-for="Id" />
-    <p>Bạn có chắc chắn muốn xóa @Model.Name không?</p>
-    <button type="submit" class="btn btn-danger">Xóa</button>
-</form>
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4 w-50">
+        <div class="card-header bg-gradient-pink text-white text-center rounded-top-4">
+            <h2 class="mb-0">⚠️ Xóa Danh Mục</h2>
+        </div>
+        <div class="card-body text-center p-4">
+            <input type="hidden" asp-for="Id" />
+            <p class="fs-5">
+                Bạn có chắc chắn muốn xóa <span class="fw-bold text-gradient-pink">@Model.Name</span> không?
+            </p>
+            <form asp-action="DeleteConfirmed" method="post" class="d-inline">
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm me-2">
+                    🗑️ Xóa
+                </button>
+            </form>
+            <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill shadow-sm">
+                ← Trở lại
+            </a>
+        </div>
+    </div>
 </div>
+
+<style>
+    :root {
+        --pink-main: #FF6185;
+        --pink-accent: #FF6B6B;
+    }
+
+    .bg-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+    }
+
+    .text-gradient-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .btn-outline-pink {
+        border: 1px solid var(--pink-main);
+        color: var(--pink-main);
+        background-color: #fff;
+        transition: 0.3s;
+    }
+
+        .btn-outline-pink:hover {
+            background-color: var(--pink-accent);
+            border-color: var(--pink-accent);
+            color: #fff;
+        }
+
+    .card {
+        border-radius: 1rem;
+    }
+</style>

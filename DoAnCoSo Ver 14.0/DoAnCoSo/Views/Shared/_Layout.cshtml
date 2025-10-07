@@ -355,16 +355,17 @@
                         </a>
                     </li>
 
-                    @* <li class="nav-item "> *@
-                    @*     <a asp-area="" asp-controller="Service" asp-action="ThuY" class="nav-link" title="THÚ Y"> *@
-                    @*         THÚ Y *@
-                    @*     </a> *@
-                    @* </li> *@
-                    @* <li class="nav-item "> *@
-                    @*     <a asp-area="" asp-controller="Service" asp-action="#" class="nav-link" title="KHUYẾN MÃI"> *@
-                    @*         KHUYỄN MÃI *@
-                    @*     </a> *@
-                    @* </li> *@
+                    <li class="nav-item ">
+                        <a asp-area="" asp-controller="VetServices" asp-action="Index" class="nav-link" title="THÚ Y">
+                            THÚ Y
+                        </a>
+                    </li>
+
+                    <li class="nav-item ">
+                        <a asp-area="" asp-controller="Promotion" asp-action="Index" class="nav-link" title="KHUYẾN MÃI">
+                            KHUYẾN MÃI
+                        </a>
+                    </li>
 
                     <li class="nav-item ">
                         <a asp-area="" asp-controller="Appointments" asp-action="CustomerAppointmentHistory" class="nav-link" title="Lịch sử đặt lịch">
@@ -373,7 +374,6 @@
                     </li>
 
                     <li class="nav-item ">
-                        @* <-- ĐÂY LÀ PHẦN THÊM MỚI *@
                         <a asp-area="" asp-controller="OrderHistory" asp-action="Index" class="nav-link" title="Lịch sử đặt hàng">
                             LỊCH SỬ ĐẶT HÀNG 
                         </a>
@@ -398,13 +398,15 @@
     </header>
 
     @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
-    <div class="modal fade" id="bookingOptionsModal" tabindex="-1" aria-labelledby="bookingOptionsModalLabel" aria-hidden="true">
+    <div class="modal fade booking-modal" id="bookingOptionsModal" tabindex="-1" aria-labelledby="bookingOptionsModalLabel" aria-hidden="true">
+        @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="bookingOptionsModalLabel">Chọn dịch vụ bạn muốn đặt lịch </h5>
+                    <h5 class="modal-title" id="bookingOptionsModalLabel">Chọn dịch vụ bạn muốn đặt lịch</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
                 <div class="modal-body text-center">
                     <p class="lead mb-4">Vui lòng chọn loại dịch vụ bạn muốn đặt:</p>
 
@@ -412,9 +414,13 @@
                         <div class="col-md-6 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i> <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
+                                    <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i>
+                                    <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
                                     <p class="card-text text-muted">Nơi nghỉ ngơi thoải mái cho thú cưng của bạn.</p>
-                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments")" class="btn btn-homestay-theme mt-3">Chọn Homestay</a>
+                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments", new { area = "" })"
+                                       class="btn btn-homestay-theme mt-3">
+                                        Chọn Homestay
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -422,14 +428,19 @@
                         <div class="col-md-6 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i> <h5 class="card-title mt-3">Đặt lịch Spa</h5>
+                                    <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i>
+                                    <h5 class="card-title mt-3">Đặt lịch Spa</h5>
                                     <p class="card-text text-muted">Chăm sóc và làm đẹp cho thú cưng yêu.</p>
-                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments")" class="btn btn-spa-theme mt-3">Chọn Spa</a>
+                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments", new { area = "" })"
+                                       class="btn btn-spa-theme mt-3">
+                                        Chọn Spa
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 </div>
@@ -438,9 +449,9 @@
     </div>
 
     <!-- Floating Button -->
-    <button id="chatFloatingBtn" class="btn shadow rounded-circle"
-            style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 10000; background-color:#FF6185; color:white;">
+    <button id="chatFloatingBtn" class="btn shadow">
         <i class="bi bi-chat-dots-fill" style="font-size: 24px;"></i>
+        <span id="unreadBadge">0</span>
     </button>
 
     <!-- Chatbox -->
@@ -459,6 +470,42 @@
     </div>
 
     <style>
+        /* Floating button */
+        #chatFloatingBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #FF6185;
+            color: white;
+            border-radius: 50%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            /* Badge đẹp gọn */
+            #chatFloatingBtn #unreadBadge {
+                position: absolute;
+                top: 0;
+                right: 0;
+                transform: translate(40%, -40%); /* đẩy ra ngoài một chút */
+                background: #dc3545;
+                color: #fff;
+                font-size: 12px;
+                font-weight: bold;
+                min-width: 20px;
+                height: 20px;
+                padding: 0 5px;
+                border-radius: 50%;
+                line-height: 20px;
+                text-align: center;
+                display: none;
+                box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            }
+
         #chatBox {
             position: fixed;
             bottom: 80px;
@@ -874,222 +921,216 @@
 
     <!-- Swiper -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script>
-        var swiper = new Swiper(".mySwiper", {
-            slidesPerView: 1,
-            spaceBetween: 20,
-            loop: false,
-            autoplay: { delay: 3000, disableOnInteraction: false },
-            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
-            breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1200: { slidesPerView: 4 } }
-        });
-    </script>
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
-    <!-- Active nav menu -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const currentPath = window.location.pathname.toLowerCase();
+        document.addEventListener("DOMContentLoaded", function () {
+            /* ------------------ Swiper ------------------ */
+            var swiper = new Swiper(".mySwiper", {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                loop: false,
+                autoplay: { delay: 3000, disableOnInteraction: false },
+                navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1200: { slidesPerView: 4 } }
+            });
+
+            /* ------------------ Active nav menu ------------------ */
+            function normalizePath(path) {
+                return path.toLowerCase().replace(/\/+$/, "");
+            }
+            const currentPath = normalizePath(window.location.pathname);
             document.querySelectorAll(".nav-item").forEach(item => {
                 let isActive = false;
-
                 const mainLink = item.querySelector(".nav-link");
                 if (mainLink) {
                     const href = mainLink.getAttribute("href");
                     if (href && href !== "#") {
-                        const fullPath = new URL(href, window.location.origin).pathname.toLowerCase();
-                        if (currentPath === fullPath || (fullPath === "/" && currentPath.includes("home"))) isActive = true;
+                        const fullPath = normalizePath(new URL(href, window.location.origin).pathname);
+                        if (currentPath === fullPath || (fullPath === "/" && currentPath.includes("home"))) {
+                            isActive = true;
+                        }
                     }
                 }
-
                 if (!isActive) {
                     item.querySelectorAll(".hmega").forEach(subLink => {
                         const href = subLink.getAttribute("href");
                         if (href && href !== "#") {
-                            const fullPath = new URL(href, window.location.origin).pathname.toLowerCase();
+                            const fullPath = normalizePath(new URL(href, window.location.origin).pathname);
                             if (currentPath === fullPath) isActive = true;
                         }
                     });
                 }
-
                 if (isActive) item.classList.add("active");
             });
-        });
-    </script>
 
-    <!-- SignalR ForceLogout -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script>
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chathub")
-            .build();
+            /* ------------------ SignalR ------------------ */
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chathub")
+                .withAutomaticReconnect()
+                .build();
 
-        connection.on("ForceLogout", () => {
-            alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
+            connection.on("ForceLogout", () => {
+                alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
+                window.location.href = "/Identity/Account/Login";
+            });
 
-            // Redirect ngay sang trang login
-            window.location.href = "/Identity/Account/Login";
-        });
-
-        connection.start().catch(err => console.error("SignalR connection error:", err));
-    </script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+            /* ------------------ Chat Box ------------------ */
             const chatBox = document.getElementById("chatBox");
             const chatFloatingBtn = document.getElementById("chatFloatingBtn");
             const minimizeBtn = document.getElementById("minimizeChat");
             const messagesList = document.getElementById("messagesList");
             const sendButton = document.getElementById("sendButton");
             const messageInput = document.getElementById("messageInput");
-            const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+            const unreadBadge = document.getElementById("unreadBadge");
 
-            let skipCount = 0;
-            const pageSize = 50;
-            let loadingOlder = false;
-            let noMoreMessages = false;
-            let allMessages = [];
-
+            const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" || "";
+            let skipCount = 0, pageSize = 50, loadingOlder = false, noMoreMessages = false;
+            let allMessages = [], unreadCount = 0;
             let customerAvatars = {};
 
+            function updateBadge(count) {
+                unreadCount = count;
+                if (count > 0) {
+                    unreadBadge.innerText = count > 99 ? "99+" : String(count);
+                    unreadBadge.style.display = "inline-block";
+                } else {
+                    unreadBadge.style.display = "none";
+                }
+            }
+            async function loadUnreadCount() {
+                try {
+                    const res = await fetch("/Chat/GetUnreadCount", { cache: "no-store" });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    updateBadge(Number(data.count || 0));
+                } catch { }
+            }
+            async function markAllAsReadServer() {
+                try { await fetch("/Chat/MarkAllAsRead", { method: "POST" }); } catch { }
+            }
             function getAvatarForCustomer(customerId) {
-                if(!customerAvatars[customerId]){
-                    customerAvatars[customerId] = `/images/avatar/avatar_${Math.floor(Math.random()*5+1)}.jpg`;
+                if (!customerAvatars[customerId]) {
+                    customerAvatars[customerId] = `/images/avatar/avatar_${Math.floor(Math.random() * 5 + 1)}.jpg`;
                 }
                 return customerAvatars[customerId];
             }
-
             function createMessageElement(msg) {
                 const date = new Date(msg.sentAt);
-                // Đảo vị trí: khách nằm bên phải, admin nằm bên trái
-                const isAdmin = msg.senderId === userId; // khách => admin=false, admin => admin=true
+                const isAdmin = msg.senderId === userId;
                 const row = document.createElement("div");
                 row.className = "message-row " + (isAdmin ? "admin" : "customer");
-
-                if(!isAdmin){ // avatar chỉ hiện khách (bên phải)
+                if (!isAdmin) {
                     const avatar = document.createElement("img");
                     avatar.className = "message-avatar";
                     avatar.src = getAvatarForCustomer(msg.senderId);
                     row.appendChild(avatar);
                 }
-
                 const bubble = document.createElement("div");
                 bubble.className = "message-bubble " + (isAdmin ? "admin" : "customer");
-                bubble.innerHTML = msg.message +
-                    `<div class="message-time">${date.toLocaleTimeString("vi-VN",{hour12:false,hour:'2-digit',minute:'2-digit'})}</div>`;
+                bubble.innerHTML = (msg.message || "") +
+                    `<div class="message-time">${date.toLocaleTimeString("vi-VN", { hour12: false, hour: '2-digit', minute: '2-digit' })}</div>`;
                 row.appendChild(bubble);
-
                 return { row, date };
             }
-
             function formatDateSeparator(date) {
-                const today = new Date();
-                const yesterday = new Date();
+                const today = new Date(), yesterday = new Date();
                 yesterday.setDate(today.getDate() - 1);
-
-                if(date.toDateString() === today.toDateString()) return "Hôm nay";
-                if(date.toDateString() === yesterday.toDateString()) return "Hôm qua";
-                return `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
+                if (date.toDateString() === today.toDateString()) return "Hôm nay";
+                if (date.toDateString() === yesterday.toDateString()) return "Hôm qua";
+                return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
             }
-
-            function addDateSeparator(date, prepend=false) {
+            function addDateSeparator(date, prepend = false) {
                 const dateText = formatDateSeparator(date);
-                const existing = Array.from(messagesList.querySelectorAll(".date-separator"))
-                    .some(s => s.innerText === dateText);
-                if(existing) return;
-
+                if (Array.from(messagesList.querySelectorAll(".date-separator")).some(s => s.innerText === dateText)) return;
                 const separator = document.createElement("div");
                 separator.className = "date-separator";
                 separator.innerText = dateText;
-
-                if(prepend) messagesList.insertBefore(separator, messagesList.firstChild);
+                if (prepend) messagesList.insertBefore(separator, messagesList.firstChild);
                 else messagesList.appendChild(separator);
             }
-
-            function renderMessages(scrollToBottom=false){
+            function renderMessages(scrollToBottom = false) {
                 messagesList.innerHTML = "";
-                allMessages.sort((a,b)=> new Date(a.sentAt) - new Date(b.sentAt));
-
+                allMessages.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
                 let lastDate = null;
                 allMessages.forEach(msg => {
                     const { row, date } = createMessageElement(msg);
-                    if(!lastDate || lastDate.toDateString() !== date.toDateString()){
+                    if (!lastDate || lastDate.toDateString() !== date.toDateString()) {
                         addDateSeparator(date);
                         lastDate = date;
                     }
                     messagesList.appendChild(row);
                 });
-
-                if(scrollToBottom) messagesList.scrollTop = messagesList.scrollHeight;
+                if (scrollToBottom) messagesList.scrollTop = messagesList.scrollHeight;
             }
-
-            async function loadMessages(prepend=false){
-                if(loadingOlder || noMoreMessages) return;
+            async function loadMessages(prepend = false) {
+                if (loadingOlder || noMoreMessages) return;
                 loadingOlder = true;
-
-                const res = await fetch(`/Chat/GetChatHistory?skip=${skipCount}&take=${pageSize}`);
-                const messages = await res.json();
-
-                if(messages.length === 0){
-                    noMoreMessages = true;
-                    loadingOlder = false;
-                    return;
-                }
-
-                if(prepend) allMessages = messages.concat(allMessages);
-                else allMessages = allMessages.concat(messages);
-
-                renderMessages(!prepend);
-                skipCount += pageSize;
-                loadingOlder = false;
+                try {
+                    const res = await fetch(`/Chat/GetChatHistory?skip=${skipCount}&take=${pageSize}`, { cache: "no-store" });
+                    if (!res.ok) return;
+                    const messages = await res.json();
+                    if (!messages || messages.length === 0) { noMoreMessages = true; return; }
+                    if (prepend) allMessages = messages.concat(allMessages);
+                    else allMessages = allMessages.concat(messages);
+                    renderMessages(!prepend);
+                    skipCount += pageSize;
+                } finally { loadingOlder = false; }
             }
 
-            chatFloatingBtn.addEventListener("click", ()=>{
+            /* ------------------ Chat Events ------------------ */
+            chatFloatingBtn.addEventListener("click", async () => {
                 chatBox.style.display = "flex";
                 chatFloatingBtn.style.display = "none";
-                allMessages = [];
-                skipCount = 0;
-                noMoreMessages = false;
-                loadMessages();
+                allMessages = []; skipCount = 0; noMoreMessages = false;
+                await loadMessages();
+                await markAllAsReadServer();
+                updateBadge(0);
             });
-
-            minimizeBtn.addEventListener("click", ()=>{
+            minimizeBtn.addEventListener("click", () => {
                 chatBox.style.display = "none";
                 chatFloatingBtn.style.display = "block";
             });
-
-            const connection = new signalR.HubConnectionBuilder().withUrl("/chathub").build();
-            connection.start();
-
-            connection.on("ReceiveMessage", (senderId, senderName, message, sentAt)=>{
-                allMessages.push({ senderId, message, sentAt });
-                renderMessages(true);
-            });
-
-            sendButton.addEventListener("click", ()=> {
+            sendButton.addEventListener("click", () => {
                 const msg = messageInput.value.trim();
-                if(!msg) return;
-
-                // Gửi lên server, không push vào allMessages
-                connection.invoke("SendMessageToAdmin", msg);
+                if (!msg) return;
+                connection.invoke("SendMessageToAdmin", msg).catch(e => console.error(e));
                 messageInput.value = "";
             });
-
-
-            messageInput.addEventListener("keydown", e=>{
-                if(e.key==="Enter" && !e.shiftKey){
+            messageInput.addEventListener("keydown", e => {
+                if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     sendButton.click();
                 }
             });
-
-            messagesList.addEventListener("scroll", async ()=>{
-                if(messagesList.scrollTop === 0 && !loadingOlder && !noMoreMessages){
+            messagesList.addEventListener("scroll", async () => {
+                if (messagesList.scrollTop === 0 && !loadingOlder && !noMoreMessages) {
                     const oldHeight = messagesList.scrollHeight;
                     await loadMessages(true);
                     messagesList.scrollTop = messagesList.scrollHeight - oldHeight;
                 }
             });
+
+            /* ------------------ SignalR ReceiveMessage ------------------ */
+            connection.on("ReceiveMessage", async (senderId, senderName, message, sentAt) => {
+                const sid = String(senderId || "");
+                if (chatBox.style.display === "flex") {
+                    allMessages.push({ senderId: sid, message: message, sentAt: sentAt });
+                    renderMessages(true);
+                    await markAllAsReadServer();
+                    updateBadge(0);
+                } else {
+                    if (sid !== userId) updateBadge(unreadCount + 1);
+                }
+            });
+
+            connection.start().then(() => {
+                loadUnreadCount();
+                setInterval(loadUnreadCount, 30000);
+            }).catch(() => loadUnreadCount());
+
+            window.__chatDebug = { getUnread: () => unreadCount, reloadUnread: loadUnreadCount };
         });
     </script>
 
