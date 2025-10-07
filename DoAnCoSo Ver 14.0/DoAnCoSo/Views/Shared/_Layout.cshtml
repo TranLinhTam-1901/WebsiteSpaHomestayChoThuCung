@@ -944,6 +944,7 @@
             document.querySelectorAll(".nav-item").forEach(item => {
                 let isActive = false;
                 const mainLink = item.querySelector(".nav-link");
+
                 if (mainLink) {
                     const href = mainLink.getAttribute("href");
                     if (href && href !== "#") {
@@ -1097,6 +1098,8 @@
                 if (!msg) return;
                 connection.invoke("SendMessageToAdmin", msg).catch(e => console.error(e));
                 messageInput.value = "";
+                // don't increment unread — server will echo message back to this client,
+                // and we ignore own messages in ReceiveMessage handler.
             });
             messageInput.addEventListener("keydown", e => {
                 if (e.key === "Enter" && !e.shiftKey) {
