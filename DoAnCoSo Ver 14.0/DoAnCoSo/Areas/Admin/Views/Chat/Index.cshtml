@@ -19,8 +19,9 @@
     }
 }
 
-<div class="container py-4">
-    <h2 class="text-center mb-4 fw-bold" style="color:black">💬 CHĂM SÓC KHÁCH HÀNG</h2>
+<div class="container py-5">
+    <h2 class="section-title">💬 Chăm sóc khách hàng</h2>
+
 
     <div class="row g-4">
         <!-- Sidebar khách hàng -->
@@ -71,6 +72,25 @@
 </div>
 
 <style>
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
     #chatWith {
         font-size: 1.3rem;
         font-weight: bold;
@@ -430,30 +450,49 @@
             }
         }
 
-        connection.on("ReceiveMessage", async (senderId, senderName, message, sentAt)=>{
+        connection.on("ReceiveMessage", async (senderId, senderName, message, sentAt) => {
             const li = document.querySelector(`#customers li[data-userid='${senderId}']`);
-            if(!li) return;
+            if (!li) return;
 
-            // nếu đang chat với người nhắn, append tin nhắn và mark read
-            if(senderId===currentCustomerId){
-                allMessages.push({fromUserId:senderId, message, sentAt});
+            // Nếu đang chat với người gửi
+            if (senderId === currentCustomerId) {
+                allMessages.push({ fromUserId: senderId, message, sentAt });
                 renderMessages(true);
-                await fetch(`/Admin/Chat/MarkAsRead?customerId=${senderId}`, {method:"POST"});
-                li.dataset.unread=0;
-                li.querySelector(".badge").style.display="none";
-                li.classList.remove("unread");
-            } else {
-                // tăng badge
+                
                 let count = parseInt(li.dataset.unread) || 0;
                 count++;
                 li.dataset.unread = count;
                 li.querySelector(".badge").textContent = count;
-                li.querySelector(".badge").style.display="inline-block";
+                li.querySelector(".badge").style.display = "inline-block";
+                li.classList.add("unread");
+               
+            } else {
+                // Nếu KHÁCH KHÁC thì tăng badge bình thường
+                let count = parseInt(li.dataset.unread) || 0;
+                count++;
+                li.dataset.unread = count;
+                li.querySelector(".badge").textContent = count;
+                li.querySelector(".badge").style.display = "inline-block";
                 li.classList.add("unread");
             }
 
-            // nhảy đầu danh sách khi có tin nhắn mới
+            // Đưa lên đầu danh sách
             li.parentNode.prepend(li);
+        });
+
+        messageInput.addEventListener("focus", async () => {
+            if (!currentCustomerId) return;
+
+            // gọi API mark read
+            await fetch(`/Admin/Chat/MarkAsRead?customerId=${currentCustomerId}`, { method: "POST" });
+
+            // cập nhật UI
+            const li = document.querySelector(`#customers li[data-userid='${currentCustomerId}']`);
+            if (li) {
+                li.dataset.unread = 0;
+                li.querySelector(".badge").style.display = "none";
+                li.classList.remove("unread");
+            }
         });
 
         connection.on("UpdateCustomerList", function () {

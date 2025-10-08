@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using DoAnCoSo.Models;
 
 namespace DoAnCoSo.Models
 {

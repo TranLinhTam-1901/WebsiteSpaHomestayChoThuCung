@@ -702,19 +702,26 @@
 
     <!-- Swiper -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
     <script>
+        // ------------------- SWIPER -------------------
         var swiper = new Swiper(".mySwiper", {
             slidesPerView: 1,
             spaceBetween: 20,
             loop: false,
             autoplay: { delay: 3000, disableOnInteraction: false },
             navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
-            breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1200: { slidesPerView: 4 } }
+            breakpoints: {
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+                1200: { slidesPerView: 4 }
+            }
         });
-    </script>
 
-    <!-- Active nav menu -->
-    <script>
+        // ------------------- ACTIVE NAV -------------------
         function normalizePath(path) {
             return path.toLowerCase().replace(/\/+$/, ""); // bỏ hết dấu / ở cuối
         }
@@ -749,20 +756,15 @@
                 if (isActive) item.classList.add("active");
             });
         });
-    </script>
 
-    <!-- SignalR ForceLogout -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script>
+        // ------------------- SIGNALR FORCE LOGOUT -------------------
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/chathub")
             .build();
 
         connection.on("ForceLogout", () => {
             alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
-
-            // Redirect ngay sang trang login
-            window.location.href = "/Identity/Account/Login";
+            window.location.href = "/Identity/Account/Login"; // redirect sang login
         });
 
         connection.start().catch(err => console.error("SignalR connection error:", err));

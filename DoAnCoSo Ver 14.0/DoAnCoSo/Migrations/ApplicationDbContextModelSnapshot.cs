@@ -1178,28 +1178,6 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Service");
                 });
 
-            modelBuilder.Entity("DoAnCoSo.Models.ServiceDetail", b =>
-                {
-                    b.HasOne("DoAnCoSo.Models.Service", "Service")
-                        .WithMany("ServiceDetails")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Service");
-                });
-
-            modelBuilder.Entity("DoAnCoSo.Models.SpaPricing", b =>
-                {
-                    b.HasOne("DoAnCoSo.Models.Service", "Service")
-                        .WithOne("SpaPricing")
-                        .HasForeignKey("DoAnCoSo.Models.SpaPricing", "ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Service");
-                });
-
             modelBuilder.Entity("Favorite", b =>
                 {
                     b.HasOne("DoAnCoSo.Models.Product", "Product")
