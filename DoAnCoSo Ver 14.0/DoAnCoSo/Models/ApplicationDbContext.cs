@@ -1,45 +1,45 @@
-﻿using Humanizer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 namespace DoAnCoSo.Models
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>  
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) 
-        {
-            
-        }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<Product> Products { get; set; }
-        public DbSet<Category> Categories { get; set; } 
+        public DbSet<Category> Categories { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
 
         public DbSet<Pet> Pets { get; set; }
+        public DbSet<PetServiceRecord> PetServiceRecords { get; set; }
+
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Service> Services { get; set; }
-        public DbSet<SpaService> SpaServices { get; set; }
-        public DbSet<HomestayService> HomestayServices { get; set; }
+        public DbSet<SpaPricing> SpaPricings { get; set; }
+
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<ReviewImage> ReviewImages { get; set; }  // 🔹 thay ProductReviewImage
+
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
-        public DbSet<ProductReview> ProductReviews { get; set; }
-        public DbSet<ProductReviewImage> ProductReviewImages { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
 
         public DbSet<CartItem> CartItems { get; set; }
 
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<SystemState> SystemStates { get; set; }
 
+        public DbSet<Promotion> Promotions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder); // Gọi base để IdentityDbContext hoạt động đúng
+            base.OnModelCreating(modelBuilder); // Identity config
 
-            // 🔹 Appointment.Status (enum lưu dạng string)
+            // 🔹 Appointment.Status enum -> string
             modelBuilder.Entity<Appointment>()
                 .Property(a => a.Status)
                 .HasConversion<string>();
@@ -51,6 +51,21 @@ namespace DoAnCoSo.Models
                 .HasForeignKey(a => a.PetId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<PetServiceRecord>()
+                .HasKey(r => r.RecordId);
+
+            modelBuilder.Entity<PetServiceRecord>()
+                .HasOne(r => r.Pet)
+                .WithMany(p => p.ServiceRecords)
+                .HasForeignKey(r => r.PetId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PetServiceRecord>()
+                .HasOne(r => r.Service)
+                .WithMany(s => s.PetServiceRecords)
+                .HasForeignKey(r => r.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // 🔹 Appointment - Service
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Service)
@@ -58,7 +73,7 @@ namespace DoAnCoSo.Models
                 .HasForeignKey(a => a.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // 🔹 Appointment - User (AspNetUsers)
+            // 🔹 Appointment - User
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.User)
                 .WithMany()
@@ -106,6 +121,13 @@ namespace DoAnCoSo.Models
                 .WithMany()
                 .HasForeignKey(c => c.AdminId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // 🔹 Review - ReviewImage (1-nhiều)
+            modelBuilder.Entity<ReviewImage>()
+                .HasOne(ri => ri.Review)
+                .WithMany(r => r.Images)
+                .HasForeignKey(ri => ri.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

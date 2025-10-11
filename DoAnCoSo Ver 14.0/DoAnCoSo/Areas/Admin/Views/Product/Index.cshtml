@@ -1,56 +1,214 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.Product>
 
-<!-- Sản phẩm -->
-<div class="container py-5">
-    <div class="tab-pane fade show active" id="sanpham">
-        <h3>Quản lý Sản phẩm</h3>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    int pageSize = 16;
+    int totalItems = Model.Count();
+    int currentPage = string.IsNullOrEmpty(Context.Request.Query["page"]) ? 1 : int.Parse(Context.Request.Query["page"]);
+    int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+    var products = Model.Skip((currentPage - 1) * pageSize).Take(pageSize);
+}
 
-        <a asp-area="Admin" asp-controller="Product" asp-action="Add" class="btn btn-primary mb-3">+ Thêm sản phẩm</a>
+<div class="container admin-product-page py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-pink mb-0"><i class="bi bi-box-seam me-2"></i>Quản lý sản phẩm</h2>
+        <a asp-area="Admin" asp-controller="Product" asp-action="Add"
+           class="btn btn-pink-gradient shadow-sm rounded-pill px-4 py-2">
+            <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm
+        </a>
+    </div>
 
-        <table class="table table-bordered align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Hình ảnh</th>
-                    <th>Giá</th>
-                    <th>Mô tả</th>
-                    <th>Danh mục</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var product in Model)
-                {
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-pink text-white">
                     <tr>
-                        <td>@product.Id</td>
-                        <td>@product.Name</td>
-                        <td>
-                            <img src="@product.ImageUrl" alt="pic" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;" />
-                        </td>
-                        <td>
-                            @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
-                            {
-                                <span style="text-decoration: line-through; color: gray;">@product.Price.ToString("N0")</span>
-
-                                <br />
-                                <span style="color: red; font-weight: bold;">@product.PriceReduced.Value.ToString("N0")</span>
-                            }
-                            else
-                            {
-                                <span>@product.Price.ToString("N0")</span>
-                            }
-                        </td>
-                        <td style="max-width: 200px;">@product.Description</td>
-                        <td>@product.Category?.Name</td>
-                        <td>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id" class="btn btn-info btn-sm">Xem</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id" class="btn btn-warning btn-sm">Sửa</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger btn-sm">Xóa</a>
-                        </td>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Tên sản phẩm</th>
+                        <th class="text-center">Hình ảnh</th>
+                        <th class="text-center">Giá</th>
+                        <th class="text-center">Mô tả</th>
+                        <th class="text-center">Danh mục</th>
+                        <th class="text-center">Hành động</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var product in products)
+                    {
+                        <tr>
+                            <td class="text-center text-muted">@product.Id</td>
+                            <td class="fw-semibold">@product.Name</td>
+                            <td class="text-center">
+                                <img src="@product.ImageUrl" alt="@product.Name"
+                                     class="rounded-3 product-img" />
+                            </td>
+                            <td class="text-center">
+                                @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
+                                {
+                                    <span class="text-decoration-line-through text-muted d-block">@product.Price.ToString("N0")đ</span>
+                                    <span class="fw-bold text-pink">@product.PriceReduced.Value.ToString("N0")đ</span>
+                                }
+                                else
+                                {
+                                    <span>@product.Price.ToString("N0")đ</span>
+                                }
+                            </td>
+                            <td class="text-truncate" style="max-width: 220px;">@product.Description</td>
+                            <td class="text-center">@product.Category?.Name</td>
+                            <td>
+                                <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id"
+                                   class="btn-action btn-view btn-sm me-1">
+                                    <i class="bi bi-eye"></i> Xem
+                                </a>
+                                <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id"
+                                   class="btn-action btn-edit btn-sm me-1">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
+                                <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id"
+                                   class="btn-action btn-delete btn-sm">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @* PHÂN TRANG *@
+        @if (totalPages > 1)
+        {
+            <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+                <nav>
+                    <ul class="pagination pagination-pink mb-0">
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = i })">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
     </div>
 </div>
+
+<style>
+    :root {
+        --pink-main: #FF6185;
+        --pink-light: #FFB6C1;
+        --pink-dark: #e74c7b;
+    }
+
+    body {
+        background-color: #FFF5F8;
+    }
+
+    .text-pink {
+        color: var(--pink-main);
+    }
+
+    .btn-pink-gradient {
+        background: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        border: none;
+        transition: 0.25s;
+    }
+
+        .btn-pink-gradient:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .table-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-light));
+        border: none;
+    }
+
+    .product-img {
+        width: 75px;
+        height: 75px;
+        object-fit: cover;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+    }
+
+        .product-img:hover {
+            transform: scale(1.07);
+        }
+
+    table tbody tr:hover {
+        background-color: #FFE9F0;
+    }
+
+    .pagination .page-link {
+        color: var(--pink-dark);
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination .page-link:hover {
+            background-color: #FFB6C1;
+            color: white;
+        }
+
+    .pagination .active .page-link {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        color: white;
+    }
+
+    .admin-product-page h2 {
+        color: var(--pink-main);
+    }
+
+    .card {
+        border-radius: 18px;
+    }
+
+    .btn-action {
+        border: 2px solid transparent;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: bold;
+        transition: all 0.2s ease;
+    }
+
+    /* Nút xem */
+    .btn-view {
+        background-color: #FFB6C1;
+        color: #000;
+    }
+
+        .btn-view:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    /* Nút sửa */
+    .btn-edit {
+        border-color: green;
+        color: green;
+        background-color: transparent;
+    }
+
+        .btn-edit:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    /* Nút xóa */
+    .btn-delete {
+        border-color: red;
+        color: red;
+        background-color: transparent;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+</style>

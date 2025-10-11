@@ -5,107 +5,230 @@
 
 @{
     ViewData["Title"] = "Đơn đặt lịch chờ xác nhận";
-
-    // Chuẩn bị thông tin múi giờ Việt Nam (giữ nguyên)
-    TimeZoneInfo vietnamTimeZone = null;
-    bool timeZoneFound = false;
-    try
-    {
-        vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-        timeZoneFound = true;
-    }
-    catch (TimeZoneNotFoundException)
-    {
-        try
-        {
-            vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
-            timeZoneFound = true;
-        }
-        catch (TimeZoneNotFoundException) { }
-    }
-    catch (InvalidTimeZoneException) { }
 }
 
-<div class="container py-5">
-    <h2>Đơn đặt lịch chờ xác nhận</h2>
+<div class="appointment-wrapper py-5">
+    <h2 class="section-title">📅 Đơn đặt lịch chờ xác nhận</h2>
 
-    <table class="table table-bordered table-hover">
-        <thead>
-            <tr>
-                <th>Mã đặt lịch </th>
-                <th>Thú cưng</th>
-                <th>Dịch vụ</th>
-                <th>Thời gian hẹn</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
+    <div class="appointment-card">
+        <div class="card-header">
+            <h4 class="mb-0 fw-bold">Danh sách đặt lịch</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center appointment-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width:20%">Mã đặt lịch</th>
+                            <th style="width:20%">Thú cưng</th>
+                            <th style="width:20%">Dịch vụ</th>
+                            <th style="width:25%">Thời gian</th>
+                            <th style="width:15%">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="id-text" title="@item.AppointmentId">@item.AppointmentId</td>
+                                <td>@(item.Pet?.Name ?? "N/A") (@(item.Pet?.Type ?? "N/A"))</td>
+                                <td>@(item.Service?.Name ?? "N/A")</td>
+                                <td>
+                                    @if (item.ServiceId >= 1 && item.ServiceId <= 3)
+                                    {
+                                        if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
+                                        {
+                                            @($"{item.StartDate:dd/MM/yyyy} - {item.EndDate:dd/MM/yyyy}")
+                                        }
+                                        else if (item.StartDate != default(DateTime))
+                                        {
+                                            @($"{item.StartDate:dd/MM/yyyy} - N/A")
+                                        }
+                                        else if (item.EndDate != default(DateTime))
+                                        {
+                                            @($"N/A - {item.EndDate:dd/MM/yyyy}")
+                                        }
+                                        else
+                                        {
+                                            @:N/A
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (item.StartDate != default(DateTime))
+                                        {
+                                            @item.StartDate.ToString("dd/MM/yyyy")
+                                        }
+                                        else
+                                        {
+                                            @:N/A
+                                        }
 
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
+                                        @if (item.AppointmentTime != default(TimeSpan))
+                                        {
+                                            @: @item.AppointmentTime.ToString(@"hh\:mm")
+                                        }
+                                    }
+                                </td>
+                                <td class="actions-cell">
+                                    <div class="actions">
+                                        <form asp-action="AcceptAppointment" asp-route-id="@item.AppointmentId" method="post" class="d-inline-block">
+                                            <button type="submit" class="btn-accept btn-sm">
+                                                <i class="fas fa-check-circle"></i> Chấp nhận
+                                            </button>
+                                        </form>
+                                        <form asp-action="CancelAppointment" asp-route-id="@item.AppointmentId" method="post" class="d-inline-block">
+                                            <button type="submit" class="btn-cancel btn-sm">
+                                                <i class="fas fa-times-circle"></i> Hủy
+                                            </button>
+                                        </form>
+                                        <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn-detail btn-sm">
+                                            <i class="fas fa-info-circle"></i> Chi tiết
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model == null || !Model.Any())
             {
-                @* --- HÀNG CHÍNH (Hiển thị chỉ 5 cột chính + 1 cột mở rộng) --- *@
-                <tr class="main-row" data-appointment-id="@item.AppointmentId">
-                    @* Ô CHỨA BIỂU TƯỢNG MỞ RỘNG (giữ nguyên) *@
-                    <td>@item.AppointmentId</td>
-                    @* -------------------------------------- *@
-
-                    @* *** CÁC Ô HIỂN THỊ 5 CỘT CHÍNH *** *@
-                    <td>@(item.Pet?.Name ?? "N/A") (@(item.Pet?.Type ?? "N/A"))</td>
-                    <td>@(item.Service?.Name ?? "N/A")</td>
-
-                    @* Nội dung cột "Thời gian hẹn" kết hợp (giữ nguyên logic) *@
-                    <td>
-                        @if (item.ServiceId >= 1 && item.ServiceId <= 3)
-                        {
-                            @(item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A")
-                            @if (item.AppointmentTime != default(TimeSpan))
-                            {
-                                @: @item.AppointmentTime.ToString(@"hh\:mm")
-                            }
-                        }
-                        else
-                        {
-                            @if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
-                            {
-                                @(item.StartDate.ToShortDateString() + " - " + item.EndDate.ToShortDateString())
-                            }
-                            else if (item.StartDate != default(DateTime))
-                            {
-                                @(item.StartDate.ToShortDateString() + " - N/A")
-                            }
-                            else if (item.EndDate != default(DateTime))
-                            {
-                                @("N/A - " + item.EndDate.ToShortDateString())
-                            }
-                            else
-                            {
-                                @:N/A
-                            }
-                        }
-                    </td>
-
-                    <td>@item.Status.GetDisplayName()</td>
-
-                    @* Nội dung cột Hành động (giữ nguyên, nên dùng Form POST cho nút Chấp nhận/Hủy) *@
-                    <td>
-                        @* Nút Chấp nhận/Hủy *@
-                        <form asp-action="AcceptAppointment" asp-route-id="@item.AppointmentId" method="post" style="display:inline;">
-                            @* Cần thêm @Html.AntiForgeryToken() hoặc input hidden trong View chứa bảng này *@
-                            <button type="submit" class="btn btn-success btn-sm">Chấp nhận</button>
-                        </form>
-                        <form asp-action="CancelAppointment" asp-route-id="@item.AppointmentId" method="post" style="display:inline;">
-                            @* Cần thêm @Html.AntiForgeryToken() *@
-                            <button type="submit" class="btn btn-danger btn-sm">Hủy</button>
-                        </form>
-                        @* *** Link "Xem chi tiết" (giữ nguyên) *** *@
-                        <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn btn-info btn-sm">
-                            Chi tiết
-                        </a>
-                        @* ----------------------------------------- *@
-                    </td>
-                </tr>
+                <p class="no-appointments">Không có đơn đặt lịch nào.</p>
             }
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
+
+<style>
+    .appointment-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .appointment-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        font-weight: 600;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .appointment-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .appointment-table th, .appointment-table td {
+        vertical-align: middle;
+    }
+
+    .appointment-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .appointment-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .id-text {
+        display: inline-block;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: monospace;
+        color: #333;
+    }
+
+    .actions-cell {
+        white-space: nowrap;
+    }
+
+    .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        text-decoration: none;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-cancel {
+        border: 2px solid red;
+        color: red;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        background-color: transparent;
+    }
+
+        .btn-cancel:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .btn-accept {
+        border: 2px solid green;
+        color: green;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        background-color: transparent;
+    }
+
+        .btn-accept:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .no-appointments {
+        text-align: center;
+        color: #777;
+        margin-top: 16px;
+    }
+</style>

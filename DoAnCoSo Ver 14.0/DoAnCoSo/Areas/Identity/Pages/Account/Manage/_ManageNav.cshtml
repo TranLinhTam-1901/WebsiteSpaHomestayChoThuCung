@@ -1,0 +1,25 @@
+﻿@using DoAnCoSo.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+}
+<ul class="nav flex-column nav-pink">
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" asp-page="./Index">👤 Thông tin cá nhân</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" asp-page="./Email">📮 Gmail</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" asp-page="./ChangePassword">🔒 Mật khẩu</a>
+    </li>
+    @if (hasExternalLogins)
+    {
+        <li class="nav-item">
+            <a class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">🔗 External logins</a>
+        </li>
+    }
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Pet" asp-action="Index">🐾 Thú cưng</a>
+    </li>
+</ul>

@@ -1,70 +1,200 @@
 ﻿@model DoAnCoSo.ViewModels.SpaBookingViewModel
+@using DoAnCoSo.Models
 
 @{
-    ViewData["Title"] = "Đặt lịch cho dịch vụ Spa";
+    ViewData["Title"] = "🧼 Đặt lịch Spa cho thú cưng 🐾";
+    var spaServices = ViewBag.SpaServices as List<Service> ?? new List<Service>();
+    var spaPricings = ViewBag.SpaPricings as List<SpaPricing> ?? new List<SpaPricing>();
+    var userPets = Model.UserPets ?? new List<Pet>();
 }
 
-<div class="container mt-5">
-    <div class="card shadow-lg p-4 w-50 mx-auto">
-        <h2 class="text-center">@ViewData["Title"]</h2>
-        <form asp-action="BookAppointmentSpa" method="post" id="bookingForm">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<link rel="stylesheet" href="~/css/booking.css" />
 
-            <h4>1️⃣ Thông tin chủ nuôi</h4>
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
 
+        <form asp-action="BookAppointmentSpa" method="post">
+            <!-- 1️⃣ Chủ nuôi -->
+            <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
             <div class="mb-3">
                 <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
-                <input asp-for="OwnerPhoneNumber" class="form-control" required>
-                <span asp-validation-for="OwnerPhoneNumber" class="text-danger"></span>
+                <input asp-for="OwnerPhoneNumber" class="form-control" required />
             </div>
 
-            <h4>2️⃣ Thông tin thú cưng</h4>
+            <!-- 2️⃣ Thú cưng -->
+            <h5><span class="section-icon">🐾</span>Chọn thú cưng</h5>
             <div class="mb-3">
-                <label asp-for="PetName" class="form-label">Tên thú cưng:</label>
-                <input asp-for="PetName" class="form-control" required>
-                <span asp-validation-for="PetName" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="PetType" class="form-label">Loại thú cưng</label>
-                <input asp-for="PetType" class="form-control" required>
-                <span asp-validation-for="PetType" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="PetWeight" class="form-label">Chọn cân nặng của thú cưng</label>
-                <select asp-for="PetWeight" class="form-select" required>
-                    <option value="">Chọn cân nặng</option>
-                    <option value="Dưới 5kg">Dưới 5kg</option>
-                    <option value="5kg - 12kg">5kg - 12kg</option>
-                    <option value="12kg - 25kg">12kg - 25kg</option>
-                    <option value="Trên 25kg">Trên 25kg</option>
+                <label class="form-label">Thú cưng có sẵn</label>
+                <select id="existingPetSelect" class="form-select">
+                    @foreach (var pet in userPets)
+                    {
+                        <option value="@pet.PetId"
+                                data-name="@pet.Name"
+                                data-type="@pet.Type"
+                                data-breed="@pet.Breed"
+                                data-age="@pet.Age"
+                                data-weight="@pet.Weight">
+                            @pet.Name
+                        </option>
+                    }
                 </select>
-                <span asp-validation-for="PetWeight" class="text-danger"></span>
             </div>
 
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PetName" class="form-label">Tên thú cưng</label>
+                    <input asp-for="PetName" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PetType" class="form-label">Loại</label>
+                    <input asp-for="PetType" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PetBreed" class="form-label">Giống</label>
+                    <input asp-for="PetBreed" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PetAge" class="form-label">Tuổi</label>
+                    <input asp-for="PetAge" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PetWeight" class="form-label">Cân nặng</label>
+                    <div class="input-group">
+                        <input asp-for="PetWeight" class="form-control" id="PetWeight" readonly />
+                        <span class="input-group-text">kg</span>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" asp-for="ExistingPetId" id="ExistingPetId" />
+
+            <!-- 3️⃣ Dịch vụ -->
+            <h5><span class="section-icon">🧴</span>Chọn dịch vụ Spa</h5>
             <div class="mb-3">
-                <label asp-for="ServiceId" class="form-label">Chọn dịch vụ Spa</label>
-                <select asp-for="ServiceId" class="form-select" asp-items="@(new SelectList(ViewBag.SpaServices, "ServiceId", "Name"))" required>
-                    <option value="">Chọn dịch vụ</option>
+                <label asp-for="ServiceId" class="form-label">Dịch vụ</label>
+                <select asp-for="ServiceId" class="form-select" id="serviceSelect" required>
+                    @foreach (var service in spaServices)
+                    {
+                        var pricing = spaPricings?.FirstOrDefault(p => p.ServiceId == service.ServiceId);
+                        <option value="@service.ServiceId"
+                                data-priceunder5="@(pricing?.PriceUnder5kg ?? 0)"
+                                data-price5to12="@(pricing?.Price5To12kg ?? 0)"
+                                data-price12to25="@(pricing?.Price12To25kg ?? 0)"
+                                data-priceover25="@(pricing?.PriceOver25kg ?? 0)">
+                            @service.Name
+                        </option>
+                    }
                 </select>
-                <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
 
-            <h4>3️⃣ Chọn thời gian</h4>
+            <!-- 4️⃣ Giá -->
+            <h5><span class="section-icon">💰</span>Giá dịch vụ</h5>
             <div class="mb-3">
-                <label asp-for="AppointmentDate" class="form-label">Chọn ngày</label>
-                <input asp-for="AppointmentDate" class="form-control" type="date" required>
-                <span asp-validation-for="AppointmentDate" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="AppointmentTime" class="form-label">Chọn giờ</label>
-                <input asp-for="AppointmentTime" class="form-control" type="time" required>
-                <span asp-validation-for="AppointmentTime" class="text-danger"></span>
+                <input type="text" class="form-control fw-bold text-danger" id="calculatedPrice" value="0 VNĐ" readonly />
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">
-                📅 Đặt lịch ngay
-            </button>
+            <!-- 5️⃣ Thời gian -->
+            <h5><span class="section-icon">📅</span>Thời gian hẹn</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="AppointmentDate" class="form-label">Ngày hẹn</label>
+                    <input asp-for="AppointmentDate"
+                           type="text"
+                           id="appointmentPicker"
+                           class="form-control"
+                           placeholder="Chọn ngày hẹn..."
+                           required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="AppointmentTime" class="form-label">Giờ hẹn</label>
+                    <input asp-for="AppointmentTime" type="time" class="form-control" required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-pink w-100 mt-4">📅 Đặt lịch ngay</button>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const petSelect = document.getElementById("existingPetSelect");
+        const serviceSelect = document.getElementById("serviceSelect");
+        const priceInput = document.getElementById("calculatedPrice");
+
+        const petNameInput = document.getElementById("PetName");
+        const petTypeInput = document.getElementById("PetType");
+        const petBreedInput = document.getElementById("PetBreed");
+        const petAgeInput = document.getElementById("PetAge");
+        const petWeightInput = document.getElementById("PetWeight");
+        const existingPetIdInput = document.getElementById("ExistingPetId");
+
+        function parseWeight(weightStr) {
+            if (!weightStr) return 0;
+            const cleaned = weightStr.replace(",", ".").replace(/[^\d.]/g, "");
+            return parseFloat(cleaned) || 0;
+        }
+
+        function updatePetInfo() {
+            const selectedPet = petSelect.selectedOptions[0];
+            if (!selectedPet) return;
+
+            petNameInput.value = selectedPet.dataset.name || "";
+            petTypeInput.value = selectedPet.dataset.type || "";
+            petBreedInput.value = selectedPet.dataset.breed || "";
+            petAgeInput.value = selectedPet.dataset.age || "";
+            petWeightInput.value = selectedPet.dataset.weight || "";
+            existingPetIdInput.value = selectedPet.value;
+
+            updatePrice(); // cập nhật giá ngay khi đổi pet
+        }
+
+        function updatePrice() {
+            const selectedService = serviceSelect.selectedOptions[0];
+            const selectedPet = petSelect.selectedOptions[0];
+            if (!selectedService || !selectedPet) {
+                priceInput.value = "0 VNĐ";
+                return;
+            }
+
+            const weight = parseWeight(selectedPet.dataset.weight);
+            let price = 0;
+
+            if (weight < 5) {
+                price = parseFloat(selectedService.dataset.priceunder5) || 0;
+            } else if (weight <= 12) {
+                price = parseFloat(selectedService.dataset.price5to12) || 0;
+            } else if (weight <= 25) {
+                price = parseFloat(selectedService.dataset.price12to25) || 0;
+            } else {
+                price = parseFloat(selectedService.dataset.priceover25) || 0;
+            }
+
+            priceInput.value = price.toLocaleString("vi-VN") + " VNĐ";
+        }
+
+        // Sự kiện khi đổi thú cưng
+        petSelect.addEventListener("change", updatePetInfo);
+
+        // Sự kiện khi đổi dịch vụ
+        serviceSelect.addEventListener("change", updatePrice);
+
+        // Khởi tạo mặc định khi vào trang
+        if (petSelect.options.length > 0) petSelect.selectedIndex = 0;
+        if (serviceSelect.options.length > 0) serviceSelect.selectedIndex = 0;
+
+        updatePetInfo(); // cập nhật thông tin thú cưng và giá ngay khi vào trang
+
+                // ------------------ AppointmentDate ------------------
+        flatpickr("#appointmentPicker", {
+            dateFormat: "d/m/Y",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "vn",
+            disableMobile: true,
+            minDate: "today",
+            defaultDate: "@(Model.AppointmentDate.ToString("dd/MM/yyyy"))"
+        });
+    });
+</script>

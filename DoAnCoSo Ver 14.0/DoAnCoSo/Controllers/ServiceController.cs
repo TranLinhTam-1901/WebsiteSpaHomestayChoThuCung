@@ -16,20 +16,20 @@ namespace DoAnCoSo.Controllers
             _context = context;
         }
 
-        // Hiển thị danh sách dịch vụ Spa
         public IActionResult Spa()
         {
-            var spaServices = _context.Services.Where(s => s.Name.Contains("Spa")).ToList();
+            var spaServices = _context.Services
+                .Where(s => s.Category == ServiceCategory.Spa)
+                .ToList();
             return View(spaServices);
         }
 
-        // Hiển thị danh sách dịch vụ Lưu trú
         public IActionResult LuuTru()
         {
-            var luuTruServices = _context.Services.Where(s => s.Name.Contains("Lưu trú")).ToList();
+            var luuTruServices = _context.Services
+                .Where(s => s.Category == ServiceCategory.Homestay)
+                .ToList();
             return View(luuTruServices);
         }
-
-       
     }
 }

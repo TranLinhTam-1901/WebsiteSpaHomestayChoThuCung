@@ -1,64 +1,172 @@
 ﻿@model DoAnCoSo.ViewModels.CheckoutViewModel
 
 @{
-    ViewData["Title"] = "Thanh Toán";
+    ViewData["Title"] = "💳 Thanh Toán";
 }
 
-<div class="container py-4">
-    <h2 class="mb-4 text-center">💳 Trang Thanh Toán</h2>
-
-    @* Hiển thị thông báo lỗi từ ModelState hoặc TempData *@
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger" role="alert">
-            @TempData["ErrorMessage"]
-        </div>
+<style>
+    .checkout-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding: 20px 15px;
     }
-    @if (!ViewData.ModelState.IsValid)
+
+    .checkout-box {
+        background-color: #fff;
+        border: 1px solid #FFB6C1;
+        border-radius: 16px;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        padding: 24px;
+    }
+
+    .checkout-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 32px;
+        position: relative;
+    }
+
+        .checkout-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .section-subtitle {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #FF6185;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .section-subtitle i {
+            color: #FF6185;
+        }
+
+    .list-group-item img {
+        border-radius: 10px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #444;
+        font-size: 0.95rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #FFB6C1;
+        font-size: 0.95rem;
+    }
+
+    .btn-checkout {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: none;
+        transition: background-color 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+        .btn-checkout:hover {
+            background-color: #e75478;
+        }
+
+    .alert-heading {
+        color: #FF6185;
+        font-weight: bold;
+    }
+
+    .text-danger {
+        font-size: 0.9rem;
+    }
+
+    @@media (max-width: 768px) {
+        .checkout-title
+
     {
-        <div class="alert alert-danger" role="alert">
-            <ul class="mb-0">
-                @foreach (var modelStateEntry in ViewData.ModelState.Values)
-                {
-                    foreach (var error in modelStateEntry.Errors)
+        font-size: 1.4rem;
+    }
+
+    .section-subtitle {
+        font-size: 1rem;
+    }
+
+    .form-label, .form-control, .form-select {
+        font-size: 0.9rem;
+    }
+
+    .btn-checkout {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+    }
+
+    }
+</style>
+
+<div class="checkout-wrapper py-5">
+    <div class="checkout-box">
+        <h2 class="checkout-title">@ViewData["Title"]</h2>
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                    @foreach (var modelStateEntry in ViewData.ModelState.Values)
                     {
-                        <li>@error.ErrorMessage</li>
+                        foreach (var error in modelStateEntry.Errors)
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
                     }
+                </ul>
+            </div>
+        }
+
+        @if (Model != null && Model.CartItemsFromDb != null && Model.CartItemsFromDb.Any())
+        {
+            <h5 class="mb-3">🛒 Các sản phẩm đã chọn:</h5>
+            <ul class="list-group mb-4">
+                @foreach (var item in Model.CartItemsFromDb)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="img-thumbnail me-2" style="width: 50px;">
+                            @item.Product.Name (@item.Quantity x @((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price).ToString("N0"))đ)
+                            @if (!string.IsNullOrEmpty(item.SelectedFlavor))
+                            {
+                                <small class="text-muted">(Hương vị: @item.SelectedFlavor)</small>
+                            }
+                        </div>
+                        <span class="fw-bold">@(((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price) * item.Quantity).ToString("N0"))đ</span>
+                    </li>
                 }
             </ul>
-        </div>
-    }
 
+            <h4 class="text-end mb-4">Tổng tiền: <span class="text-danger fw-bold">@Model.CartTotal.ToString("N0")đ</span></h4>
 
-    @if (Model != null && Model.CartItemsFromDb != null && Model.CartItemsFromDb.Any())
-    {
-        <h4 class="mb-3">Các sản phẩm đã chọn:</h4>
-        <ul class="list-group mb-4">
-            @foreach (var item in Model.CartItemsFromDb)
-            {
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="img-thumbnail me-2" style="width: 50px;">
-                        @item.Product.Name (@item.Quantity x @((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price).ToString("N0"))đ)
-                        @if (!string.IsNullOrEmpty(item.SelectedFlavor))
-                        {
-                            <small class="text-muted">(Hương vị: @item.SelectedFlavor)</small>
-                        }
-                    </div>
-                    <span class="fw-bold">@(((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price) * item.Quantity).ToString("N0"))đ</span>
-                </li>
-            }
-        </ul>
-
-        <h3 class="text-end mb-4">Tổng tiền phải trả: <span class="text-danger fw-bold">@Model.CartTotal.ToString("N0")đ</span></h3>
-
-        <div class="card p-4">
-            <h5 class="mb-3">Thông tin nhận hàng và thanh toán</h5>
             <form asp-controller="ShoppingCart" asp-action="Checkout" method="post">
                 @Html.AntiForgeryToken()
 
                 <input type="hidden" asp-for="IsBuyNowCheckout" />
-
                 @if (Model.IsBuyNowCheckout)
                 {
                     <input type="hidden" asp-for="BuyNowProductId" />
@@ -67,7 +175,6 @@
                 }
                 else
                 {
-                    @* CHỈNH SỬA TẠI ĐÂY: Thay đổi name thành SelectedCartItemIds[@i] *@
                     @for (int i = 0; i < Model.CartItemsFromDb.Count; i++)
                     {
                         <input type="hidden" name="SelectedCartItemIds[@i]" value="@Model.CartItemsFromDb[i].Id" />
@@ -75,25 +182,30 @@
                 }
                 <input type="hidden" asp-for="CartTotal" />
 
+                <h5 class="mb-3">📦 Thông tin nhận hàng</h5>
 
                 <div class="mb-3">
                     <label asp-for="Order.CustomerName" class="form-label">Họ và tên người nhận:</label>
                     <input asp-for="Order.CustomerName" class="form-control" placeholder="Nhập tên người nhận..." />
                     <span asp-validation-for="Order.CustomerName" class="text-danger"></span>
                 </div>
+
                 <div class="mb-3">
                     <label asp-for="Order.PhoneNumber" class="form-label">Số điện thoại:</label>
                     <input asp-for="Order.PhoneNumber" class="form-control" type="tel" placeholder="Nhập số điện thoại..." />
                     <span asp-validation-for="Order.PhoneNumber" class="text-danger"></span>
                 </div>
+
                 <div class="mb-3">
                     <label asp-for="Order.ShippingAddress" class="form-label">Địa chỉ giao hàng:</label>
                     <textarea asp-for="Order.ShippingAddress" class="form-control" rows="3" placeholder="Nhập địa chỉ chi tiết..."></textarea>
                     <span asp-validation-for="Order.ShippingAddress" class="text-danger"></span>
                 </div>
 
+                <h5 class="mb-3">💰 Phương thức thanh toán</h5>
+
                 <div class="mb-3">
-                    <label asp-for="Order.PaymentMethod" class="form-label">Phương thức thanh toán:</label>
+                    <label asp-for="Order.PaymentMethod" class="form-label">Phương thức:</label>
                     <select asp-for="Order.PaymentMethod" class="form-select">
                         <option value="">-- Chọn phương thức --</option>
                         <option value="COD">Thanh toán khi nhận hàng (COD)</option>
@@ -108,19 +220,18 @@
                     <span asp-validation-for="Order.Notes" class="text-danger"></span>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">
-                    <i class="fas fa-money-check-alt"></i> Đặt Hàng Ngay
+                <button type="submit" class="btn btn-checkout w-100 mt-3">
+                    🛍️ Đặt Hàng Ngay
                 </button>
             </form>
-        </div>
-
-    }
-    else
-    {
-        <div class="alert alert-info text-center mt-4">
-            Không có sản phẩm nào được chọn để thanh toán. Vui lòng quay lại <a asp-action="Index">giỏ hàng</a>.
-        </div>
-    }
+        }
+        else
+        {
+            <div class="alert alert-info text-center mt-4">
+                Không có sản phẩm nào được chọn để thanh toán. Vui lòng quay lại <a asp-action="Index">giỏ hàng</a>.
+            </div>
+        }
+    </div>
 </div>
 
 @section Scripts {

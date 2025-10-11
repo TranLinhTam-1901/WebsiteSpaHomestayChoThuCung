@@ -1,0 +1,131 @@
+﻿@model DoAnCoSo.Models.Promotion
+
+<section class="promotion-detail-section">
+    <div class="container">
+        <div class="promo-detail-card">
+            <img src="~/images/promotions/@Model.Image" alt="@Model.Title" class="promo-detail-img">
+
+            <div class="promo-detail-content">
+                <h1 class="promo-title">@Model.Title</h1>
+
+                @if (!string.IsNullOrEmpty(Model.ShortDescription))
+                {
+                    <p class="promo-short">@Model.ShortDescription</p>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="promo-description">
+                        @Html.Raw(Model.Description)
+                    </div>
+                }
+
+                <div class="promo-meta">
+                    @if (Model.Discount > 0)
+                    {
+                        <span class="promo-discount">Giảm giá: @Model.Discount %</span>
+                    }
+                    <span class="promo-date">Áp dụng từ @Model.StartDate.ToString("dd/MM/yyyy") đến @Model.EndDate.ToString("dd/MM/yyyy")</span>
+                </div>
+
+                <a href="/Promotion" class="btn-back">← Quay lại</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .promotion-detail-section {
+        padding: 60px 15px;
+        background-color: #f9f9f9;
+    }
+
+    .promo-detail-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .promo-detail-img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+    }
+
+    .promo-detail-content {
+        padding: 30px;
+    }
+
+    .promo-title {
+        font-size: 32px;
+        color: #FF6185;
+        margin-bottom: 15px;
+    }
+
+    .promo-short {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .promo-description {
+        font-size: 15px;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .promo-meta {
+        font-size: 14px;
+        color: #FF6185;
+        margin-bottom: 25px;
+    }
+
+        .promo-meta span {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+    .btn-back {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 30px;
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-back:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    /* Responsive */
+    @@media (max-width: 767px) {
+        .promo-detail-img
+
+    {
+        height: 250px;
+    }
+
+    .promo-title {
+        font-size: 24px;
+    }
+
+    .promo-short {
+        font-size: 16px;
+    }
+
+    .promo-description {
+        font-size: 14px;
+    }
+
+    }
+</style>
