@@ -1,7 +1,6 @@
 ﻿using DoAnCoSo.Data;
 using DoAnCoSo.Helpers;
 using DoAnCoSo.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,19 +21,20 @@ namespace DoAnCoSo.Controllers
 
         public IActionResult Index()
         {
-            var customers = _userManager.GetUsersInRoleAsync("customer").Result;
-            return View(customers);
+            return View();
         }
 
         // ✅ Lấy danh sách cuộc trò chuyện
         public async Task<IActionResult> GetConversations()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+
             var conversations = await _context.Conversations
                 .Include(c => c.Customer)
                 .OrderByDescending(c => c.LastUpdated)
                 .ToListAsync();
 
-            // ✅ Lấy tin nhắn cuối cùng cho từng cuộc trò chuyện
             foreach (var conv in conversations)
             {
                 var lastMessage = _context.ChatMessages
@@ -42,10 +42,10 @@ namespace DoAnCoSo.Controllers
                     .OrderByDescending(m => m.SentAt)
                     .FirstOrDefault();
 
-                // Gắn tin nhắn cuối vào ViewData để hiển thị trong sidebar
                 if (lastMessage != null)
                 {
-                    ViewData[$"LastMessage_{conv.Id}"] = lastMessage.Message;
+                    var plain = TryDecryptMessage(lastMessage, user);
+                    ViewData[$"LastMessage_{conv.Id}"] = plain;
                     ViewData[$"LastMessageTime_{conv.Id}"] = lastMessage.SentAt;
                 }
             }
@@ -54,14 +54,14 @@ namespace DoAnCoSo.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetChatHistory(int skip = 0, int take = 20)
+        public async Task<IActionResult> GetChatHistory(int skip = 0, int take = 20)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
 
             var conversation = _context.Conversations
                 .FirstOrDefault(c => c.CustomerId == userId);
 
-            // Tạo conversation nếu chưa có
             if (conversation == null)
             {
                 conversation = new Conversation
@@ -73,20 +73,28 @@ namespace DoAnCoSo.Controllers
                 _context.SaveChanges();
             }
 
-            var messages = _context.ChatMessages
+            var messages = await _context.ChatMessages
                 .Where(m => m.ConversationId == conversation.Id)
                 .OrderByDescending(m => m.SentAt)
                 .Skip(skip)
                 .Take(take)
                 .OrderBy(m => m.SentAt)
-                .Select(m => new {
-                    senderId = m.SenderId,
-                    message = EncryptionHelper.Decrypt(m.Message),
-                    sentAt = m.SentAt
-                })
-                .ToList();
+                .ToListAsync();
 
-            return Json(messages);
+            var decrypted = new List<object>();
+
+            foreach (var m in messages)
+            {
+                var plain = TryDecryptMessage(m, user);
+                decrypted.Add(new
+                {
+                    senderId = m.SenderId,
+                    message = plain,
+                    sentAt = m.SentAt
+                });
+            }
+
+            return Json(decrypted);
         }
 
         [HttpGet]
@@ -112,10 +120,35 @@ namespace DoAnCoSo.Controllers
                 .Where(m => m.ReceiverId == customerId && !m.IsRead)
                 .ToListAsync();
 
-            foreach (var m in messages) m.IsRead = true;
-            await _context.SaveChangesAsync();
+            foreach (var m in messages)
+                m.IsRead = true;
 
+            await _context.SaveChangesAsync();
             return Ok();
+        }
+
+        // ✅ Giải mã chuẩn cấp 2 + fallback AES
+        private string TryDecryptMessage(ChatMessage message, ApplicationUser currentUser)
+        {
+            try
+            {
+                if (message.SenderId == currentUser.Id)
+                {
+                    if (!string.IsNullOrEmpty(message.SenderCopy) && !string.IsNullOrEmpty(message.SenderAesKey))
+                        return EncryptionHelper.DecryptHybrid(message.SenderCopy, message.SenderAesKey, currentUser.PrivateKey);
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(message.Message) && !string.IsNullOrEmpty(message.EncryptedAesKey))
+                        return EncryptionHelper.DecryptHybrid(message.Message, message.EncryptedAesKey, currentUser.PrivateKey);
+                }
+
+                return message.Message;
+            }
+            catch
+            {
+                return message.Message;
+            }
         }
     }
 }

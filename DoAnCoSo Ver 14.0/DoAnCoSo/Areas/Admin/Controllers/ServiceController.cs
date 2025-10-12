@@ -24,7 +24,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 .Include(a => a.Pet)
                 .Include(a => a.Service)
                 .Where(a => a.Status == AppointmentStatus.Pending)
-                .OrderBy(a => a.AppointmentDate) // có thể sắp xếp theo ngày đặt
+                .OrderBy(a => a.AppointmentId) // có thể sắp xếp theo ngày đặt
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -66,8 +66,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 .Include(a => a.User)
                 .Include(a => a.Pet)
                 .Include(a => a.Service)
-                .Where(a => a.Status != AppointmentStatus.Pending)
-                .OrderByDescending(a => a.AppointmentDate)
+                .OrderByDescending(a => a.AppointmentId)
                 .AsNoTracking()
                 .ToListAsync();
 

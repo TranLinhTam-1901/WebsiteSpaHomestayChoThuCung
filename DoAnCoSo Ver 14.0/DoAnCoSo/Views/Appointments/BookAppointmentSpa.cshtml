@@ -99,7 +99,16 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label asp-for="AppointmentDate" class="form-label">Ngày hẹn</label>
+<<<<<<< HEAD
                     <input asp-for="AppointmentDate" type="date" class="form-control" required />
+=======
+                    <input asp-for="AppointmentDate"
+                           type="text"
+                           id="appointmentPicker"
+                           class="form-control"
+                           placeholder="Chọn ngày hẹn..."
+                           required />
+>>>>>>> feature/kiet/add_encrypt_and_RR_toChat
                 </div>
                 <div class="col-md-6">
                     <label asp-for="AppointmentTime" class="form-label">Giờ hẹn</label>
@@ -180,5 +189,21 @@
         if (serviceSelect.options.length > 0) serviceSelect.selectedIndex = 0;
 
         updatePetInfo(); // cập nhật thông tin thú cưng và giá ngay khi vào trang
+<<<<<<< HEAD
     });
 </script>
+=======
+
+                // ------------------ AppointmentDate ------------------
+        flatpickr("#appointmentPicker", {
+            dateFormat: "d/m/Y",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "vn",
+            disableMobile: true,
+            minDate: "today",
+            defaultDate: "@(Model.AppointmentDate.ToString("dd/MM/yyyy"))"
+        });
+    });
+</script>
+>>>>>>> feature/kiet/add_encrypt_and_RR_toChat

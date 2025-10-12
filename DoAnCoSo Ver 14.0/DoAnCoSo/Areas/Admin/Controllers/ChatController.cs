@@ -30,34 +30,40 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
         // ✅ Lấy lịch sử tin nhắn trong 1 cuộc trò chuyện
         [HttpGet]
-        public IActionResult GetMessages(string customerId, int skip = 0, int take = 20)
+        public async Task<IActionResult> GetMessages(string customerId, int skip = 0, int take = 20)
         {
             var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var conversation = _context.Conversations
-                .FirstOrDefault(c =>
+            var conversation = await _context.Conversations
+                .FirstOrDefaultAsync(c =>
                     (c.CustomerId == customerId && c.AdminId == adminId) ||
                     (c.CustomerId == adminId && c.AdminId == customerId));
 
-            if (conversation == null) return Ok(new List<ChatMessage>());
+            if (conversation == null) return Ok(new List<object>());
 
-            // Lấy tin nhắn mới → cũ để skip/take
-            var messages = _context.ChatMessages
+            var messages = await _context.ChatMessages
                 .Where(m => m.ConversationId == conversation.Id)
-                .OrderByDescending(m => m.SentAt)  // mới → cũ
+                .OrderByDescending(m => m.SentAt)
                 .Skip(skip)
                 .Take(take)
-                .Select(m => new {
+                .ToListAsync();
+
+            var admin = await _userManager.FindByIdAsync(adminId);
+            var decryptedList = new List<object>();
+
+            foreach (var m in messages)
+            {
+                var plain = TryDecryptMessage(m, admin);
+                decryptedList.Add(new
+                {
                     fromUserId = m.SenderId,
-                    message = EncryptionHelper.Decrypt(m.Message),
+                    message = plain,
                     sentAt = m.SentAt
-                })
-                .ToList();
+                });
+            }
 
-            // Đảo lại mảng để client append từ cũ → mới
-            messages.Reverse();
-
-            return Ok(messages);
+            decryptedList.Reverse();
+            return Ok(decryptedList);
         }
 
         [HttpGet]
@@ -67,8 +73,9 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             var result = await _context.Conversations
                 .Where(c => c.AdminId == adminId || c.CustomerId == adminId)
-                .OrderByDescending(c => c.LastUpdated) // 👈 sort ngay từ DB
-                .Select(c => new {
+                .OrderByDescending(c => c.LastUpdated)
+                .Select(c => new
+                {
                     id = c.CustomerId == adminId ? c.AdminId : c.CustomerId,
                     fullName = c.CustomerId == adminId ? c.Admin.FullName : c.Customer.FullName,
                     unreadCount = _context.ChatMessages.Count(m => m.ConversationId == c.Id && !m.IsRead && m.SenderId != adminId),
@@ -79,7 +86,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             return Ok(result);
         }
 
-        // ✅ Đánh dấu tất cả tin nhắn của khách đã đọc
+
         [HttpPost]
         public async Task<IActionResult> MarkAsRead(string customerId)
         {
@@ -96,14 +103,38 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     .ToListAsync();
 
                 foreach (var msg in unreadMessages)
-                {
                     msg.IsRead = true;
-                }
 
                 await _context.SaveChangesAsync();
             }
 
             return Ok(new { success = true });
+        }
+
+        // ✅ Fix decrypt logic: nếu chính mình gửi thì trả plaintext
+        private string TryDecryptMessage(ChatMessage message, ApplicationUser currentUser)
+        {
+            try
+            {
+                // Nếu mình là người gửi → giải bằng bản sao (sender copy)
+                if (message.SenderId == currentUser.Id)
+                {
+                    if (!string.IsNullOrEmpty(message.SenderCopy) && !string.IsNullOrEmpty(message.SenderAesKey))
+                        return EncryptionHelper.DecryptHybrid(message.SenderCopy, message.SenderAesKey, currentUser.PrivateKey);
+                }
+                else
+                {
+                    // Nếu mình là người nhận → giải bản chính
+                    if (!string.IsNullOrEmpty(message.Message) && !string.IsNullOrEmpty(message.EncryptedAesKey))
+                        return EncryptionHelper.DecryptHybrid(message.Message, message.EncryptedAesKey, currentUser.PrivateKey);
+                }
+
+                return message.Message;
+            }
+            catch
+            {
+                return message.Message;
+            }
         }
     }
 }

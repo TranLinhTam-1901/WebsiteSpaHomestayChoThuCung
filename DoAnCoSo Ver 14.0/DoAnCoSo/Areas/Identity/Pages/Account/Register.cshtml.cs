@@ -163,13 +163,18 @@ namespace DoAnCoSo.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-
                     _logger.LogInformation("User created a new account with password.");
 
-                    // Luôn gán vai trò Customer
+                    // ✅ Sinh cặp khóa RSA cho user
+                    var (publicKey, privateKey) = DoAnCoSo.Helpers.EncryptionHelper.GenerateRsaKeyPair();
+                    user.PublicKey = publicKey;
+                    user.PrivateKey = privateKey;
+                    await _userManager.UpdateAsync(user);
+
+                    // ✅ Gán vai trò Customer
                     await _userManager.AddToRoleAsync(user, SD.Role_Customer);
 
-                    // Lưu Conversation mặc định cho customer mới
+                    // ✅ Tạo conversation mặc định
                     using (var scope = HttpContext.RequestServices.CreateScope())
                     {
                         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -178,7 +183,6 @@ namespace DoAnCoSo.Areas.Identity.Pages.Account
                         {
                             CustomerId = user.Id,
                             LastUpdated = DateTime.UtcNow
-                            // AdminId để null => để khi admin nhận tin thì gán
                         };
                         db.Conversations.Add(conv);
                         await db.SaveChangesAsync();
@@ -206,6 +210,7 @@ namespace DoAnCoSo.Areas.Identity.Pages.Account
                         return LocalRedirect(returnUrl);
                     }
                 }
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);

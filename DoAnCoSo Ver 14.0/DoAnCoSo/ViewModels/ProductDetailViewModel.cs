@@ -22,6 +22,8 @@ namespace DoAnCoSo.ViewModels
         public string? Trademark => Product?.Trademark;
         public string? Description => Product?.Description;
         public string? CategoryName => Product?.Category?.Name;
+        public int CurrentPage { get; set; } = 1;
+
         public List<string> Flavors => Product?.FlavorsList ?? new List<string>();
 
         // Đánh giá

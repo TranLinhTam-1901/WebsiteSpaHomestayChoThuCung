@@ -125,7 +125,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
         #region Display + Reviews (Customer)
 
-        public async Task<IActionResult> Display(int id)
+        public async Task<IActionResult> Display(int id, int currentPage = 1)
         {
             var product = await _context.Products
                 .Include(p => p.Images)
@@ -146,7 +146,9 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 Product = product,
                 Reviews = reviews,
                 TotalReviews = reviews.Count,
-                AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0
+                AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0,
+
+                CurrentPage = currentPage
             };
 
             return View(vm);

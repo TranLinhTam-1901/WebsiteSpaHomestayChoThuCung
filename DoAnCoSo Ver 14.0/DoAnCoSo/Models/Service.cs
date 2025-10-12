@@ -3,13 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DoAnCoSo.Models
 {
-    public enum ServiceCategory
-    {
-        Spa,
-        Homestay,
-        Vet
-    }
-
     public class Service
     {
         [Key]

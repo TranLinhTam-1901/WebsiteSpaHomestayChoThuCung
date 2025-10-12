@@ -30,8 +30,13 @@ label {
 }
 
 .btn-pink {
+<<<<<<< HEAD
     background-color: #FF6185;
     color: white;
+=======
+    background-color: #FFB6C1;
+    color: black;
+>>>>>>> feature/kiet/add_encrypt_and_RR_toChat
     font-weight: bold;
     padding: 12px;
     border-radius: 12px;
@@ -40,7 +45,12 @@ label {
 }
 
     .btn-pink:hover {
+<<<<<<< HEAD
         background-color: #e75478;
+=======
+        background-color: #FF6185;
+        color: white;
+>>>>>>> feature/kiet/add_encrypt_and_RR_toChat
     }
 
 #calculatedPrice {
@@ -52,3 +62,51 @@ label {
     font-size: 1.2rem;
     margin-right: 5px;
 }
+<<<<<<< HEAD
+=======
+
+.btn-secondary {
+    background-color: #FFB6C1;
+    color: black;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+    .btn-secondary:hover {
+        background-color: #FF6185;
+        color: white;
+    }
+
+.btn-warning {
+    background-color: #E6A500;
+    border: none;
+    color: black;
+    font-weight: bold;
+    border-radius: 12px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+    .btn-warning:hover {
+        background-color: #CC8C00;
+        color: #fff;
+    }
+
+.btn-danger {
+    background-color: #FF3B3B;
+    border: none;
+    color: black;
+    font-weight: bold;
+    border-radius: 12px;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+    .btn-danger:hover {
+        background-color: #D92D2D;
+        color: white;
+    }
+>>>>>>> feature/kiet/add_encrypt_and_RR_toChat

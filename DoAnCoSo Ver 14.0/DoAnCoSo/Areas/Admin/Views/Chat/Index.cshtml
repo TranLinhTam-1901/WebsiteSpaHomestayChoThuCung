@@ -21,7 +21,10 @@
 
 <div class="container py-5">
     <h2 class="section-title">💬 Chăm sóc khách hàng</h2>
+<<<<<<< HEAD
 
+=======
+>>>>>>> feature/kiet/add_encrypt_and_RR_toChat
 
     <div class="row g-4">
         <!-- Sidebar khách hàng -->
@@ -229,7 +232,12 @@
         const customerAvatars = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerAvatars));
 
         function getAvatar(customerId){
-            return `/images/avatar/${customerAvatars[customerId]}`;
+            if (customerAvatars[customerId]) {
+                return `/images/avatar/${customerAvatars[customerId]}`;
+            }
+            // Nếu không có trong danh sách -> dùng avatar mặc định
+            const num = Math.abs(customerId.split('-').reduce((a,b)=>a+b.charCodeAt(0),0)) % 6 + 1;
+            return `/images/avatar/avatar_${num}.jpg`;
         }
 
         function createMessageElement(msg){
