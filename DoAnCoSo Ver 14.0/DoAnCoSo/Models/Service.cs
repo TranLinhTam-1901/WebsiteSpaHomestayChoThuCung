@@ -1,5 +1,4 @@
-﻿using DoAnCoSo.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DoAnCoSo.Models
 {
@@ -34,5 +33,4 @@ namespace DoAnCoSo.Models
         // Quan hệ với PetServiceRecord
         public ICollection<PetServiceRecord> PetServiceRecords { get; set; } = new List<PetServiceRecord>();
     }
-
 }

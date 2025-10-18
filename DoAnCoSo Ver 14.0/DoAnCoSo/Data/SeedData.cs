@@ -1,5 +1,5 @@
-﻿using DoAnCoSo.Models;
-using DoAnCoSo.Helpers;
+﻿using DoAnCoSo.Helpers;
+using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,8 +40,8 @@ namespace DoAnCoSo.Data
                         UserName = "Admin1@gmail.com",
                         Email = "Admin1@gmail.com",
                         FullName = "Admin1",
-                        Address = "System 1", 
-                        PhoneNumber = "0987654321" 
+                        Address = "System 1",
+                        PhoneNumber = "0987654321"
                     };
 
                     // Tạo user với mật khẩu

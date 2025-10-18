@@ -30,13 +30,8 @@ label {
 }
 
 .btn-pink {
-<<<<<<< HEAD
-    background-color: #FF6185;
-    color: white;
-=======
     background-color: #FFB6C1;
     color: black;
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
     font-weight: bold;
     padding: 12px;
     border-radius: 12px;
@@ -45,12 +40,8 @@ label {
 }
 
     .btn-pink:hover {
-<<<<<<< HEAD
-        background-color: #e75478;
-=======
         background-color: #FF6185;
         color: white;
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
     }
 
 #calculatedPrice {
@@ -62,8 +53,6 @@ label {
     font-size: 1.2rem;
     margin-right: 5px;
 }
-<<<<<<< HEAD
-=======
 
 .btn-secondary {
     background-color: #FFB6C1;
@@ -109,4 +98,3 @@ label {
         background-color: #D92D2D;
         color: white;
     }
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
