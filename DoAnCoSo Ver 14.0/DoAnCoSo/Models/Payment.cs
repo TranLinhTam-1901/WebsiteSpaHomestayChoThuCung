@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnCoSo.Models
 {
@@ -22,6 +22,6 @@ namespace DoAnCoSo.Models
         public int OrderId { get; set; }
 
         // Navigation Property
-        public  Order Order { get; set; }
+        public Order Order { get; set; }
     }
 }

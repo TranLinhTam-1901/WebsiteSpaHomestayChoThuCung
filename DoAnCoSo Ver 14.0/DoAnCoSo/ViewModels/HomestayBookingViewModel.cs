@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DoAnCoSo.Models;
 using System.ComponentModel.DataAnnotations;
-using DoAnCoSo.Models;
 
 namespace DoAnCoSo.ViewModels
 {

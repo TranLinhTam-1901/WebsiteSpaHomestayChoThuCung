@@ -1,40 +1,5 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.Category>
 
-<<<<<<< HEAD
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-gradient-pink fw-bold">🌸 Quản lý Danh mục</h2>
-        <a asp-area="Admin" asp-controller="Categories" asp-action="Add"
-            class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
-            + Thêm danh mục
-        </a>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table table-hover text-center shadow-sm rounded-3 overflow-hidden">
-            <thead class="bg-gradient-pink text-white">
-                <tr>
-                    <th style="width:10%">ID</th>
-                    <th style="width:60%">Tên danh mục</th>
-                    <th style="width:30%">Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var category in Model)
-                {
-                    <tr>
-                        <td>@category.Id</td>
-                        <td class="fw-semibold">@category.Name</td>
-                        <td>
-                            <a class="btn btn-outline-pink btn-sm me-1" asp-area="Admin" asp-action="Display" asp-route-id="@category.Id">Xem</a>
-                            <a class="btn btn-outline-warning btn-sm me-1" asp-area="Admin" asp-action="Update" asp-route-id="@category.Id">Sửa</a>
-                            <a class="btn btn-outline-danger btn-sm" asp-area="Admin" asp-action="Delete" asp-route-id="@category.Id">Xóa</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-=======
 @{
     ViewData["Title"] = "Quản lý danh mục";
 }
@@ -83,64 +48,12 @@
                 </tbody>
             </table>
         </div>
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
     </div>
 </div>
 
 <style>
     :root {
         --pink-main: #FF6185;
-<<<<<<< HEAD
-        --pink-accent: #FF6B6B;
-    }
-
-    /* Gradient hồng */
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-    }
-
-    .text-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .btn-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: #fff;
-        border: none;
-        transition: 0.3s;
-    }
-
-        .btn-gradient-pink:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-    .btn-outline-pink {
-        border: 1px solid var(--pink-main);
-        color: var(--pink-main);
-        background-color: #fff;
-        transition: 0.3s;
-    }
-
-        .btn-outline-pink:hover {
-            background-color: var(--pink-accent);
-            border-color: var(--pink-accent);
-            color: #fff;
-        }
-
-    table {
-        border-radius: 0.75rem;
-        overflow: hidden;
-        font-size: 0.95rem;
-    }
-
-        table tbody tr:hover {
-            background-color: #fff0f4;
-        }
-</style>
-=======
         --pink-light: #FFB6C1;
         --pink-dark: #e74c7b;
     }
@@ -224,4 +137,3 @@
             color: #fff;
         }
 </style>
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat

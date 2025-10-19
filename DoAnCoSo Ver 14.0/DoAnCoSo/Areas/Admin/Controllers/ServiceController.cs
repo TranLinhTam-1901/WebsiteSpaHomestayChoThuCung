@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using DoAnCoSo.Models;
+﻿using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DoAnCoSo.Areas.Admin.Controllers
