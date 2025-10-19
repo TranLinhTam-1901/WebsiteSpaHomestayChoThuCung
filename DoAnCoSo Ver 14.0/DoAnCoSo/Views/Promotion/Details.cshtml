@@ -20,21 +20,168 @@
                     </div>
                 }
 
-                <div class="promo-meta">
-                    @if (Model.Discount > 0)
+                <!-- Điều kiện áp dụng -->
+                <div class="promo-conditions mb-3">
+                    @if (Model.MinOrderValue.HasValue)
                     {
-                        <span class="promo-discount">Giảm giá: @Model.Discount %</span>
+                        <p class="promo-condition">
+                            🔸 Áp dụng cho đơn hàng từ <strong>@Model.MinOrderValue.Value.ToString("N0")đ</strong> trở lên.
+                        </p>
                     }
-                    <span class="promo-date">Áp dụng từ @Model.StartDate.ToString("dd/MM/yyyy") đến @Model.EndDate.ToString("dd/MM/yyyy")</span>
+
+                    @if (Model.MaxUsage.HasValue)
+                    {
+                        <p class="promo-condition">
+                            🔸 Giới hạn <strong>@Model.MaxUsage.Value</strong> lượt sử dụng toàn hệ thống.
+                        </p>
+                    }
+
+                    @if (Model.MaxUsagePerUser.HasValue)
+                    {
+                        <p class="promo-condition">
+                            🔸 Mỗi tài khoản được sử dụng tối đa <strong>@Model.MaxUsagePerUser.Value</strong> lần.
+                        </p>
+                    }
                 </div>
 
-                <a href="/Promotion" class="btn-back">← Quay lại</a>
+                <div class="promo-meta mb-4">
+                    <span class="promo-discount">
+                        💰 Giảm:
+                        <strong>
+                            @(Model.IsPercent ? $"{Model.Discount}%" : $"{Model.Discount.ToString("N0")}đ")
+                        </strong>
+                    </span>
+                    <span class="promo-date">
+                        📅 Áp dụng: @Model.StartDate.ToString("dd/MM/yyyy") - @Model.EndDate.ToString("dd/MM/yyyy")
+                    </span>
+                </div>
+
+
+                @if (ViewBag.IsSaved == true)
+                {
+                    <div class="alert alert-success text-center fw-semibold">
+                        🎉 Bạn đã lưu mã khuyến mãi này! Hạn sử dụng: @Model.EndDate.ToString("dd/MM/yyyy")
+                    </div>
+                }
+
+                <div class="text-center mt-4">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        if (ViewBag.AlreadySaved)
+                        {
+                            <!-- ✅ Đã lưu: hiện nút áp dụng -->
+                            <button class="btn btn-success btn-lg rounded-pill px-4"
+                                    data-bs-toggle="modal" data-bs-target="#applyModal">
+                                🛒 Áp dụng ngay
+                            </button>
+                        }
+                        else
+                        {
+                            <!-- 💾 Chưa lưu -->
+                            <form asp-action="SavePromotion" method="post" class="d-inline">
+                                <input type="hidden" name="promotionId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-4">
+                                    💾 Lưu mã khuyến mãi
+                                </button>
+                            </form>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login"
+                           class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+                            🔑 Đăng nhập để lưu mã
+                        </a>
+                    }
+
+                    <a href="/Promotion" class="btn btn-outline-dark btn-lg rounded-pill px-4 ms-3">
+                        ← Quay lại
+                    </a>
+                </div>
+                <!-- 🛍️ Modal hiển thị sản phẩm áp dụng -->
+                <div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-pink text-white">
+                                <h5 class="modal-title" id="applyModalLabel">Chọn sản phẩm áp dụng khuyến mãi</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="eligible-products" class="row g-3">
+                                    <!-- Sản phẩm sẽ được load bằng AJAX -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
             </div>
         </div>
     </div>
 </section>
 
 <style>
+    .promo-condition {
+        font-size: 14px;
+        color: #444;
+        margin-bottom: 6px;
+    }
+
+    .btn-save-promo {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 12px rgba(255, 97, 133, 0.3);
+    }
+
+        .btn-save-promo:hover {
+            background-color: #e75478;
+            box-shadow: 0 6px 16px rgba(255, 97, 133, 0.45);
+            transform: translateY(-2px);
+        }
+
+    .btn-login-promo {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        border: 2px dashed #FF6185;
+        color: #FF6185;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-login-promo:hover {
+            background-color: #FFB6C1;
+            color: #fff;
+        }
+
+    .btn-view-saved {
+        display: inline-block;
+        padding: 12px 28px;
+        border-radius: 40px;
+        background-color: #198754;
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+    }
+
+        .btn-view-saved:hover {
+            background-color: #157347;
+            transform: translateY(-2px);
+        }
+
     .promotion-detail-section {
         padding: 60px 15px;
         background-color: #f9f9f9;

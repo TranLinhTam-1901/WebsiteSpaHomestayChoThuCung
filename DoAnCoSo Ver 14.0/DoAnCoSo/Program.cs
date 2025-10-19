@@ -144,7 +144,7 @@ app.UseEndpoints(endpoints =>
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}");
 
-    // ✅ Route cho SignalR Hub
+    // Route cho SignalR Hub
     endpoints.MapHub<ChatHub>("/chathub");
 });
 

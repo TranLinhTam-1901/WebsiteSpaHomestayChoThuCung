@@ -382,6 +382,76 @@ namespace DoAnCoSo.Controllers
                 }
             }
             order.TotalPrice = total;
+            _context.Orders.Add(order);
+            // --- Áp dụng khuyến mãi nếu người dùng nhập mã ---
+            if (!string.IsNullOrEmpty(model.PromoCode))
+            {
+                string code = model.PromoCode.Trim().ToUpper();
+
+                var promo = await _context.Promotions
+                    .FirstOrDefaultAsync(p =>
+                        p.Code.ToUpper() == code &&
+                        p.IsActive &&
+                        p.StartDate <= DateTime.Now &&
+                        p.EndDate >= DateTime.Now);
+
+                if (promo != null)
+                {
+                    // ✅ Kiểm tra số lượt dùng
+                    int usedCount = await _context.OrderPromotions.CountAsync(op => op.PromotionId == promo.Id);
+                    if (promo.MaxUsage.HasValue && usedCount >= promo.MaxUsage.Value)
+                    {
+                        TempData["ErrorMessage"] = "Mã khuyến mãi đã hết lượt sử dụng.";
+                        promo = null;
+                    }
+
+                    // ✅ Kiểm tra điều kiện tối thiểu
+                    if (promo != null)
+                    {
+                        if (promo.MinOrderValue.HasValue && total < promo.MinOrderValue.Value)
+                        {
+                            TempData["ErrorMessage"] = $"Đơn hàng chưa đạt giá trị tối thiểu ({promo.MinOrderValue:N0}đ) để sử dụng mã này.";
+                        }
+                        else
+                        {
+                            // ✅ Tính số tiền giảm
+                            decimal discountAmount = promo.IsPercent
+                                ? total * (promo.Discount / 100)
+                                : promo.Discount;
+
+                            // Không cho âm
+                            if (discountAmount > total)
+                                discountAmount = total;
+
+                            // ✅ Giảm vào tổng tiền
+                            order.TotalPrice = total - discountAmount;
+                            Console.WriteLine($"✅ Tổng sau giảm: {order.TotalPrice} (Giảm {discountAmount})");
+
+                            // ✅ Ghi nhận việc dùng mã
+                            var orderPromo = new OrderPromotion
+                            {
+                                PromotionId = promo.Id,
+                                Order = order,
+                                CodeUsed = promo.Code,
+                                DiscountApplied = discountAmount,
+                                UsedAt = DateTime.Now
+                            };
+
+                            _context.OrderPromotions.Add(orderPromo);
+                        }
+                    }
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Mã khuyến mãi không hợp lệ hoặc đã hết hạn.";
+                }
+            }
+            else
+            {
+                // Không có mã khuyến mãi → tổng tiền là tổng gốc
+                order.TotalPrice = total;
+            }      
+
 
             if (!order.OrderDetails.Any())
             {
@@ -391,8 +461,10 @@ namespace DoAnCoSo.Controllers
 
             try
             {
+                //order.TotalPrice = total;
+
                 // 1. Lưu đơn hàng
-                _context.Orders.Add(order);
+                //_context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
                 // 2. Gửi email xác nhận (nếu lỗi → chỉ log, không phá Checkout)
@@ -417,19 +489,18 @@ namespace DoAnCoSo.Controllers
                             <th>Thành tiền</th>
                         </tr>";
 
-                                        foreach (var detail in order.OrderDetails)
-                                        {
-                                            var product = await _context.Products.FindAsync(detail.ProductId);
-                                            body += $@"
+                    foreach (var detail in order.OrderDetails)
+                    {
+                        var product = await _context.Products.FindAsync(detail.ProductId);
+                        body += $@"
                         <tr>
                             <td>{product?.Name}</td>
                             <td>{detail.Quantity}</td>
                             <td>{detail.Price:N0}đ</td>
                             <td>{(detail.Price * detail.Quantity):N0}đ</td>
                         </tr>";
-                                        }
-
-                                        body += $@"
+                    }
+                    body += $@"
                     </table>
                     <p><b>Tổng cộng:</b> {order.TotalPrice:N0}đ</p>
                     <p>Chúng tôi sẽ liên hệ để xác nhận đơn hàng trong thời gian sớm nhất.</p>";
@@ -539,7 +610,7 @@ namespace DoAnCoSo.Controllers
 
             // Tìm mục giỏ hàng chính xác bằng CartItem.Id và UserId
             var cartItem = await _context.CartItems
-                                         .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.UserId == userId); // <--- Dòng đã sửa: Tìm theo CartItem.Id
+                                         .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.UserId == userId); 
 
             if (cartItem == null)
             {
@@ -598,6 +669,93 @@ namespace DoAnCoSo.Controllers
             {
                 return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi server: " + ex.Message });
             }
+
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetValidPromos(decimal cartTotal)
+        {
+            var now = DateTime.Now;
+
+            // Lấy các mã public, còn hạn, còn hiệu lực
+            var promos = await _context.Promotions
+                .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
+                .ToListAsync();
+
+            // Lọc theo giá trị tối thiểu, lượt dùng, v.v.
+            var validPromos = new List<object>();
+            foreach (var p in promos)
+            {
+                if (p.MinOrderValue.HasValue && cartTotal < p.MinOrderValue.Value)
+                    continue;
+
+                if (p.MaxUsage.HasValue)
+                {
+                    int used = await _context.OrderPromotions.CountAsync(op => op.PromotionId == p.Id);
+                    if (used >= p.MaxUsage.Value)
+                        continue;
+                }
+
+                validPromos.Add(new
+                {
+                    p.Id,
+                    p.Code,
+                    p.Title,
+                    p.Discount,
+                    p.IsPercent,
+                    p.EndDate,
+                    p.MinOrderValue,
+                    Description = p.ShortDescription ?? ""
+                });
+            }
+
+            return Json(validPromos);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ValidatePromo([FromBody] PromoCheckRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Code))
+                return Json(new { success = false, message = "⚠️ Vui lòng nhập mã khuyến mãi." });
+
+            var code = request.Code.Trim().ToUpper();
+            var total = request.CartTotal;
+            var now = DateTime.Now;
+
+            var promo = await _context.Promotions
+                .FirstOrDefaultAsync(p => p.Code.ToUpper() == code
+                                          && p.IsActive
+                                          && p.StartDate <= now
+                                          && p.EndDate >= now);
+
+            if (promo == null)
+                return Json(new { success = false, message = "❌ Mã khuyến mãi không hợp lệ hoặc đã hết hạn." });
+
+            if (promo.MinOrderValue.HasValue && total < promo.MinOrderValue.Value)
+                return Json(new { success = false, message = $"⚠️ Đơn hàng chưa đạt {promo.MinOrderValue.Value:N0}đ để sử dụng mã này." });
+
+            if (promo.MaxUsage.HasValue)
+            {
+                var used = await _context.OrderPromotions.CountAsync(op => op.PromotionId == promo.Id);
+                if (used >= promo.MaxUsage.Value)
+                    return Json(new { success = false, message = "❌ Mã đã hết lượt sử dụng." });
+            }
+
+            decimal discount = promo.IsPercent ? total * (promo.Discount / 100) : promo.Discount;
+            if (discount > total) discount = total;
+
+            var discountLabel = promo.IsPercent ? $"{promo.Discount}%" : $"{promo.Discount:N0}đ";
+
+            // 🟩 Phân biệt cách hiển thị message
+            string message = promo.IsPercent
+                ? $"✅ Áp dụng thành công! Giảm {discount:N0}đ ({discountLabel})."
+                : $"✅ Áp dụng thành công! Giảm {discount:N0}đ.";
+
+            return Json(new
+            {
+                success = true,
+                message,
+                discount
+            });
         }
     }
 }

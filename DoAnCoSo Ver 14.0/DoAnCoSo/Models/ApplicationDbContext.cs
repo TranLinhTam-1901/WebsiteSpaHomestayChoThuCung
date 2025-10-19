@@ -35,6 +35,10 @@ namespace DoAnCoSo.Models
 
         public DbSet<Promotion> Promotions { get; set; }
 
+        public DbSet<OrderPromotion> OrderPromotions { get; set; }
+        public DbSet<UserPromotion> UserPromotions { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder); // Identity config

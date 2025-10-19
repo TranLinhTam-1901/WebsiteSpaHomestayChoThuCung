@@ -34,6 +34,9 @@ namespace DoAnCoSo.Models
 
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
         public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
-     
+
+        public ICollection<OrderPromotion> OrderPromotions { get; set; } = new List<OrderPromotion>();
+
+
     }
 }

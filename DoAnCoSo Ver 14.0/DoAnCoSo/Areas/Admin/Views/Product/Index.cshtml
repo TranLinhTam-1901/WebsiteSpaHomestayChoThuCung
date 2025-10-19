@@ -1,67 +1,4 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.Product>
-
-<<<<<<< HEAD
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-gradient-pink fw-bold">🌸 Quản lý Sản phẩm</h2>
-        <a asp-area="Admin" asp-controller="Product" asp-action="Add"
-           class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
-            + Thêm sản phẩm
-        </a>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table table-hover align-middle shadow-sm rounded-3 overflow-hidden">
-            <thead class="bg-gradient-pink text-white">
-                <tr>
-                    <th>ID</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Hình ảnh</th>
-                    <th>Giá</th>
-                    <th>Mô tả</th>
-                    <th>Danh mục</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var product in Model)
-                {
-                    <tr>
-                        <td>@product.Id</td>
-                        <td class="fw-semibold">@product.Name</td>
-                        <td>
-                            <img src="@product.ImageUrl" alt="pic"
-                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" />
-                        </td>
-                        <td>
-                            @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
-                            {
-                                <span class="text-muted text-decoration-line-through">@product.Price.ToString("N0")</span>
-                        
-                                <br />
-                                <span class="text-danger fw-bold">@product.PriceReduced.Value.ToString("N0")</span>
-                            }
-                            else
-                            {
-                                <span>@product.Price.ToString("N0")</span>
-                            }
-                        </td>
-                        <td style="max-width: 200px;" class="text-truncate">@product.Description</td>
-                        <td>@product.Category?.Name</td>
-                        <td>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id"
-                               class="btn btn-outline-pink btn-sm me-1">Xem</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id"
-                               class="btn btn-outline-warning btn-sm me-1">Sửa</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id"
-                               class="btn btn-outline-danger btn-sm">Xóa</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-=======
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
     int pageSize = 16;
@@ -154,62 +91,11 @@
             </div>
         }
     </div>
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
 </div>
 
 <style>
     :root {
         --pink-main: #FF6185;
-<<<<<<< HEAD
-        --pink-accent: #FF6B6B;
-    }
-
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-    }
-
-    .text-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .btn-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: #fff;
-        border: none;
-        transition: 0.3s;
-    }
-
-        .btn-gradient-pink:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-    .btn-outline-pink {
-        border: 1px solid var(--pink-main);
-        color: var(--pink-main);
-        background-color: #fff;
-        transition: 0.3s;
-    }
-
-        .btn-outline-pink:hover {
-            background-color: var(--pink-accent);
-            border-color: var(--pink-accent);
-            color: #fff;
-        }
-
-    table {
-        border-radius: 0.75rem;
-        overflow: hidden;
-        font-size: 0.95rem;
-    }
-
-        table tbody tr:hover {
-            background-color: #fff0f4;
-        }
-</style>
-=======
         --pink-light: #FFB6C1;
         --pink-dark: #e74c7b;
     }
@@ -325,4 +211,3 @@
             color: #fff;
         }
 </style>
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat

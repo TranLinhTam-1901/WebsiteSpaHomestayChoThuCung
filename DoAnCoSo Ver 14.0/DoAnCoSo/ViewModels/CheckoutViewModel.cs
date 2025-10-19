@@ -5,7 +5,7 @@ namespace DoAnCoSo.ViewModels
     public class CheckoutViewModel
     {
 
-
+        public string? PromoCode { get; set; }
         //public ShoppingCart Cart { get; set; }
         public List<CartItem> CartItemsFromDb { get; set; }
         public bool IsBuyNowCheckout { get; set; }

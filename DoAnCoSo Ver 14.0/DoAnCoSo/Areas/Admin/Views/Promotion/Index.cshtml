@@ -1,0 +1,66 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Promotion>
+@{
+    ViewData["Title"] = "Quản lý khuyến mãi";
+}
+
+<h2 class="text-center mt-3 mb-4">🎁 Quản lý khuyến mãi</h2>
+
+<div class="text-end mb-3">
+    <a asp-action="Create" class="btn btn-primary">+ Thêm khuyến mãi mới</a>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>Tiêu đề</th>
+            <th>Mã</th>
+            <th>Giảm</th>
+            <th>Thời gian</th>
+            <th>Hoạt động</th>
+            <th>Sử dụng</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.Code</td>
+                <td>
+                    @if (item.IsPercent)
+                    {
+                        @($"{item.Discount}%")
+                    }
+                    else
+                    {
+                        @($"{item.Discount:N0}đ")
+                    }
+                </td>
+                <td>@item.StartDate:dd/MM/yyyy - @item.EndDate:dd/MM/yyyy</td>
+                <td>
+                    @(item.IsActive ? "✅" : "❌")
+                </td>
+                <td>
+                    <a asp-action="UsageDetails" asp-route-id="@item.Id" class="btn btn-sm btn-info">
+                        Xem lượt dùng
+                    </a>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Sửa</a>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Xác nhận xóa khuyến mãi này?')">
+                            Xóa
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Chưa có khuyến mãi nào.</div>
+}

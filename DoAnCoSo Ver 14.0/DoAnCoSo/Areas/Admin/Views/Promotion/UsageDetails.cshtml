@@ -1,0 +1,50 @@
+﻿@model List<DoAnCoSo.ViewModels.PromotionUsageViewModel>
+@{
+    ViewData["Title"] = "Chi tiết sử dụng mã khuyến mãi";
+    var promo = ViewBag.Promotion as DoAnCoSo.Models.Promotion;
+}
+<div class="container py-4">
+    <h2 class="fw-bold text-success mb-3">
+        🎟️ Chi tiết sử dụng mã: @promo.Code
+    </h2>
+
+    <p><b>Tên khuyến mãi:</b> @promo.Title</p>
+    <p><b>Số lượng phát hành:</b> @(promo.MaxUsage ?? 0)</p>
+    <p><b>Đã sử dụng:</b> @promo.OrderPromotions.Count()</p>
+    <p><b>Còn lại:</b> @((promo.MaxUsage ?? 0) - promo.OrderPromotions.Count())</p>
+
+    <hr />
+
+    @if (Model != null && Model.Any())
+    {
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Người dùng</th>
+                    <th>Email</th>
+                    <th>Mã đơn hàng</th>
+                    <th>Giảm giá áp dụng</th>
+                    <th>Ngày dùng</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var usage in Model)
+                {
+                    <tr>
+                        <td>@usage.UserName</td>
+                        <td>@usage.Email</td>
+                        <td>#@usage.OrderId</td>
+                        <td>@usage.DiscountApplied.ToString("N0") đ</td>
+                        <td>@usage.UsedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">Chưa có ai sử dụng mã này.</div>
+    }
+
+    <a asp-action="Index" class="btn btn-secondary mt-3">← Quay lại danh sách</a>
+</div>
