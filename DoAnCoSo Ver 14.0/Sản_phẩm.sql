@@ -28,7 +28,7 @@ VALUES
 (0, N'Shave (Spa + Cạo lông)', 'Cạo lông và chăm sóc lông', 0);
 
 -- 4️⃣ Bảng giá Spa
-INSERT INTO SpaPricing (ServiceId, PriceUnder5kg, Price5To12kg, Price12To25kg, PriceOver25kg)
+INSERT INTO SpaPricings (ServiceId, PriceUnder5kg, Price5To12kg, Price12To25kg, PriceOver25kg)
 VALUES
 ( (SELECT ServiceId FROM Services WHERE Name = N'Spa (Tắm sấy vệ sinh)'), 330000, 440000, 610000, 850000),
 ( (SELECT ServiceId FROM Services WHERE Name = N'Grooming (Spa + Cắt tạo kiểu)'), 500000, 690000, 930000, 1300000),
@@ -489,13 +489,13 @@ DELETE FROM dbo.Reviews;
 INSERT INTO dbo.Reviews (UserId, TargetType, TargetId, Rating, Comment, CreatedDate)
 VALUES
 -- Customer1 --
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
+('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
+('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
+('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
+('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
+('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
+('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
+('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
 
 -- Customer2 --
 ('ab333bd2-101a-448d-bc64-ff2b4c1318ec', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
@@ -540,8 +540,8 @@ SET DATEFORMAT DMY;
 INSERT INTO [dbo].[Pets] ([Name], [Type], [Breed], [Gender], [Age], [DateOfBirth], [ImageUrl], [Weight], [Height], [Color], [DistinguishingMarks], [VaccinationRecords], [MedicalHistory], [Allergies], [DietPreferences], [HealthNotes], [AI_AnalysisResult], [UserId])
 VALUES
 -- Customer1
-(N'Yuki', N'Mèo', N'Mèo Anh lông ngắn', N'Male', 2, '2023-05-12', NULL, 4, 25, N'Xám', N'Vệt trắng ở tai', N'Đã tiêm 3 mũi cơ bản', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe mạnh', N'Bình thường', '6cb911f8-1520-4324-b7d1-5ace1f958f12'),
-(N'Milo', N'Chó', N'Poodle', N'Male', 3, '2022-05-11', NULL, 6, 30, N'Trắng', NULL, N'Đã tiêm phòng đầy đủ', N'Bệnh da nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '6cb911f8-1520-4324-b7d1-5ace1f958f12'),
+(N'Yuki', N'Mèo', N'Mèo Anh lông ngắn', N'Male', 2, '2023-05-12', NULL, 4, 25, N'Xám', N'Vệt trắng ở tai', N'Đã tiêm 3 mũi cơ bản', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe mạnh', N'Bình thường', 'a5110398-ed38-493a-bfe4-42199eb633ac'),
+(N'Milo', N'Chó', N'Poodle', N'Male', 3, '2022-05-11', NULL, 6, 30, N'Trắng', NULL, N'Đã tiêm phòng đầy đủ', N'Bệnh da nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', 'a5110398-ed38-493a-bfe4-42199eb633ac'),
 
 -- Customer2
 (N'Susu', N'Chó', N'Shiba', N'Female', 1, '2024-05-10', NULL, 7, 35, N'Nâu đỏ', NULL, N'Đã tiêm 4 mũi', N'Không', N'Không', N'Thức ăn mềm', N'Khỏe', N'Bình thường', 'ab333bd2-101a-448d-bc64-ff2b4c1318ec'),
@@ -611,10 +611,10 @@ INSERT INTO dbo.Appointments (
 )
 VALUES
 -- Customer1 --
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 1, 1, '2025-05-16', '09:00:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:15:00', '0123456789'), -- Homestay
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 1, 4, '2025-05-17', '10:30:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-13 09:45:00', '0123456789'), -- Vet
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 2, 2, '2025-05-18', '14:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-14 10:20:00', '0123456789'), -- Homestay
-('6cb911f8-1520-4324-b7d1-5ace1f958f12', 2, 5, '2025-05-16', '15:30:00', '2025-05-16', '2025-05-16', 'Confirmed', '2025-05-11 16:10:00', '0123456789'), -- Vet
+('a5110398-ed38-493a-bfe4-42199eb633ac', 1, 1, '2025-05-16', '09:00:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:15:00', '0123456789'), -- Homestay
+('a5110398-ed38-493a-bfe4-42199eb633ac', 1, 4, '2025-05-17', '10:30:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-13 09:45:00', '0123456789'), -- Vet
+('a5110398-ed38-493a-bfe4-42199eb633ac', 2, 2, '2025-05-18', '14:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-14 10:20:00', '0123456789'), -- Homestay
+('a5110398-ed38-493a-bfe4-42199eb633ac', 2, 5, '2025-05-16', '15:30:00', '2025-05-16', '2025-05-16', 'Confirmed', '2025-05-11 16:10:00', '0123456789'), -- Vet
 
 -- Customer2 --
 ('ab333bd2-101a-448d-bc64-ff2b4c1318ec', 3, 3, '2025-05-19', '08:15:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-15 09:00:00', '0123456788'), -- Vet
