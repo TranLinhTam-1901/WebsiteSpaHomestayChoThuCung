@@ -14,32 +14,36 @@
     }
     else
     {
-        <table class="table table-bordered align-middle text-center">
-            <thead class="table-pink">
+        <table class="table table-bordered align-middle text-center shadow-sm">
+            <thead class="table-pink bg-light">
                 <tr>
                     <th>Tên khuyến mãi</th>
                     <th>Mã</th>
                     <th>Giảm giá</th>
                     <th>Ngày lưu</th>
                     <th>Trạng thái</th>
+                    <th>Thao tác</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var promo in Model)
                 {
+                    bool isExpired = promo.EndDate < DateTime.Now;
+                    bool isUsed = promo.IsUsed;
+                    bool isActive = !isExpired && !isUsed;
+
                     <tr>
                         <td>@promo.Title</td>
-                        <td><span class="fw-bold">@promo.Code</span></td>
-                        <td>
-                            @(promo.IsPercent ? $"{promo.Discount}%" : $"{promo.Discount:N0}đ")
-                        </td>
+                        <td><span class="fw-bold text-danger">@promo.Code</span></td>
+                        <td>@(promo.IsPercent ? $"{promo.Discount}%" : $"{promo.Discount:N0}đ")</td>
                         <td>@promo.DateSaved.ToString("dd/MM/yyyy")</td>
+
                         <td>
-                            @if (promo.EndDate < DateTime.Now)
+                            @if (isExpired)
                             {
                                 <span class="badge bg-secondary">Hết hạn</span>
                             }
-                            else if (promo.IsUsed)
+                            else if (isUsed)
                             {
                                 <span class="badge bg-success">Đã dùng</span>
                             }
@@ -48,9 +52,43 @@
                                 <span class="badge bg-warning text-dark">Còn hiệu lực</span>
                             }
                         </td>
+
+                        <td>
+                            @if (isActive)
+                            {
+                                <a asp-action="Apply"
+                                   asp-route-id="@promo.Id"
+                                   class="btn btn-sm btn-outline-success me-2">
+                                    🛒 Áp dụng
+                                </a>
+                            }
+
+                            <form asp-action="RemoveSavedPromotion" method="post" class="d-inline">
+                                <input type="hidden" name="promotionId" value="@promo.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    🗑 Xóa
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 }
             </tbody>
         </table>
     }
 </section>
+
+<style>
+    .table-pink th {
+        background-color: #ffe5ec;
+        color: #FF6185;
+    }
+
+    .btn-sm {
+        padding: 3px 10px;
+        font-size: 0.85rem;
+    }
+
+    .fw-bold.text-danger {
+        color: #FF6185 !important;
+    }
+</style>

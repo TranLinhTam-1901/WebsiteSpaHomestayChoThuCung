@@ -276,25 +276,35 @@
                     return;
                 }
 
-                promos.forEach(p => {
-                    const discountText = p.isPercent ? `${p.discount}%` : `${p.discount.toLocaleString()}đ`;
-                    const item = document.createElement("div");
-                    item.className = "col-md-6";
-                    item.innerHTML = `
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h5 class="fw-bold text-pink">${p.title}</h5>
-                                <p>${p.description || ""}</p>
-                                <p>💰 Giảm <b>${discountText}</b></p>
-                                <p>📅 HSD: ${new Date(p.endDate).toLocaleDateString()}</p>
-                                <button class="btn btn-outline-success w-100 selectPromoBtn" data-code="${p.code}">
-                                    Áp dụng mã ${p.code}
-                                </button>
-                            </div>
-                        </div>`;
-                    listDiv.appendChild(item);
-                });
+                       promos.forEach(p => {
+            const discountText = p.isPercent ? `${p.discount}%` : `${p.discount.toLocaleString()}đ`;
 
+            // 🧩 Nếu người dùng đã dùng mã này rồi
+            const isUsed = p.isUsedByUser;
+            const usedBadge = isUsed
+                ? `<span class="badge bg-secondary ms-2">Đã dùng</span>`
+                : "";
+            const disabledClass = isUsed ? "opacity-50" : "";
+            const applyButton = isUsed
+                ? `<button class="btn btn-secondary w-100" disabled>Đã sử dụng</button>`
+                : `<button class="btn btn-outline-success w-100 selectPromoBtn" data-code="${p.code}">
+                        Áp dụng mã ${p.code}
+                    </button>`;
+
+            const item = document.createElement("div");
+            item.className = "col-md-6";
+            item.innerHTML = `
+                <div class="card shadow-sm h-100 ${disabledClass}">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-pink">${p.title} ${usedBadge}</h5>
+                        <p>${p.description || ""}</p>
+                        <p>💰 Giảm <b>${discountText}</b></p>
+                        <p>📅 HSD: ${new Date(p.endDate).toLocaleDateString()}</p>
+                        ${applyButton}
+                    </div>
+                </div>`;
+            listDiv.appendChild(item);
+        });
                 const modal = new bootstrap.Modal(document.getElementById("promoModal"));
                 modal.show();
 
@@ -343,3 +353,9 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
+<style>
+    .opacity-50 {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+</style>

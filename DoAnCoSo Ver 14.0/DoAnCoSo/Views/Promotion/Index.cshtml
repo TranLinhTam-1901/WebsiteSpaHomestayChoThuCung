@@ -7,7 +7,7 @@
 <section class="promotion-page py-5">
     <div class="container">
 
-        <!-- 🔥 Phần 1: Chiến dịch nổi bật -->
+        <!-- 🔥 Chiến dịch nổi bật -->
         <h2 class="section-title text-center mb-4">
             🔥 Chiến dịch nổi bật
         </h2>
@@ -16,20 +16,33 @@
             @foreach (var promo in Model.Where(p => p.IsCampaign))
             {
                 <div class="campaign-card">
-                    <img src="~/images/promotions/@promo.Image" alt="@promo.Title" class="campaign-img" />
+                    <div class="image-wrapper">
+                        <img src="~/images/promotions/@promo.Image" alt="@promo.Title" class="campaign-img" />
+                        @if (promo.EndDate < DateTime.Now)
+                        {
+                            <span class="badge-expired">Hết hạn</span>
+                        }
+                        else
+                        {
+                            <span class="badge-hot">Đang diễn ra</span>
+                        }
+                    </div>
 
                     <div class="campaign-info">
                         <h4>@promo.Title</h4>
-                        <p>@promo.ShortDescription</p>
-                        <div class="mt-3">
-                            <a href="/Promotion/Details/@promo.Id" class="btn btn-outline-dark btn-sm">Xem chi tiết</a>
+                        <p class="short-desc">@promo.ShortDescription</p>
+
+                        <div class="campaign-meta">
+                            <small>📅 @promo.StartDate.ToString("dd/MM") - @promo.EndDate.ToString("dd/MM/yyyy")</small>
                         </div>
+
+                        <a href="/Promotion/Details/@promo.Id" class="btn btn-outline-dark btn-sm mt-2">Xem chi tiết</a>
                     </div>
                 </div>
             }
         </div>
 
-        <!-- 🎟️ Phần 2: Mã giảm giá -->
+        <!-- 🎁 Mã giảm giá đang diễn ra -->
         <h2 class="section-title text-center mb-4">
             🎁 Mã giảm giá đang diễn ra
         </h2>
@@ -40,18 +53,28 @@
                 var isSaved = savedIds != null && savedIds.Contains(promo.Id);
 
                 <div class="voucher-card">
-                    <div class="voucher-info">
-                        <h5 class="text-pink fw-bold">@promo.Title</h5>
-                        <p>Giảm @promo.Discount@(promo.IsPercent ? "%" : "đ")</p>
-                        <small>HSD: @promo.EndDate.ToString("dd/MM/yyyy")</small>
+                    <div class="voucher-header">
+                        @* <img src="~/images/promotions/@promo.Image" alt="@promo.Title" class="voucher-thumb" /> *@
+                        <div class="voucher-info">
+                            <h5>@promo.Title</h5>
+                            <p>@promo.ShortDescription</p>
+                            <p class="discount">Giảm <b>@promo.Discount@(promo.IsPercent ? "%" : "đ")</b></p>
+                            <small class="date">⏰ HSD: @promo.EndDate.ToString("dd/MM/yyyy")</small>
+                        </div>
                     </div>
 
-                    <div class="voucher-actions mt-2">
+                    <div class="voucher-actions">
+
+                        <a href="/Promotion/Details/@promo.Id" class="btn btn-outline-dark btn-sm">Xem chi tiết</a>
+
                         @if (User.Identity.IsAuthenticated)
                         {
-                            if (isSaved)
+                            @if (isSaved)
                             {
-                                <a href="/Promotion/Apply/@promo.Id" class="btn btn-success btn-sm">🛒 Áp dụng</a>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="/Promotion/Apply/@promo.Id" class="btn btn-success btn-sm">Áp dụng</a>
+                                    @* <a href="/Promotion/Details/@promo.Id" class="btn btn-outline-dark btn-sm">Xem chi tiết</a> *@
+                                </div>
                             }
                             else
                             {
@@ -73,9 +96,7 @@
         </div>
     </div>
 </section>
-
 <style>
-    /* ===== General ===== */
     .section-title {
         font-size: 1.8rem;
         color: #FF6185;
@@ -93,78 +114,127 @@
             border-radius: 2px;
         }
 
-    /* ===== Campaign Section ===== */
+    /* === Chiến dịch nổi bật === */
     .campaign-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 25px;
     }
 
     .campaign-card {
-        position: relative;
+        background: linear-gradient(180deg, #fff, #fff6f9);
+        border-radius: 16px;
         overflow: hidden;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 18px rgba(255, 97, 133, 0.15);
         transition: all 0.3s ease;
+        text-align: center;
+        padding: 20px;
     }
 
         .campaign-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 28px rgba(255, 97, 133, 0.3);
         }
+
+    .image-wrapper {
+        position: relative;
+    }
 
     .campaign-img {
         width: 100%;
-        height: 200px;
-        object-fit: cover;
+        height: 300px;
+        object-fit: contain;
+        object-position: center;
+        display: block;
+        background-color: #fff;
+        border-radius: 12px;
+        margin-bottom: 12px;
     }
 
-    .campaign-info {
-        padding: 15px;
-        background: #fff;
-        text-align: center;
+    .badge-hot,
+    .badge-expired {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        padding: 5px 10px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        color: #fff;
+        font-weight: 600;
     }
 
-        .campaign-info h4 {
-            color: #FF6185;
-            font-weight: 600;
-        }
+    .badge-hot {
+        background: #FF6185;
+    }
 
-    /* ===== Voucher Section ===== */
+    .badge-expired {
+        background: #888;
+    }
+
+    .campaign-info h4 {
+        color: #FF4F80;
+        font-weight: 700;
+    }
+
+    .campaign-meta small {
+        color: #777;
+    }
+
+    /* === Voucher Section === */
     .voucher-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
     }
 
     .voucher-card {
-        background: #fff;
         border: 2px dashed #FFB6C1;
-        border-radius: 12px;
+        border-radius: 16px;
+        background: #fff;
         padding: 15px;
-        text-align: center;
-        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(255, 182, 193, 0.15);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: 0.3s ease;
     }
 
         .voucher-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 22px rgba(255, 182, 193, 0.25);
         }
 
+    .voucher-header {
+        display: flex;
+        gap: 12px;
+    }
+
+    .voucher-thumb {
+        width: 90px;
+        height: 90px;
+        object-fit: contain;
+        background: #fff;
+        border-radius: 10px;
+    }
+
     .voucher-info h5 {
-        margin-bottom: 8px;
-    }
-
-    .text-pink {
         color: #FF6185;
+        font-weight: 700;
     }
 
-    @@media (max-width: 768px) {
-        .campaign-img
-
-    {
-        height: 160px;
+    .discount {
+        color: #FF4F80;
+        font-size: 1.1rem;
     }
 
+    .date {
+        color: #777;
+    }
+
+    .voucher-actions {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 12px;
     }
 </style>

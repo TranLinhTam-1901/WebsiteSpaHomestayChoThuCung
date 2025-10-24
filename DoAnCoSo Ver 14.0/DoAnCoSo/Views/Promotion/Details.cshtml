@@ -1,278 +1,96 @@
 ﻿@model DoAnCoSo.Models.Promotion
+@{
+    ViewData["Title"] = "Chi tiết khuyến mãi";
+}
 
-<section class="promotion-detail-section">
-    <div class="container">
-        <div class="promo-detail-card">
-            <img src="~/images/promotions/@Model.Image" alt="@Model.Title" class="promo-detail-img">
-
-            <div class="promo-detail-content">
-                <h1 class="promo-title">@Model.Title</h1>
-
-                @if (!string.IsNullOrEmpty(Model.ShortDescription))
-                {
-                    <p class="promo-short">@Model.ShortDescription</p>
-                }
-
-                @if (!string.IsNullOrEmpty(Model.Description))
-                {
-                    <div class="promo-description">
-                        @Html.Raw(Model.Description)
-                    </div>
-                }
-
-                <!-- Điều kiện áp dụng -->
-                <div class="promo-conditions mb-3">
-                    @if (Model.MinOrderValue.HasValue)
-                    {
-                        <p class="promo-condition">
-                            🔸 Áp dụng cho đơn hàng từ <strong>@Model.MinOrderValue.Value.ToString("N0")đ</strong> trở lên.
-                        </p>
-                    }
-
-                    @if (Model.MaxUsage.HasValue)
-                    {
-                        <p class="promo-condition">
-                            🔸 Giới hạn <strong>@Model.MaxUsage.Value</strong> lượt sử dụng toàn hệ thống.
-                        </p>
-                    }
-
-                    @if (Model.MaxUsagePerUser.HasValue)
-                    {
-                        <p class="promo-condition">
-                            🔸 Mỗi tài khoản được sử dụng tối đa <strong>@Model.MaxUsagePerUser.Value</strong> lần.
-                        </p>
-                    }
-                </div>
-
-                <div class="promo-meta mb-4">
-                    <span class="promo-discount">
-                        💰 Giảm:
-                        <strong>
-                            @(Model.IsPercent ? $"{Model.Discount}%" : $"{Model.Discount.ToString("N0")}đ")
-                        </strong>
-                    </span>
-                    <span class="promo-date">
-                        📅 Áp dụng: @Model.StartDate.ToString("dd/MM/yyyy") - @Model.EndDate.ToString("dd/MM/yyyy")
-                    </span>
-                </div>
-
-
-                @if (ViewBag.IsSaved == true)
-                {
-                    <div class="alert alert-success text-center fw-semibold">
-                        🎉 Bạn đã lưu mã khuyến mãi này! Hạn sử dụng: @Model.EndDate.ToString("dd/MM/yyyy")
-                    </div>
-                }
-
-                <div class="text-center mt-4">
-                    @if (User.Identity.IsAuthenticated)
-                    {
-                        if (ViewBag.AlreadySaved)
-                        {
-                            <!-- ✅ Đã lưu: hiện nút áp dụng -->
-                            <button class="btn btn-success btn-lg rounded-pill px-4"
-                                    data-bs-toggle="modal" data-bs-target="#applyModal">
-                                🛒 Áp dụng ngay
-                            </button>
-                        }
-                        else
-                        {
-                            <!-- 💾 Chưa lưu -->
-                            <form asp-action="SavePromotion" method="post" class="d-inline">
-                                <input type="hidden" name="promotionId" value="@Model.Id" />
-                                <button type="submit" class="btn btn-danger btn-lg rounded-pill px-4">
-                                    💾 Lưu mã khuyến mãi
-                                </button>
-                            </form>
-                        }
-                    }
-                    else
-                    {
-                        <a asp-area="Identity" asp-page="/Account/Login"
-                           class="btn btn-outline-secondary btn-lg rounded-pill px-4">
-                            🔑 Đăng nhập để lưu mã
-                        </a>
-                    }
-
-                    <a href="/Promotion" class="btn btn-outline-dark btn-lg rounded-pill px-4 ms-3">
-                        ← Quay lại
-                    </a>
-                </div>
-                <!-- 🛍️ Modal hiển thị sản phẩm áp dụng -->
-                <div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-header bg-pink text-white">
-                                <h5 class="modal-title" id="applyModalLabel">Chọn sản phẩm áp dụng khuyến mãi</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div id="eligible-products" class="row g-3">
-                                    <!-- Sản phẩm sẽ được load bằng AJAX -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-            </div>
-        </div>
-    </div>
-</section>
-
+@if (Model.IsCampaign)
+{
+    @await Html.PartialAsync("_DetailCampaign", Model)
+}
+else
+{
+    @await Html.PartialAsync("_DetailNormal", Model)
+}
 <style>
-    .promo-condition {
-        font-size: 14px;
-        color: #444;
-        margin-bottom: 6px;
-    }
-
-    .btn-save-promo {
-        display: inline-block;
-        padding: 12px 28px;
-        border-radius: 40px;
-        background-color: #FF6185;
-        color: #fff;
-        font-weight: 600;
-        font-size: 1rem;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        border: none;
-        box-shadow: 0 4px 12px rgba(255, 97, 133, 0.3);
-    }
-
-        .btn-save-promo:hover {
-            background-color: #e75478;
-            box-shadow: 0 6px 16px rgba(255, 97, 133, 0.45);
-            transform: translateY(-2px);
-        }
-
-    .btn-login-promo {
-        display: inline-block;
-        padding: 12px 28px;
-        border-radius: 40px;
-        border: 2px dashed #FF6185;
-        color: #FF6185;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-        .btn-login-promo:hover {
-            background-color: #FFB6C1;
-            color: #fff;
-        }
-
-    .btn-view-saved {
-        display: inline-block;
-        padding: 12px 28px;
-        border-radius: 40px;
-        background-color: #198754;
-        color: #fff;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        border: none;
-        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
-    }
-
-        .btn-view-saved:hover {
-            background-color: #157347;
-            transform: translateY(-2px);
-        }
-
+    /* === Shared === */
     .promotion-detail-section {
-        padding: 60px 15px;
-        background-color: #f9f9f9;
+        background: linear-gradient(180deg, #fff5f8 0%, #fff 100%);
     }
 
-    .promo-detail-card {
-        max-width: 900px;
-        margin: 0 auto;
-        background: #fff;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
+    .promo-title {
+        color: #FF6185;
+        font-weight: 800;
     }
 
-    .promo-detail-img {
+    /* === Campaign banner === */
+    /* .campaign-banner {
         width: 100%;
-        height: 400px;
-        object-fit: cover;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 8px 20px rgba(255, 97, 133, 0.2);
+    } */
+
+    /* .banner-img {
+        width: 100%;
+        height: 300px; /* 🔽 giảm chiều cao để ảnh vuông ít bị crop hơn */
+        background-size: cover;
+        background-position: center center;
+        border-radius: 20px;
+    } */
+
+    /* .campaign-banner:hover .banner-img {
+        transform: scale(1.05);
+    } */
+
+    /* === Badge === */
+    .badge-hot {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        background: #FF6185;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 25px;
+        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(255, 97, 133, 0.3);
     }
 
-    .promo-detail-content {
-        padding: 30px;
+    /* === Button consistency === */
+    .btn {
+        border-radius: 50px !important;
+        font-weight: 600;
     }
 
-    .promo-title {
-        font-size: 32px;
-        color: #FF6185;
-        margin-bottom: 15px;
+    .text-pink {
+        color: #FF6185 !important;
     }
 
-    .promo-short {
-        font-size: 18px;
-        color: #333;
-        margin-bottom: 20px;
+    /* === Campaign banner === */
+    .campaign-banner {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto 30px auto;
+        aspect-ratio: 16 / 9; /* ✅ tự điều chỉnh khung ảnh theo tỉ lệ 16:9 */
+        border-radius: 20px;
+        overflow: hidden;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 8px 20px rgba(255, 97, 133, 0.2);
     }
 
-    .promo-description {
-        font-size: 15px;
-        color: #555;
-        line-height: 1.6;
-        margin-bottom: 20px;
+    .banner-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* ✅ ảnh nào cũng hiển thị toàn bộ, không cắt */
+        object-position: center;
+        transition: transform 0.4s ease;
+        background-color: #fff;
     }
 
-    .promo-meta {
-        font-size: 14px;
-        color: #FF6185;
-        margin-bottom: 25px;
-    }
-
-        .promo-meta span {
-            display: inline-block;
-            margin-right: 20px;
-        }
-
-    .btn-back {
-        display: inline-block;
-        padding: 10px 20px;
-        border-radius: 30px;
-        background-color: #FFB6C1;
-        color: #000;
-        font-weight: bold;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-        .btn-back:hover {
-            background-color: #FF6185;
-            color: #fff;
-        }
-
-    /* Responsive */
-    @@media (max-width: 767px) {
-        .promo-detail-img
-
-    {
-        height: 250px;
-    }
-
-    .promo-title {
-        font-size: 24px;
-    }
-
-    .promo-short {
-        font-size: 16px;
-    }
-
-    .promo-description {
-        font-size: 14px;
-    }
-
-    }
+    .campaign-banner:hover .banner-img {
+        transform: scale(1.04); /* hiệu ứng hover nhẹ */
+    } 
 </style>

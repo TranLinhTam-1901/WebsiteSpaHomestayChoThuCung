@@ -3,64 +3,118 @@
     ViewData["Title"] = "Quản lý khuyến mãi";
 }
 
-<h2 class="text-center mt-3 mb-4">🎁 Quản lý khuyến mãi</h2>
+<div class="promotion-container py-4">
+    <div class="promotion-card shadow-sm rounded-4 p-4 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-pink mb-0">
+                🎁 Quản lý khuyến mãi
+            </h2>
+            <a asp-action="Create" class="btn btn-pink">
+                + Thêm khuyến mãi mới
+            </a>
+        </div>
 
-<div class="text-end mb-3">
-    <a asp-action="Create" class="btn btn-primary">+ Thêm khuyến mãi mới</a>
+        <div class="table-responsive">
+            <table class="table align-middle table-hover text-center">
+                <thead class="table-header">
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Mã</th>
+                        <th>Giảm</th>
+                        <th>Thời gian</th>
+                        <th>Hoạt động</th>
+                        <th>Sử dụng</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var isExpired = item.EndDate < DateTime.Now;
+                        <tr class="@(isExpired ? "text-muted bg-light" : "")">
+                            <td>@item.Title</td>
+                            <td>@item.Code</td>
+                            <td>
+                                @if (item.IsPercent)
+                                {
+                                    @($"{item.Discount:0}%")
+                                }
+                                else
+                                {
+                                    @($"{item.Discount:N0}đ")
+                                }
+                            </td>
+                            <td>@item.StartDate.ToString("dd/MM/yyyy") - @item.EndDate.ToString("dd/MM/yyyy")</td>
+                            <td>@(item.IsActive ? "✅" : "❌")</td>
+                            <td>
+                                <a asp-action="UsageDetails" asp-route-id="@item.Id" class="btn btn-sm btn-info px-3 rounded-pill shadow-sm">
+                                    Xem lượt dùng
+                                </a>
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning rounded-pill px-3 me-1">Sửa</a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                            onclick="return confirm('Xác nhận xóa khuyến mãi này?')">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info text-center mt-3">Chưa có khuyến mãi nào.</div>
+        }
+    </div>
 </div>
 
-<table class="table table-bordered table-striped">
-    <thead class="table-light">
-        <tr>
-            <th>Tiêu đề</th>
-            <th>Mã</th>
-            <th>Giảm</th>
-            <th>Thời gian</th>
-            <th>Hoạt động</th>
-            <th>Sử dụng</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Title</td>
-                <td>@item.Code</td>
-                <td>
-                    @if (item.IsPercent)
-                    {
-                        @($"{item.Discount}%")
-                    }
-                    else
-                    {
-                        @($"{item.Discount:N0}đ")
-                    }
-                </td>
-                <td>@item.StartDate:dd/MM/yyyy - @item.EndDate:dd/MM/yyyy</td>
-                <td>
-                    @(item.IsActive ? "✅" : "❌")
-                </td>
-                <td>
-                    <a asp-action="UsageDetails" asp-route-id="@item.Id" class="btn btn-sm btn-info">
-                        Xem lượt dùng
-                    </a>
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Sửa</a>
-                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Xác nhận xóa khuyến mãi này?')">
-                            Xóa
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+<style>
+    /* --- Căn lề và khung giống Product Index --- */
+    .promotion-container {
+        max-width: 1250px;
+        margin: 0 auto;
+    }
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">Chưa có khuyến mãi nào.</div>
-}
+    .promotion-card {
+        border-radius: 1rem;
+        background: #fff;
+        border: 2px solid #ffb6c1;
+    }
+
+    .text-pink {
+        color: #ff6185;
+    }
+
+    .btn-pink {
+        background-color: #ff6185;
+        color: white;
+        border: none;
+        font-weight: 600;
+        border-radius: 20px;
+        padding: 8px 16px;
+        transition: 0.25s;
+    }
+
+        .btn-pink:hover {
+            background-color: #ff84a1;
+        }
+
+    .table-header {
+        background-color: #ffe6ed;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #fff7f9;
+    }
+</style>

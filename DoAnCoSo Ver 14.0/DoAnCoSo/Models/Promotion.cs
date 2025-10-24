@@ -26,6 +26,8 @@
 
         // Trạng thái
         public bool IsActive { get; set; } = true;
+        // Đánh dấu mã riêng tư (chỉ dành cho admin tạo, không hiển thị cho user)
+        public bool IsPrivate { get; set; } = false;
         public ICollection<OrderPromotion> OrderPromotions { get; set; } = new List<OrderPromotion>();
         
     }

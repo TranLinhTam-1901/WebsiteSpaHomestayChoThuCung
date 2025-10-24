@@ -1,4 +1,5 @@
 ﻿using DoAnCoSo.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,28 +21,36 @@ namespace DoAnCoSo.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
+            var now = DateTime.Now;
 
-            // Lấy tất cả khuyến mãi đang hoạt động
-            var promotions = await _context.Promotions
-                .Where(p => p.IsActive && p.EndDate >= DateTime.Now)
-                .OrderByDescending(p => p.StartDate)
-                .ToListAsync();
+            // 🧩 Bước 1: Tạo query khuyến mãi đang hoạt động và trong thời gian hợp lệ
+            var query = _context.Promotions
+                .Where(p => p.IsActive && p.EndDate >= now && p.StartDate <= now);
 
-            // Nếu user đăng nhập -> lấy danh sách mã đã lưu
+            // 🧩 Bước 2: Nếu user đã đăng nhập
             if (user != null)
             {
-                var savedIds = await _context.UserPromotions
+                // Lấy danh sách ID các mã private mà user này được gán
+                var assignedPrivateIds = await _context.UserPromotions
                     .Where(up => up.UserId == user.Id)
                     .Select(up => up.PromotionId)
                     .ToListAsync();
 
-                ViewBag.SavedPromotionIds = savedIds;
+                // Chỉ hiển thị mã public + private được gán
+                query = query.Where(p => !p.IsPrivate || assignedPrivateIds.Contains(p.Id));
+
+                // Lưu danh sách mã đã lưu (nếu có)
+                ViewBag.SavedPromotionIds = assignedPrivateIds;
             }
             else
             {
+                // 🧩 Nếu chưa đăng nhập -> chỉ hiển thị mã public
+                query = query.Where(p => !p.IsPrivate);
                 ViewBag.SavedPromotionIds = new List<int>();
             }
 
+            // 🧩 Bước 3: Trả về danh sách khuyến mãi
+            var promotions = await query.OrderByDescending(p => p.StartDate).ToListAsync();
             return View(promotions);
         }
 
@@ -129,20 +138,86 @@ namespace DoAnCoSo.Controllers
                 .Include(up => up.Promotion)
                 .Select(up => new
                 {
-                    up.Promotion.Title,
-                    up.Promotion.Code,
-                    up.Promotion.Discount,
-                    up.Promotion.IsPercent,
-                    up.Promotion.StartDate,
-                    up.Promotion.EndDate,
-                    up.IsUsed,
-                    up.DateSaved,
-                    up.UsedAt
+                    Id = up.Promotion.Id, // ✅ cần dòng này để View nhận ra promo.Id
+                    Title = up.Promotion.Title,
+                    Code = up.Promotion.Code,
+                    Discount = up.Promotion.Discount,
+                    IsPercent = up.Promotion.IsPercent,
+                    StartDate = up.Promotion.StartDate,
+                    EndDate = up.Promotion.EndDate,
+                    IsUsed = up.IsUsed,
+                    DateSaved = up.DateSaved,
+                    UsedAt = up.UsedAt
                 })
                 .OrderByDescending(up => up.DateSaved)
                 .ToListAsync();
 
             return View(myPromos);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Apply(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var promo = await _context.Promotions.FindAsync(id);
+            if (promo == null)
+            {
+                TempData["Error"] = "❌ Không tìm thấy mã khuyến mãi.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // 🔒 Kiểm tra điều kiện hợp lệ
+            if (!promo.IsActive || promo.EndDate < DateTime.Now || promo.StartDate > DateTime.Now)
+            {
+                TempData["Error"] = "⚠️ Mã khuyến mãi này đã hết hạn hoặc chưa bắt đầu.";
+                return RedirectToAction(nameof(MyPromotions));
+            }
+
+            // 🔐 Nếu là mã private → kiểm tra user có được gán không
+            if (promo.IsPrivate)
+            {
+                bool allowed = await _context.UserPromotions
+                    .AnyAsync(up => up.PromotionId == promo.Id && up.UserId == user.Id);
+
+                if (!allowed)
+                {
+                    TempData["Error"] = "🚫 Mã này không được gán cho bạn.";
+                    return RedirectToAction(nameof(MyPromotions));
+                }
+            }
+
+            // ✅ Nếu hợp lệ → Chuyển tới trang sản phẩm, truyền mã
+            return RedirectToAction("AllProducts", "Product", new { promoCode = promo.Code });
+        }
+
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> RemoveSavedPromotion(int promotionId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var saved = await _context.UserPromotions
+                .FirstOrDefaultAsync(up => up.UserId == user.Id && up.PromotionId == promotionId);
+
+            if (saved != null)
+            {
+                _context.UserPromotions.Remove(saved);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "🗑 Đã xóa mã khuyến mãi khỏi danh sách của bạn.";
+            }
+            else
+            {
+                TempData["Error"] = "❌ Không tìm thấy mã khuyến mãi cần xóa.";
+            }
+
+            return RedirectToAction(nameof(MyPromotions));
         }
 
     }
