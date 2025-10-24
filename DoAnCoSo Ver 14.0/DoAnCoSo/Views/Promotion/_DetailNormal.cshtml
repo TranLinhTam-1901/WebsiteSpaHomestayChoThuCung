@@ -1,0 +1,85 @@
+﻿@model DoAnCoSo.Models.Promotion
+
+<section class="promotion-detail-section bg-light">
+    <div class="container py-5">
+        <div class="p-5 mx-auto bg-white rounded-4 shadow-sm text-center" style="max-width: 720px;">
+            <!-- 🏷️ Tiêu đề -->
+            <h2 class="text-danger fw-bold">@Model.Title</h2>
+
+            <!-- 🎁 Thông tin mã -->
+            <div class="my-3">
+                <p class="mb-1">🎁 Mã khuyến mãi: <strong class="text-dark">@Model.Code</strong></p>
+                <h4 class="text-pink fw-bold">
+                    Giảm @(Model.IsPercent ? $"{Model.Discount}%" : $"{Model.Discount:N0}đ")
+                </h4>
+                <p class="small text-muted">
+                    ⏰ HSD: @Model.EndDate.ToString("dd/MM/yyyy")
+                </p>
+            </div>
+
+            <hr class="my-4" />
+
+            <!-- ⚙️ Điều kiện áp dụng -->
+            <div class="promo-conditions text-start d-inline-block text-secondary">
+                <ul class="list-unstyled">
+                    @if (Model.MinOrderValue.HasValue)
+                    {
+                        <li>🛒 Đơn tối thiểu: <strong>@Model.MinOrderValue.Value.ToString("N0")đ</strong></li>
+                    }
+                    else
+                    {
+                        <li>🛒 Không yêu cầu đơn tối thiểu</li>
+                    }
+
+                    @if (Model.MaxUsagePerUser.HasValue)
+                    {
+                        <li>👤 Mỗi người dùng: <strong>@Model.MaxUsagePerUser</strong> lần</li>
+                    }
+
+                    <li>
+                        💡 Điều kiện áp dụng:
+                        @(Model.MinOrderValue.HasValue
+                                                ? $"Đơn hàng từ {Model.MinOrderValue.Value.ToString("N0")}đ trở lên"
+                                                : "Không yêu cầu giá trị tối thiểu")
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 🧩 Nút thao tác -->
+            <div class="mt-4">
+                @if (User.Identity.IsAuthenticated)
+                {
+                    if (ViewBag.AlreadySaved == true)
+                    {
+                        <form asp-action="Apply" asp-route-id="@Model.Id" method="get" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm">
+                                🛒 Áp dụng ngay
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="SavePromotion" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="promotionId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-danger btn-lg rounded-pill px-4 shadow-sm">
+                                💾 Lưu mã
+                            </button>
+                        </form>
+                    }
+                }
+                else
+                {
+                    <a asp-area="Identity" asp-page="/Account/Login"
+                       class="btn btn-outline-secondary btn-lg rounded-pill px-4 shadow-sm">
+                        🔑 Đăng nhập để lưu mã
+                    </a>
+                }
+
+                <a href="/Promotion" class="btn btn-outline-dark btn-lg rounded-pill px-4 ms-3 shadow-sm">
+                    ← Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
