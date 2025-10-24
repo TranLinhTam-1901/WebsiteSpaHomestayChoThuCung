@@ -1,0 +1,423 @@
+﻿.section-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #FF6185;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+    .section-title::after {
+        content: "";
+        display: block;
+        width: 80px;
+        height: 4px;
+        background-color: #FFB6C1;
+        margin: 12px auto 0;
+        border-radius: 2px;
+    }
+
+#chatWith {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+/* Khung chat cố định */
+#messagesList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+}
+
+/* Bubble tin nhắn */
+.message-row {
+    display: flex;
+    align-items: flex-end;
+}
+
+    .message-row.admin {
+        justify-content: flex-end;
+    }
+
+.message-bubble {
+    max-width: 60%;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    position: relative;
+    word-wrap: break-word;
+}
+
+    /* Màu bubble */
+    .message-bubble.admin {
+        background-color: #FF6185;
+        color: white;
+    }
+
+    .message-bubble.customer {
+        background-color: #d2c6f0; /* tím xám nhạt */
+        color: black;
+    }
+
+/* Avatar */
+.message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+/* Thời gian */
+.message-time {
+    font-size: 0.7rem;
+    margin-top: 2px;
+    text-align: right;
+    color: inherit;
+}
+
+/* Ngắt ngày giống admin */
+.date-separator {
+    text-align: center;
+    font-size: 0.75rem; /* nhỏ hơn tin nhắn */
+    color: #888; /* xám nhạt */
+    margin: 10px 0; /* cách đều 2 bên */
+    position: relative;
+}
+
+    /* Tạo 2 đường kẻ ngang hai bên separator */
+    .date-separator::before,
+    .date-separator::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background-color: #ccc;
+    }
+
+    .date-separator::before {
+        left: 40px;
+    }
+
+    .date-separator::after {
+        right: 40px;
+    }
+
+/* Scrollbar */
+#messagesList::-webkit-scrollbar {
+    width: 6px;
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.loading-msg {
+    font-size: 14px;
+    color: #666;
+    animation: fadeIn 0.3s ease;
+}
+
+#messagesList::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+
+/* Thêm cho số lượng tin nhắn chưa đọc */
+.unread-badge {
+    background-color: #FF6185;
+    color: white;
+    font-size: 0.7rem;
+    border-radius: 50%;
+    padding: 2px 6px;
+    margin-left: auto;
+}
+
+.list-group-item.unread {
+    font-weight: bold;
+}
+
+#sendButton {
+    background-color: #FF6185;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#uploadImageBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; /* vuông */
+    height: 40px;
+    border-radius: 50%; /* bo tròn */
+    border: none;
+    background-color: #FF6185;
+    color: #fff;
+    font-size: 18px; /* icon to vừa phải */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* === Ảnh preview khi paste === */
+#imagePreviewContainer {
+    position: absolute;
+    bottom: 55px; /* cao hơn ô nhập một chút */
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: none;
+    background: rgba(255, 255, 255, 0.95);
+    border-top: 2px solid #ff7b9c;
+    border-bottom: 2px solid #ff7b9c;
+    padding: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+}
+
+    /* Thumbnail preview */
+    #imagePreviewContainer img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 0 4px rgba(0,0,0,0.2);
+    }
+
+/* ====== ẢNH TRONG KHUNG CHAT ====== */
+.message-images {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 6px;
+    border-radius: 10px;
+    overflow: visible;
+}
+    /* Hiệu ứng hover */
+    .message-images img.chat-image:hover {
+        filter: brightness(0.7); /* ✅ làm tối ảnh khi hover */
+    }
+
+    /* mặc định image style (tất cả) */
+    .message-images img {
+        width: 100%;
+        display: block;
+        border-radius: 10px;
+        background: #fafafa;
+        transition: transform .15s ease;
+    }
+
+    /* full single */
+    .message-images.single {
+        grid-template-columns: 1fr;
+    }
+
+        .message-images.single img {
+            height: auto;
+            max-height: 420px;
+            object-fit: contain; /* giữ toàn bộ ảnh */
+        }
+
+    /* square (bình thường) */
+    .message-images img[data-type="square"] {
+        height: 160px;
+        object-fit: cover; /* cắt nhẹ nhưng nhìn chuẩn lưới */
+    }
+
+    /* tall (dọc) */
+    .message-images img[data-type="tall"] {
+        height: 240px; /* cao hơn */
+        object-fit: contain; /* hiển thị full, không crop nội dung dọc */
+        background: #fff;
+        padding: 6px; /* để không dính sát */
+        box-sizing: border-box;
+    }
+
+    /* wide (ngang dài) -> chiếm full row */
+    .message-images img[data-type="wide"] {
+        grid-column: 1 / -1;
+        height: auto;
+        max-height: 300px;
+        object-fit: contain; /* không crop panorama */
+        background: #fff;
+        padding: 6px;
+        box-sizing: border-box;
+    }
+
+    /* Khi một ảnh duy nhất: dùng class single (đã set trong JS) */
+    .message-images.single img {
+        border-radius: 12px;
+    }
+
+    /* Khi nhiều ảnh: hạn chế chiều cao tổng để không quá dài */
+    .message-images.multiple {
+        /* không giới hạn cứng, nhưng tránh overflow lớn - tùy chỉnh nếu cần */
+    }
+
+/* more-overlay (nếu >4) */
+.more-overlay {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+    .more-overlay img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .more-overlay::after {
+        content: attr(data-more);
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+/* modal viewer: ảnh fit toàn bộ kích thước modal */
+#imageViewerModal .viewer-image {
+    max-width: 92%;
+    max-height: 82vh;
+    object-fit: contain;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* responsive nhỏ */
+@media (max-width: 600px) {
+    .message-images img[data-type="square"] {
+        height: 120px;
+    }
+
+    .message-images img[data-type="tall"] {
+        height: 180px;
+    }
+
+    .message-images img[data-type="wide"] {
+        max-height: 220px;
+    }
+}
+
+/* ==== MODAL XEM ẢNH ==== */
+#imageViewerModal .modal-dialog {
+    margin: 0;
+    height: 100%;
+}
+
+#imageViewerModal .modal-content {
+    background-color: #000 !important;
+    color: #fff;
+    border: none;
+}
+
+/* Header & footer gọn nhẹ */
+#imageViewerModal .custom-header,
+#imageViewerModal .custom-footer {
+    background-color: #141414;
+    padding: 10px 20px;
+}
+
+#imageViewerModal .custom-header {
+    height: 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#imageViewerModal .custom-footer {
+    height: 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Căn giữa ảnh, có khoảng trống so với header/footer */
+#viewerWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100% - 16%); /* trừ header + footer */
+    padding: 20px 0; /* cách đều trên dưới */
+}
+
+/* ==== ẢNH TRONG MODAL ==== */
+#imageViewerModal .viewer-image {
+    max-width: 95%;
+    max-height: 85vh;
+    object-fit: contain; /* đảm bảo fit mọi tỉ lệ */
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
+}
+
+    #imageViewerModal .viewer-image:hover {
+        transform: scale(1.02);
+    }
+
+/* User info */
+#imageViewerModal .user-info {
+    display: flex;
+    align-items: center;
+}
+
+    #imageViewerModal .user-info .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+    }
+
+#imageViewerModal .user-name {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+#imageViewerModal .time-info {
+    color: #bbb;
+    font-size: 13px;
+}
+
+/* Nút icon hành động */
+#imageViewerModal .action-buttons .btn {
+    background: none;
+    color: #fff;
+    border: none;
+    font-size: 1.4rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+    #imageViewerModal .action-buttons .btn:hover {
+        color: #1e90ff;
+        transform: scale(1.1);
+    }
+
+/* Nút đóng trắng */
+#imageViewerModal .btn-close {
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+/* Ẩn scrollbar */
+#imageViewerModal .modal-body::-webkit-scrollbar {
+    display: none;
+}

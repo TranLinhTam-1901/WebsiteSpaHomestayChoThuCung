@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DoAnCoSo.Data;
-using DoAnCoSo.Models;
-using System.Linq;
-using System.Threading.Tasks;
 
 
 public class OrderHistoryController : Controller
@@ -22,9 +18,9 @@ public class OrderHistoryController : Controller
     public async Task<IActionResult> Index()
     {
         var currentUser = await _userManager.GetUserAsync(User);
-        List<Order> orders = new List<Order>(); 
+        List<Order> orders = new List<Order>();
 
-        if (currentUser != null) 
+        if (currentUser != null)
         {
             orders = await _context.Orders
                 .Where(o => o.UserId == currentUser.Id)
@@ -40,7 +36,7 @@ public class OrderHistoryController : Controller
             TempData["InfoMessage"] = "Vui lòng đăng nhập để xem lịch sử đặt hàng của bạn.";
         }
 
-        return View(orders); 
+        return View(orders);
     }
 
     [HttpPost]

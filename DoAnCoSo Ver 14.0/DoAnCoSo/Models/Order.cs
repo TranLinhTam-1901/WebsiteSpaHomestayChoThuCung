@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace DoAnCoSo.Models
 {
@@ -24,7 +24,7 @@ namespace DoAnCoSo.Models
 
         // --- THÊM THUỘC TÍNH NÀY ---
         public string? PaymentMethod { get; set; }
-        public string?  ShippingAddress { get; set; }
+        public string? ShippingAddress { get; set; }
         public string? Notes { get; set; }
 
         [ForeignKey("UserId")]

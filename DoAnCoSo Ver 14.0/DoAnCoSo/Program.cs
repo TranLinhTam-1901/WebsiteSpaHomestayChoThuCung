@@ -7,9 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.Globalization;
-using DoAnCoSo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,7 +112,7 @@ using (var scope = app.Services.CreateScope()) // Tạo một scope dịch vụ 
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>(); // Lấy logger để ghi log lỗi
         logger.LogError(ex, "An error occurred seeding the DB."); // Ghi log nếu có lỗi xảy ra trong quá trình seed
     }
-}   
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

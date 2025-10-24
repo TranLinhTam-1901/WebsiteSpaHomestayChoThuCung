@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace DoAnCoSo.Models
 {
@@ -32,6 +32,7 @@ namespace DoAnCoSo.Models
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<SystemState> SystemStates { get; set; }
+        public DbSet<ChatImage> ChatImages { get; set; }
 
         public DbSet<Promotion> Promotions { get; set; }
 

@@ -1,14 +1,10 @@
-﻿using Azure.Core;
-using DoAnCoSo.Extensions;
-using DoAnCoSo.Models;
+﻿using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
+using DoAnCoSo.Services;
 using DoAnCoSo.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System; // Thêm using này cho DateTime
-using DoAnCoSo.Services;
 
 namespace DoAnCoSo.Controllers
 {
@@ -104,7 +100,7 @@ namespace DoAnCoSo.Controllers
 
             // Tìm kiếm mục giỏ hàng của người dùng cho sản phẩm này trong DB
             var existingCartItem = await _context.CartItems
-                                                 .FirstOrDefaultAsync(ci => ci.UserId == userId 
+                                                 .FirstOrDefaultAsync(ci => ci.UserId == userId
                                                  && ci.ProductId == productId
                                                  && ci.SelectedFlavor == flavor);
 
@@ -121,7 +117,7 @@ namespace DoAnCoSo.Controllers
                     UserId = userId,
                     ProductId = productId,
                     Quantity = quantity,
-                    SelectedFlavor = flavor ??"",
+                    SelectedFlavor = flavor ?? "",
                     DateCreated = DateTime.UtcNow // Gán thời gian tạo
                 };
                 _context.CartItems.Add(newCartItem);
@@ -130,7 +126,7 @@ namespace DoAnCoSo.Controllers
             // Lưu thay đổi vào database
             await _context.SaveChangesAsync();
 
-          
+
             return RedirectToAction("Index");
         }
 
@@ -147,15 +143,15 @@ namespace DoAnCoSo.Controllers
             {
                 return NotFound("Product not found");
             }
-          
+
             return RedirectToAction("Checkout", new { isBuyNow = true, buyNowProductId = productId, buyNowQuantity = quantity });
 
         }
 
         [HttpPost]
-        public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request) 
+        public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request)
         {
-            
+
             Console.WriteLine($"RemoveFromCart called for CartItemId: {request.CartItemId}");
 
             var userId = _userManager.GetUserId(User);
@@ -165,7 +161,7 @@ namespace DoAnCoSo.Controllers
                 Console.WriteLine("Lỗi: Không tìm thấy User ID. Người dùng có thể chưa đăng nhập.");
                 return Json(new { success = false, message = "Bạn cần đăng nhập để xóa sản phẩm khỏi giỏ hàng." });
             }
-            Console.WriteLine($"User ID: {userId}"); 
+            Console.WriteLine($"User ID: {userId}");
 
             var itemToRemove = await _context.CartItems
                                              .FirstOrDefaultAsync(ci => ci.Id == request.CartItemId && ci.UserId == userId); // SỬ DỤNG request.CartItemId
@@ -284,9 +280,9 @@ namespace DoAnCoSo.Controllers
                 BuyNowQuantity = isBuyNowFlow ? buyNowQuantity : null,
                 BuyNowFlavor = isBuyNowFlow ? buyNowFlavor : null,
 
-              
+
                 SelectedCartItemIds = itemsToProcess.Where(ci => ci.Id != 0).Select(ci => ci.Id).ToList()
-               
+
             };
             viewModel.Order = new Order
             {
