@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DoAnCoSo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251013071828_SendPics")]
-    partial class SendPics
+    [Migration("20251024144846_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -443,6 +443,38 @@ namespace DoAnCoSo.Migrations
                     b.ToTable("OrderDetails");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.OrderPromotion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodeUsed")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("DiscountApplied")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PromotionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PromotionId");
+
+                    b.ToTable("OrderPromotions");
+                });
+
             modelBuilder.Entity("DoAnCoSo.Models.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -650,19 +682,42 @@ namespace DoAnCoSo.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Discount")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Image")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCampaign")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPercent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrivate")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MaxUsage")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MaxUsagePerUser")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MinOrderValue")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ShortDescription")
                         .IsRequired()
@@ -853,6 +908,40 @@ namespace DoAnCoSo.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SystemStates");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.UserPromotion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateSaved")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PromotionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PromotionId");
+
+                    b.HasIndex("UserId", "PromotionId")
+                        .IsUnique();
+
+                    b.ToTable("UserPromotions");
                 });
 
             modelBuilder.Entity("Favorite", b =>
@@ -1155,6 +1244,25 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.OrderPromotion", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Order", "Order")
+                        .WithMany("OrderPromotions")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DoAnCoSo.Models.Promotion", "Promotion")
+                        .WithMany("OrderPromotions")
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Promotion");
+                });
+
             modelBuilder.Entity("DoAnCoSo.Models.Payment", b =>
                 {
                     b.HasOne("DoAnCoSo.Models.Order", "Order")
@@ -1266,6 +1374,25 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.UserPromotion", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Promotion", "Promotion")
+                        .WithMany()
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DoAnCoSo.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Promotion");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Favorite", b =>
                 {
                     b.HasOne("DoAnCoSo.Models.Product", "Product")
@@ -1361,6 +1488,8 @@ namespace DoAnCoSo.Migrations
 
                     b.Navigation("OrderDetails");
 
+                    b.Navigation("OrderPromotions");
+
                     b.Navigation("Payments");
                 });
 
@@ -1378,6 +1507,11 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.Promotion", b =>
+                {
+                    b.Navigation("OrderPromotions");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Review", b =>

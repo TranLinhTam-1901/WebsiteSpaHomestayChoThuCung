@@ -1,5 +1,4 @@
-﻿USE [DoAnCoSoVer20.0]
-
+﻿USE DoAnCoSoVer1310
 -- 1️⃣ Homestay Services
 INSERT INTO Services (Category, Name, Description, Price)
 VALUES 
@@ -489,46 +488,46 @@ DELETE FROM dbo.Reviews;
 INSERT INTO dbo.Reviews (UserId, TargetType, TargetId, Rating, Comment, CreatedDate)
 VALUES
 -- Customer1 --
-('ae39751c-a1c1-44af-87e4-c864f106664c', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
-('ae39751c-a1c1-44af-87e4-c864f106664c', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
-('ae39751c-a1c1-44af-87e4-c864f106664c', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
-('ae39751c-a1c1-44af-87e4-c864f106664c', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
-('ae39751c-a1c1-44af-87e4-c864f106664c', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
-('ae39751c-a1c1-44af-87e4-c864f106664c', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
-('ae39751c-a1c1-44af-87e4-c864f106664c', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
+('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
+('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
+('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
+('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
+('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
+('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
+('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
 
 -- Customer2 --
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 0, 10, 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 0, 13, 4, N'Mèo rất thích nhai loại này.', '2025-05-17 08:00:00'),
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 0, 16, 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
+('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
+('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
+('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
+('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 10, 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
+('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 13, 4, N'Mèo rất thích nhai loại này.', '2025-05-17 08:00:00'),
+('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 16, 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
 
 -- Customer3 --
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 0, 17, 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 0, 18, 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 0, 19, 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 08:30:00'),
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 0, 20, 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00'),
+('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
+('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
+('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
+('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 17, 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
+('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 18, 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
+('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 19, 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 08:30:00'),
+('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 20, 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00'),
 
 -- Customer4 --
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 0, 7, 5, N'Sản phẩm dinh dưỡng, chó mình rất thích.', '2025-05-22 09:00:00'),
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 0, 11, 4, N'Mèo ăn được nhưng hơi kén một chút.', '2025-05-23 14:00:00'),
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 0, 15, 5, N'Rất phù hợp cho Poodle nhà mình.', '2025-05-24 18:30:00'),
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 0, 20, 4, N'Gói snack khá thơm, thú cưng rất thích.', '2025-05-28 09:20:00'),
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 0, 22, 5, N'Sữa tắm mùi dễ chịu, lông mềm mượt.', '2025-05-29 17:10:00'),
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 0, 24, 3, N'Hàng dùng ổn nhưng giao hơi chậm.', '2025-05-30 13:40:00'),
+('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 7, 5, N'Sản phẩm dinh dưỡng, chó mình rất thích.', '2025-05-22 09:00:00'),
+('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 11, 4, N'Mèo ăn được nhưng hơi kén một chút.', '2025-05-23 14:00:00'),
+('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 15, 5, N'Rất phù hợp cho Poodle nhà mình.', '2025-05-24 18:30:00'),
+('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 20, 4, N'Gói snack khá thơm, thú cưng rất thích.', '2025-05-28 09:20:00'),
+('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 22, 5, N'Sữa tắm mùi dễ chịu, lông mềm mượt.', '2025-05-29 17:10:00'),
+('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 24, 3, N'Hàng dùng ổn nhưng giao hơi chậm.', '2025-05-30 13:40:00'),
 
 -- Customer5 --
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 0, 8, 5, N'Cún Golden rất thích, lông óng mượt hơn.', '2025-05-25 10:15:00'),
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 0, 12, 4, N'Mèo ăn nhanh, giá cả hợp lý.', '2025-05-26 11:45:00'),
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 0, 18, 5, N'Chất lượng tốt, đáng để mua lại.', '2025-05-27 16:10:00'),
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 0, 21, 5, N'Bổ sung vitamin rất tốt, mèo khỏe hơn.', '2025-05-28 15:00:00'),
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 0, 23, 4, N'Khẩu phần phù hợp cho Golden, ăn hết ngay.', '2025-05-29 19:20:00'),
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 0, 25, 5, N'Rất hài lòng, sẽ mua lại lần nữa.', '2025-05-31 08:10:00');
+('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 8, 5, N'Cún Golden rất thích, lông óng mượt hơn.', '2025-05-25 10:15:00'),
+('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 12, 4, N'Mèo ăn nhanh, giá cả hợp lý.', '2025-05-26 11:45:00'),
+('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 18, 5, N'Chất lượng tốt, đáng để mua lại.', '2025-05-27 16:10:00'),
+('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 21, 5, N'Bổ sung vitamin rất tốt, mèo khỏe hơn.', '2025-05-28 15:00:00'),
+('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 23, 4, N'Khẩu phần phù hợp cho Golden, ăn hết ngay.', '2025-05-29 19:20:00'),
+('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 25, 5, N'Rất hài lòng, sẽ mua lại lần nữa.', '2025-05-31 08:10:00');
 
 -- Thú cưng --
 -- Lưu ý: Copy UserId ở trên xuống --
@@ -712,3 +711,5 @@ DBCC CHECKIDENT ('Appointments', RESEED, 0);
  -- Xóa, reset promotion --
 DELETE FROM Promotions;
 DBCC CHECKIDENT ('Promotions', RESEED, 0);
+
+SELECT Id, UserName FROM AspNetUsers;

@@ -5,7 +5,7 @@
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialFixUserPromotion : Migration
+    public partial class AddVietQr : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
