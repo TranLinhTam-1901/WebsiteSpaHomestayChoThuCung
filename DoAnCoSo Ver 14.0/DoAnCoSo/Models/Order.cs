@@ -21,6 +21,7 @@ namespace DoAnCoSo.Models
         public string? PhoneNumber { get; set; }
 
         public OrderStatusEnum Status { get; set; }
+        public BankStatusEnum bankStatus { get; set; } = BankStatusEnum.ChuaThanhToan;
 
         // --- THÊM THUỘC TÍNH NÀY ---
         public string? PaymentMethod { get; set; }
@@ -34,6 +35,9 @@ namespace DoAnCoSo.Models
 
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
         public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+
+        public ICollection<OrderPromotion> OrderPromotions { get; set; } = new List<OrderPromotion>();
+
 
     }
 }

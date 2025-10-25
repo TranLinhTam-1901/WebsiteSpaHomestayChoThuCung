@@ -30,10 +30,36 @@ namespace DoAnCoSo.Controllers
             _userManager = userManager;
         }
 
-        public IActionResult AllProducts()
+        public IActionResult AllProducts(string? promoCode)
         {
-            var products = _context.Products.ToList();
+            var products = _context.Products.AsQueryable();
 
+            // 🟢 Nếu có promoCode được truyền vào
+            if (!string.IsNullOrEmpty(promoCode))
+            {
+                var promo = _context.Promotions
+                    .FirstOrDefault(p => p.Code == promoCode && p.IsActive);
+
+                if (promo != null)
+                {
+                    // ⚙️ Gợi ý 1: lọc sản phẩm theo giá trị tối thiểu
+                    if (promo.MinOrderValue.HasValue)
+                        products = products.Where(p => p.Price >= promo.MinOrderValue.Value);
+
+                    // ⚙️ (Tuỳ chọn mở rộng)
+                    // Nếu bạn có bảng PromotionCategory → lọc theo CategoryId
+
+                    ViewBag.AppliedPromo = promo;
+                }
+                else
+                {
+                    TempData["Error"] = "❌ Mã khuyến mãi không hợp lệ hoặc đã hết hạn.";
+                }
+            }
+
+            var productList = products.ToList();
+
+            // Giữ phần yêu thích cũ của bạn
             var json = HttpContext.Session.GetString("FavoriteProducts");
             List<int> favoriteIds = string.IsNullOrEmpty(json)
                 ? new List<int>()
@@ -41,7 +67,7 @@ namespace DoAnCoSo.Controllers
 
             ViewBag.FavoriteIds = favoriteIds;
 
-            return View(products);
+            return View(productList);
         }
 
         // Giả sử bạn lưu trữ danh sách yêu thích trong session
