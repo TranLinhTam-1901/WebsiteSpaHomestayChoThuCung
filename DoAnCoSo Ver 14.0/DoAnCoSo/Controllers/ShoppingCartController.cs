@@ -356,6 +356,7 @@ namespace DoAnCoSo.Controllers
             order.OrderDate = DateTime.UtcNow;
             order.Status = OrderStatusEnum.ChoXacNhan;
             order.OrderDetails = new List<OrderDetail>();
+            order.PaymentMethod = model.Order.PaymentMethod;
 
             decimal total = 0;
             foreach (var item in itemsForOrder)
@@ -486,6 +487,16 @@ namespace DoAnCoSo.Controllers
             {
                 TempData["ErrorMessage"] = "Không có chi tiết đơn hàng nào được tạo. Vui lòng thử lại.";
                 return RedirectToAction("Index");
+            }
+
+            if(order.PaymentMethod == "BankTransfer")
+            {
+                await _context.SaveChangesAsync();
+                return RedirectToAction(
+                    actionName: "Payment",
+                    controllerName: "BankTransfer",
+                    routeValues: new { orderId = order.Id }
+                );
             }
 
             try
@@ -846,5 +857,25 @@ namespace DoAnCoSo.Controllers
                 discount
             });
         }
+        //test
+        //[HttpGet]
+        //public IActionResult BankTransferPayment(int orderId, decimal amount)
+        //{
+        //    if (orderId <= 0 || amount <= 0)
+        //    {
+        //        return RedirectToAction("Index", "ShoppingCart");
+        //    }
+
+        //    ViewData["OrderId"] = orderId;
+        //    ViewData["Amount"] = amount;
+
+        //    string qrText = $"Thanh toán đơn #{orderId} - Số tiền: {amount}";
+
+        //    ViewBag.QRImageUrl =
+        //        $"https://img.vietqr.io/image/MBBank-0123456789-compact.png?amount={amount}&addInfo=ORDER{orderId}";
+
+        //    return View();
+        //}
+
     }
 }

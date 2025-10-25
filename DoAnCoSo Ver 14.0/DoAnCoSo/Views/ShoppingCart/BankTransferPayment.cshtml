@@ -1,0 +1,40 @@
+﻿@model DoAnCoSo.ViewModels.CheckoutBankTransferViewModel
+@{
+    ViewData["Title"] = "Thanh toán chuyển khoản";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 mx-auto" style="max-width: 450px;">
+        <h3 class="text-center mb-3 text-primary fw-bold">
+            Quét mã QR để thanh toán
+        </h3>
+
+        <p class="text-center">Mã đơn hàng: <strong>#@Model.OrderId</strong></p>
+
+        <div class="text-center my-3">
+            <img src="@Model.QRImageUrl"
+                 alt="QR Thanh toán"
+                 class="img-fluid"
+                 style="width:260px; border-radius:10px; border:2px solid #eee; padding:6px;" />
+        </div>
+
+        <p class="text-center fs-4 text-success fw-bold">
+            @Model.Amount.ToString("#,0") đ
+        </p>
+
+        <div class="bg-light rounded p-3 mt-2">
+            <p class="mb-1"><b>STK:</b> <span class="text-dark">@Model.BankAccount</span></p>
+            <p class="mb-1"><b>Chủ tài khoản:</b> <span class="text-dark text-uppercase">@Model.OwnerName</span>
+            <p class="mb-1">
+                <b>Nội dung CK:</b>
+                <span class="text-danger fw-bold">
+                    @Model.Content
+                </span>
+            </p>
+        </div>
+
+        <p class="text-danger fw-semibold text-center mt-3">
+            ⚠️ Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống xác nhận!
+        </p>
+    </div>
+</div>
