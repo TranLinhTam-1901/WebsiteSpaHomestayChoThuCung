@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnCoSo.Models
 {
@@ -24,7 +24,7 @@ namespace DoAnCoSo.Models
 
         // Thời gian sản phẩm được thêm vào giỏ hàng (tùy chọn)
         public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-        
+
         public string? SelectedFlavor { get; set; }
     }
 }

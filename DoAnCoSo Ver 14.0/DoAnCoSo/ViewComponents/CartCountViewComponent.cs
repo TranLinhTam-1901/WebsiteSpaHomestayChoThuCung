@@ -1,10 +1,7 @@
 ﻿
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http; // Thêm dòng này
-using DoAnCoSo.Extensions; // Đảm bảo bạn có extension này để đọc từ Session
 using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Identity; // Đảm bảo bạn có model ShoppingCart
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 public class CartCountViewComponent : ViewComponent
 {
@@ -34,4 +31,4 @@ public class CartCountViewComponent : ViewComponent
 
         return View(itemCount);
     }
-}   
+}

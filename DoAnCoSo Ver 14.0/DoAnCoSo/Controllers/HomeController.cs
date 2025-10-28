@@ -1,12 +1,8 @@
-﻿using System.Diagnostics;
-using DoAnCoSo.Models;
+﻿using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.Linq;
-using DoAnCoSo.ViewModels;
-using System.Security.Claims;
+using System.Diagnostics;
 
 namespace DoAnCoSo.Controllers
 {

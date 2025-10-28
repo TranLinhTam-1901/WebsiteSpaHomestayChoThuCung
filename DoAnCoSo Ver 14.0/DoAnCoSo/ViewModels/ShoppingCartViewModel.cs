@@ -6,7 +6,7 @@ namespace DoAnCoSo.ViewModels
     {
         public List<CartItem> CartItemsFromDb { get; set; } = new List<CartItem>();
 
-        
+
         public decimal CartTotal { get; set; }
     }
 }

@@ -21,10 +21,6 @@
 
 <div class="container py-5">
     <h2 class="section-title">💬 Chăm sóc khách hàng</h2>
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
 
     <div class="row g-4">
         <!-- Sidebar khách hàng -->
@@ -65,146 +61,82 @@
                     <!-- Tin nhắn sẽ hiện ở đây -->
                 </div>
 
-                <div class="card-footer d-flex p-2" style="border-top:3px solid #FF6185;">
-                    <input id="messageInput" type="text" class="form-control me-2" placeholder="Nhập tin nhắn..." style="border-radius:20px;" />
-                    <button id="sendButton" class="btn" style="background-color:#FF6185; color:white; border-radius:20px;">Gửi</button>
+                <div class="card-footer position-relative d-flex p-2" style="border-top:3px solid #FF6185; gap: 5px; flex-direction: column;">
+
+                    <div id="imagePreviewContainer" style="
+                        display: none;
+                        flex-direction: row;
+                        gap: 5px;
+                        overflow-x: auto;
+                        max-height: 100px;
+                        padding-bottom: 5px;
+                        width: 100%;">
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 5px; width: 100%;">
+
+                        <input type="file" id="imageFileInput" accept="image/*" multiple style="display:none" />
+
+                        <input id="messageInput" type="text" class="form-control" placeholder="Nhập tin nhắn..."
+                               style="border-radius:20px; flex-grow:1;" />
+
+                        <button id="uploadImageBtn" class="btn btn-primary btn-icon" title="Upload ảnh">
+                            <i class="bi bi-paperclip"></i>
+                        </button>
+
+                        <button id="sendButton">Gửi</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .section-title {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #FF6185;
-        text-align: center;
-        margin-bottom: 30px;
-        position: relative;
-    }
+<div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true" style="z-index:10100">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+        <div class="modal-content bg-dark d-flex flex-column">
 
-        .section-title::after {
-            content: "";
-            display: block;
-            width: 80px;
-            height: 4px;
-            background-color: #FFB6C1;
-            margin: 12px auto 0;
-            border-radius: 2px;
-        }
+            <!-- Header -->
+            <div class="modal-header custom-header border-0 justify-content-end">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
-    #chatWith {
-        font-size: 1.3rem;
-        font-weight: bold;
-    }
+            <!-- Body -->
+            <div class="modal-body d-flex justify-content-center align-items-center flex-grow-1 p-0">
+                <div id="viewerWrapper">
+                    <img id="viewerImage" src="" class="viewer-image" alt="Image Viewer">
+                </div>
+            </div>
 
-    /* Khung chat cố định */
-    #messagesList {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        overflow-y: auto;
-    }
+            <!-- Footer -->
+            <div class="modal-footer custom-footer border-0 d-flex justify-content-between align-items-center">
 
-    /* Bubble tin nhắn */
-    .message-row {
-        display: flex;
-        align-items: flex-end;
-    }
+                <!-- Góc trái: avatar + tên + thời gian -->
+                <div class="user-info d-flex align-items-center">
+                    <img src="" alt="User Avatar" class="avatar rounded-circle me-2" id="modalAvatar">
+                    <div class="user-text">
+                        <div class="user-name" id="modalUserName"></div>
+                        <div class="time-info" id="modalTime"></div>
+                    </div>
+                </div>
 
-        .message-row.admin {
-            justify-content: flex-end;
-        }
+                <!-- Giữa: Zoom + Download -->
+                <div class="action-buttons d-flex align-items-center">
+                    <button type="button" class="btn btn-dark btn-sm me-2" id="zoomInBtn" title="Phóng to">
+                        <i class="bi bi-zoom-in"></i>
+                    </button>
+                    <button type="button" class="btn btn-dark btn-sm me-2" id="zoomOutBtn" title="Thu nhỏ">
+                        <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <button type="button" class="btn btn-dark btn-sm" id="downloadBtn" title="Tải ảnh">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
 
-    .message-bubble {
-        max-width: 60%;
-        padding: 10px 15px;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        position: relative;
-        word-wrap: break-word;
-    }
-
-        /* Màu bubble */
-        .message-bubble.admin {
-            background-color: #FF6185;
-            color: white;
-        }
-
-        .message-bubble.customer {
-            background-color: #d2c6f0; /* tím xám nhạt */
-            color: black;
-        }
-
-    /* Avatar */
-    .message-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        margin-right: 8px;
-    }
-
-    /* Thời gian */
-    .message-time {
-        font-size: 0.7rem;
-        margin-top: 2px;
-        text-align: right;
-        color: inherit;
-    }
-
-    /* Ngắt ngày giống admin */
-    .date-separator {
-        text-align: center;
-        font-size: 0.75rem; /* nhỏ hơn tin nhắn */
-        color: #888; /* xám nhạt */
-        margin: 10px 0; /* cách đều 2 bên */
-        position: relative;
-    }
-
-        /* Tạo 2 đường kẻ ngang hai bên separator */
-        .date-separator::before,
-        .date-separator::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            width: 40%;
-            height: 1px;
-            background-color: #ccc;
-        }
-
-        .date-separator::before {
-            left: 40px;
-        }
-
-        .date-separator::after {
-            right: 40px;
-        }
-
-    /* Scrollbar */
-    #messagesList::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #messagesList::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,0.2);
-        border-radius: 3px;
-    }
-
-    /* Thêm cho số lượng tin nhắn chưa đọc */
-    .unread-badge {
-        background-color: #FF6185;
-        color: white;
-        font-size: 0.7rem;
-        border-radius: 50%;
-        padding: 2px 6px;
-        margin-left: auto;
-    }
-
-    .list-group-item.unread {
-        font-weight: bold;
-    }
-</style>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
@@ -215,6 +147,18 @@
         const chatWith = document.getElementById("chatWith");
         const searchInput = document.getElementById("searchCustomer");
         const ulCustomers = document.getElementById("customers");
+
+        const imageFileInput = document.getElementById("imageFileInput");
+        const uploadImageBtn = document.getElementById("uploadImageBtn");
+        const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+        const zoomInBtn = document.getElementById("zoomInBtn");
+        const zoomOutBtn = document.getElementById("zoomOutBtn");
+        const downloadBtn = document.getElementById("downloadBtn");
+
+        let scale = 1;
+        const minScale = 1;   // ảnh mặc định
+        const maxScale = 3;   // phóng to tối đa
+        let selectedImages = [];
 
         let currentCustomerId = null;
         let currentCustomerName = "";
@@ -240,25 +184,265 @@
             return `/images/avatar/avatar_${num}.jpg`;
         }
 
-        function createMessageElement(msg){
-            const date = new Date(msg.sentAt);
+        function createMessageElement(msg) {
+            const date = msg.localSentAt ? new Date(msg.localSentAt) : parseServerDate(msg.sentAt);
+            const isAdmin = String(msg.fromUserId || "") === String(adminId || "");
             const row = document.createElement("div");
-            row.className = "message-row " + (msg.fromUserId === adminId ? "admin" : "customer");
+            row.className = "message-row " + (isAdmin ? "admin" : "customer");
 
-            if(msg.fromUserId !== adminId){
+            if (!isAdmin) {
                 const avatar = document.createElement("img");
-                avatar.src = getAvatar(msg.fromUserId);
                 avatar.className = "message-avatar";
+                avatar.src = getAvatar(msg.fromUserId);
                 row.appendChild(avatar);
             }
 
             const bubble = document.createElement("div");
-            bubble.className = "message-bubble " + (msg.fromUserId === adminId ? "admin" : "customer");
-            bubble.innerHTML = msg.message +
-                `<div class="message-time">${date.toLocaleTimeString("vi-VN",{hour:'2-digit',minute:'2-digit'})}</div>`;
-            row.appendChild(bubble);
+            bubble.className = "message-bubble " + (isAdmin ? "admin" : "customer");
 
-            return {row, date};
+            // Xử lý ảnh
+            let urls = [];
+            if (Array.isArray(msg.imageUrls)) urls = msg.imageUrls;
+            else if (typeof msg.imageUrls === "string") {
+                try { urls = JSON.parse(msg.imageUrls); } catch { urls = []; }
+            }
+
+            if (urls.length > 0) {
+                const maxDisplay = 12; // hiển thị tối đa (có thể tùy chỉnh)
+                const imgContainer = document.createElement("div");
+                imgContainer.className = "message-images";
+
+                // tạo các ảnh, gán data-src trước, đợi load để classify type
+                const loaders = urls.slice(0, maxDisplay).map((url, index) => {
+                    return new Promise((resolve) => {
+                        const img = document.createElement("img");
+                        img.src = url;
+                        img.dataset.serverUrl = url;
+                        img.className = "chat-image";
+                        // tạm set kích thước để tránh layout nhảy khi load chậm
+                        img.style.minWidth = "60px";
+                        img.style.minHeight = "60px";
+                        img.style.maxWidth = "100%";
+                        img.style.objectFit = "cover";
+
+                        // khi load xong, phân loại kích thước và gán data-type
+                        const tmp = new Image();
+                        tmp.onload = () => {
+                            const w = tmp.width || img.naturalWidth || 1;
+                            const h = tmp.height || img.naturalHeight || 1;
+                            const ratio = w / h;
+
+                            // phân loại:
+                            if (ratio > 1.7) img.dataset.type = "wide";   // panorama ngang
+                            else if (ratio < 0.85) img.dataset.type = "tall"; // dọc/cao
+                            else img.dataset.type = "square"; // vuông/bình thường
+
+                            resolve(img);
+                        };
+                        tmp.onerror = () => {
+                            // fallback nếu load bị lỗi
+                            img.dataset.type = "square";
+                            resolve(img);
+                        };
+                        tmp.src = url;
+
+                        // nếu load cực nhanh thì tmp.onload sẽ chạy sớm; vẫn append img sớm để tránh nhảy layout
+                        // append vào container ngay để giữ thứ tự; layoutAdjust sẽ điều chỉnh sau khi tất cả resolved
+                        imgContainer.appendChild(img);
+                    });
+                });
+
+                // sau khi tất cả ảnh đã ít nhất được phân loại, điều chỉnh layout
+                Promise.all(loaders).then((imgs) => {
+                    adjustImageLayout(imgContainer, imgs);
+                }).catch(() => {
+                    // nếu có lỗi vẫn gọi adjust dự phòng
+                    adjustImageLayout(imgContainer, Array.from(imgContainer.querySelectorAll("img")));
+                });
+
+                bubble.appendChild(imgContainer);
+            }
+
+            if (msg.message && msg.message.trim() !== "") {
+                const text = document.createElement("div");
+                text.innerHTML = msg.message;
+                bubble.appendChild(text);
+            }
+
+            const time = document.createElement("div");
+            time.className = "message-time";
+            time.textContent = date.toLocaleTimeString("vi-VN", { hour12: false, hour: "2-digit", minute: "2-digit" });
+            bubble.appendChild(time);
+
+            row.appendChild(bubble);
+            return { row, date };
+        }
+
+        /* --- Hàm helper: điều chỉnh grid/layout dựa trên loại ảnh --- */
+        function adjustImageLayout(container, imgs) {
+            const total = imgs.length;
+            const types = imgs.map(i => i.dataset.type || "square");
+            const hasWide = types.includes("wide");
+            const tallCount = types.filter(t => t === "tall").length;
+
+            // reset styles
+            container.classList.remove("single","multiple","has-wide");
+            container.style.display = "";
+            container.style.gridTemplateColumns = "";
+            container.style.gap = "6px";
+
+            // Helper: clear per-img inline layout before re-assign
+            Array.from(container.children).forEach(imgEl => {
+                imgEl.style.gridColumn = "";
+                imgEl.style.height = "";
+                imgEl.style.objectFit = "";
+                imgEl.style.maxHeight = "";
+                imgEl.style.width = "100%";
+            });
+
+            // 1) Wide image present -> make wide images full-row; others 2-column
+            if (hasWide) {
+                container.classList.add("has-wide");
+                container.style.display = "grid";
+                container.style.gridTemplateColumns = "repeat(2, 1fr)";
+                Array.from(container.children).forEach(imgEl => {
+                    const t = imgEl.dataset.type;
+                    if (t === "wide") {
+                        imgEl.style.gridColumn = "1 / -1";
+                        imgEl.style.objectFit = "contain";
+                        imgEl.style.height = "auto";
+                        imgEl.style.maxHeight = "360px";
+                    } else {
+                        imgEl.style.objectFit = "cover";
+                        imgEl.style.height = "160px";
+                    }
+                });
+                return;
+            }
+
+            // 2) Single image -> full width, show fully (contain)
+            if (total === 1) {
+                container.classList.add("single");
+                container.style.display = "grid";
+                container.style.gridTemplateColumns = "1fr";
+                const imgEl = container.querySelector("img");
+                if (imgEl) {
+                    imgEl.style.gridColumn = "1 / -1";
+                    imgEl.style.objectFit = "contain";
+                    imgEl.style.height = "auto";
+                    imgEl.style.maxHeight = "420px";
+                }
+                return;
+            }
+
+            // 3) All tall images -> special distribution (1..4 columns top), then bottom row spreads to fill
+            if (tallCount === total) {
+                // determine top columns:
+                let topCols;
+                if (total <= 4) topCols = total;            // 1..4 -> 1..4 columns
+                else topCols = Math.min(4, Math.ceil(total / 2)); // >4 -> ceil(total/2) up to 4
+
+                // --- CHỖ ĐÃ SỬA: tính totalUnits để bottom images chia đều ---
+                const bottomCount = total - topCols;
+                // nếu có bottomCount > 0 thì dùng totalUnits = topCols * bottomCount
+                // (đảm bảo top và bottom có span nguyên và bottom tất cả bằng nhau)
+                const totalUnits = bottomCount > 0 ? topCols * Math.max(1, bottomCount) : topCols * 2;
+
+                container.style.display = "grid";
+                container.style.gridTemplateColumns = `repeat(${totalUnits}, 1fr)`;
+                container.style.gap = "6px";
+
+                // tính span cố định cho top và bottom (chia đều)
+                const topSpan = Math.floor(totalUnits / topCols);
+                const bottomSpan = bottomCount > 0 ? Math.floor(totalUnits / bottomCount) : 2;
+
+                Array.from(container.children).forEach((imgEl, idx) => {
+                    if (idx < topCols) {
+                        imgEl.style.gridColumn = `span ${topSpan}`;
+                        imgEl.style.objectFit = "contain";
+                        imgEl.style.height = "auto";
+                        imgEl.style.maxHeight = "360px";
+                    } else {
+                        // --- CHỖ ĐÃ SỬA: bottom mỗi ảnh dùng bottomSpan -> đều nhau ---
+                        imgEl.style.gridColumn = `span ${bottomSpan}`;
+                        imgEl.style.objectFit = "contain"; // full ảnh, không zoom
+                        imgEl.style.height = "auto";
+                        imgEl.style.maxHeight = "360px";
+                    }
+                });
+
+                return;
+            }
+
+            // 4) Mixed / square-dominant -> use 2-column grid, but handle odd-last full-width case
+            container.classList.add("multiple");
+            container.style.display = "grid";
+            container.style.gridTemplateColumns = "repeat(2, 1fr)";
+            container.style.gap = "6px";
+
+            Array.from(container.children).forEach(imgEl => {
+                const t = imgEl.dataset.type || "square";
+                imgEl.style.gridColumn = "";
+                if (t === "tall") {
+                    imgEl.style.objectFit = "cover";
+                    imgEl.style.height = "220px";
+                } else {
+                    imgEl.style.objectFit = "cover";
+                    imgEl.style.height = "160px";
+                }
+                imgEl.style.maxHeight = "";
+            });
+
+            // If odd number of images (>1), make last one span full width and show fully (contain) so no white gap
+            if (total % 2 === 1 && total > 1) {
+                const last = container.children[container.children.length - 1];
+                if (last) {
+                    last.style.gridColumn = "1 / -1";
+                    last.style.objectFit = "contain";
+
+                    // --- CHỖ SỬA CHO ẢNH VUÔNG: kéo cao bằng tổng chiều cao 2 ảnh trên ---
+                    // Lấy 2 ảnh phía trên (nếu có) và dùng height đã gán (npx) để cộng lại.
+                    // Nếu không tìm thấy giá trị height, dùng fallback (square:160, tall:220).
+                    const first = container.children[0];
+                    const second = container.children[1];
+                    function pxToNum(v, fallback) {
+                        if (!v) return fallback;
+                        const m = String(v).match(/(-?\d+\.?\d*)px/);
+                        return m ? parseFloat(m[1]) : fallback;
+                    }
+
+                    const h1 = first ? pxToNum(first.style.height, (first?.dataset.type === "tall" ? 220 : 160)) : 160;
+                    const h2 = second ? pxToNum(second.style.height, (second?.dataset.type === "tall" ? 220 : 160)) : 160;
+                    const targetHeight = (h1 + h2);
+
+                    last.style.height = targetHeight + "px";
+                    // nâng maxHeight để không bóp tỉ lệ nếu cần
+                    last.style.maxHeight = (targetHeight * 1.2) + "px";
+
+                    // cho phép kéo dài bubble để ảnh vuông cuối vừa khung
+                    container.style.alignItems = "stretch";
+                    container.style.alignContent = "stretch";
+                }
+            }
+        }
+
+        function parseServerDate(raw) {
+            if (!raw) return new Date();
+            if (raw instanceof Date) return raw;
+            if (typeof raw === "number") return new Date(raw);
+            const s = String(raw);
+
+            const m = /\/Date\((-?\d+)(?:[+-]\d+)?\)\//.exec(s);
+            if (m) return new Date(Number(m[1]));
+
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(s)) {
+                return new Date(s + "Z");
+            }
+
+            const parsed = Date.parse(s);
+            if (!isNaN(parsed)) return new Date(parsed);
+
+            return new Date();
         }
 
         function formatDateSeparator(date){
@@ -286,23 +470,120 @@
         }
 
         function renderMessages(scrollToBottom=false){
-            messagesList.innerHTML = "";
+            const fragment = document.createDocumentFragment();
+
             allMessages.sort((a,b)=> new Date(a.sentAt)-new Date(b.sentAt));
             let lastDate = null;
             allMessages.forEach(msg=>{
                 const {row, date} = createMessageElement(msg);
                 if(!lastDate || lastDate.toDateString()!==date.toDateString()){
-                    addDateSeparator(date);
+                    const sep = addDateSeparator(date, true); // trả về element
+                    fragment.appendChild(sep);
                     lastDate = date;
                 }
-                messagesList.appendChild(row);
+                fragment.appendChild(row);
             });
+
+            messagesList.replaceChildren(fragment); // ⚡ nhanh và mượt hơn innerHTML=""
             if(scrollToBottom) messagesList.scrollTop = messagesList.scrollHeight;
+        }
+
+        function scrollToBottom(element) {
+            // Nếu không có element thì bỏ qua
+            if (!element) return;
+
+            const imgs = element.querySelectorAll("img");
+            let loaded = 0;
+
+            // Hàm cuộn xuống cuối
+            const doScroll = () => {
+                // Dùng requestAnimationFrame để tránh giật khung
+                requestAnimationFrame(() => {
+                    element.scrollTop = element.scrollHeight;
+                });
+            };
+
+            // Không có ảnh thì cuộn luôn
+            if (imgs.length === 0) return doScroll();
+
+            imgs.forEach(img => {
+                if (img.complete) {
+                    loaded++;
+                    if (loaded === imgs.length) doScroll();
+                } else {
+                    img.addEventListener("load", () => {
+                        loaded++;
+                        if (loaded === imgs.length) doScroll();
+                    }, { once: true });
+
+                    img.addEventListener("error", () => {
+                        loaded++;
+                        if (loaded === imgs.length) doScroll();
+                    }, { once: true });
+                }
+            });
+
+            // Trường hợp ảnh nào đó đã cache sẵn (đã complete) thì đảm bảo cuộn luôn
+            if (loaded === imgs.length) doScroll();
+        }
+
+        function appendMessage(msg) {
+            if (!msg.localSentAt) msg.localSentAt = msg.sentAt ? parseServerDate(msg.sentAt) : new Date();
+
+            const allRows = messagesList.querySelectorAll(".message");
+            const lastMsgElement = allRows.length > 0 ? allRows[allRows.length - 1] : null;
+            const lastDate = lastMsgElement ? lastMsgElement.dataset.localdate : null;
+            const currentDate = msg.localSentAt.toDateString();
+
+            if (lastDate && lastDate !== currentDate) addDateSeparator(msg.localSentAt);
+
+            const { row } = createMessageElement(msg);
+            row.classList.add("message");
+            row.dataset.localdate = currentDate;
+            messagesList.appendChild(row);
+
+            allMessages.push(msg);
+
+            // Scroll xuống dưới
+            scrollToBottom(messagesList);
+        }
+
+        function prependMessages(messages) {
+            if (!messages || messages.length === 0) return;
+            messages.sort((a, b) => parseServerDate(a.sentAt) - parseServerDate(b.sentAt));
+
+            const fragment = document.createDocumentFragment();
+            let lastDate = null;
+            const firstVisibleMsg = messagesList.querySelector(".message");
+            if (firstVisibleMsg) lastDate = firstVisibleMsg.dataset.localdate;
+
+            messages.forEach(msg => {
+                if (!msg.localSentAt) msg.localSentAt = msg.sentAt ? parseServerDate(msg.sentAt) : new Date();
+                const currentDate = msg.localSentAt.toDateString();
+
+                if (lastDate !== currentDate) {
+                    const separator = document.createElement("div");
+                    separator.className = "date-separator";
+                    separator.textContent = formatDateSeparator(msg.localSentAt);
+                    fragment.appendChild(separator);
+                    lastDate = currentDate;
+                }
+
+                const { row } = createMessageElement(msg);
+                row.classList.add("message");
+                row.dataset.localdate = currentDate;
+                fragment.appendChild(row);
+            });
+
+            const oldScrollHeight = messagesList.scrollHeight;
+            messagesList.prepend(fragment);
+            messagesList.scrollTop += messagesList.scrollHeight - oldScrollHeight;
         }
 
         async function loadMessages(prepend=false){
             if(!currentCustomerId || loadingOlder || noMoreMessages) return;
             loadingOlder = true;
+
             const res = await fetch(`/Admin/Chat/GetMessages?customerId=${currentCustomerId}&skip=${skipCount}&take=${pageSize}`);
             const messages = await res.json();
             if(messages.length===0){
@@ -311,8 +592,16 @@
                 return;
             }
 
-            allMessages = prepend ? messages.concat(allMessages) : allMessages.concat(messages);
-            renderMessages(!prepend);
+            messages.forEach(m => m.localSentAt = m.sentAt ? parseServerDate(m.sentAt) : new Date());
+
+            if(prepend) {
+                allMessages = messages.concat(allMessages);
+                prependMessages(messages);
+            } else {
+                messages.forEach(m => appendMessage(m));
+                allMessages = allMessages.concat(messages);
+            }
+
             skipCount += pageSize;
             loadingOlder = false;
         }
@@ -325,21 +614,252 @@
             }
         });
 
-        function sendMessage(){
-            const msg = messageInput.value.trim();
-            if(!msg || !currentCustomerId) return;
+        async function sendMessage() {
+            if (!currentCustomerId) return;
 
-            const newMsg = {fromUserId: adminId, message: msg, sentAt: new Date()};
-            allMessages.push(newMsg);
-            renderMessages(true);
+            const text = messageInput.value.trim();
+            const imageFiles = selectedImages.map(x => x.file);
+            let imageUrls = [];
 
-            // prepend khách hàng lên đầu
-            const li = ulCustomers.querySelector(`li[data-userid='${currentCustomerId}']`);
-            if(li) li.parentNode.prepend(li);
+            if (imageFiles.length > 0) {
+                // ví dụ phần upload trong sendMessage()
+                const uploads = await Promise.all(imageFiles.map(async file => {
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    try {
+                        const res = await fetch("/Admin/Chat/UploadImage", { method: "POST", body: fd });
+                        const data = await res.json();
+                        return data?.imageUrl || data?.url || null; // ưu tiên imageUrl
+                    } catch (e) {
+                        console.error("Upload error:", e);
+                        return null;
+                    }
+                }));
 
-            connection.invoke("SendMessageToCustomer", currentCustomerId, msg);
+                imageUrls = uploads.filter(u => u);
+            }
+
+            if (!text && imageUrls.length === 0) return;
+
+            // append local ngay lập tức
+            const msg = { fromUserId: adminId, message: text, imageUrls, sentAt: new Date() };
+            appendMessage(msg);
+
+            // gọi Hub
+            connection.invoke("SendMessageToCustomer", currentCustomerId, text, imageUrls, null)
+                .catch(console.error);
+
+            // ✅ reset badge ngay lập tức
+            const li = document.querySelector(`#customers li[data-userid='${currentCustomerId}']`);
+            if (li) {
+                li.dataset.unread = 0;
+                const badge = li.querySelector(".badge");
+                if (badge) badge.style.display = "none";
+                li.classList.remove("unread");
+
+                // gọi backend đồng bộ
+                fetch(`/Admin/Chat/MarkAsRead?customerId=${currentCustomerId}`, { method: "POST" }).catch(console.error);
+            }
+
             messageInput.value = "";
+            clearImagePreviews();
         }
+
+        document.getElementById("uploadImageBtn").addEventListener("click", () => {
+            document.getElementById("imageFileInput").click();
+        });
+
+        imageFileInput.addEventListener("change", (e) => {
+            try {
+                if (!currentCustomerId) return;
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+
+                // upload từng file riêng lẻ, không await toàn bộ để tránh block UI
+                files.forEach(file => {
+                    const fd = new FormData();
+                    fd.append("file", file);
+
+                    fetch("/Admin/Chat/UploadImage", { method: "POST", body: fd })
+                        .then(res => res.json())
+                        .then(data => {
+                            // <-- dùng đúng key trả về từ controller: imageUrl
+                            const imageUrl = data?.imageUrl || data?.url || data?.path || null;
+                            if (!imageUrl) {
+                                console.error("Upload trả về không có imageUrl:", data);
+                                return;
+                            }
+
+                            // append ngay 1 tin nhắn ảnh (local)
+                            const msg = { fromUserId: adminId, message: "", imageUrls: [imageUrl], sentAt: new Date() };
+                            try { appendMessage(msg); } catch (ex) { console.error("appendMessage lỗi:", ex); }
+
+                            // gửi realtime
+                            connection.invoke("SendMessageToCustomer", currentCustomerId, "", [imageUrl], null)
+                                .catch(err => console.error("SignalR invoke lỗi:", err));
+                        })
+                        .catch(err => {
+                            console.error("UploadImage fetch lỗi:", err);
+                        });
+                });
+            } catch (ex) {
+                console.error("imageFileInput.change crash:", ex);
+            } finally {
+                // reset để cho phép chọn lại cùng 1 file sau này
+                try { e.target.value = ""; } catch (e) {}
+            }
+        });
+
+        function renderImagePreviews() {
+            imagePreviewContainer.innerHTML = "";
+            if (!selectedImages.length) {
+                imagePreviewContainer.style.display = "none";
+                return;
+            }
+
+            imagePreviewContainer.style.display = "flex";
+            imagePreviewContainer.style.flexDirection = "row";
+            imagePreviewContainer.style.overflowX = "auto";
+            imagePreviewContainer.style.gap = "8px";
+            imagePreviewContainer.style.padding = "5px";
+
+            selectedImages.forEach(item => {
+                const wrapper = document.createElement("div");
+                wrapper.style.position = "relative";
+                wrapper.style.flex = "0 0 auto";
+
+                const img = document.createElement("img");
+                img.src = item.url;
+                img.style.width = "80px";
+                img.style.height = "80px";
+                img.style.objectFit = "cover";
+                img.style.borderRadius = "8px";
+                img.style.boxShadow = "0 0 4px rgba(0,0,0,0.2)";
+
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.innerText = "✖";
+                removeBtn.style.position = "absolute";
+                removeBtn.style.top = "2px";
+                removeBtn.style.right = "2px";
+                removeBtn.style.background = "rgba(0,0,0,0.6)";
+                removeBtn.style.color = "white";
+                removeBtn.style.border = "none";
+                removeBtn.style.borderRadius = "50%";
+                removeBtn.style.cursor = "pointer";
+                removeBtn.style.fontSize = "12px";
+
+                removeBtn.addEventListener("click", () => {
+                    const idx = selectedImages.findIndex(x => x.id === item.id);
+                    if (idx > -1) {
+                        if (item.isTemp && item.url.startsWith("blob:")) URL.revokeObjectURL(item.url);
+                        selectedImages.splice(idx, 1);
+                        renderImagePreviews();
+                    }
+                });
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+                imagePreviewContainer.appendChild(wrapper);
+            });
+        }
+
+        function clearImagePreviews() {
+            selectedImages.forEach(it => { try { if (it.isTemp && it.url.startsWith("blob:")) URL.revokeObjectURL(it.url); } catch(e){} });
+            selectedImages = [];
+            imagePreviewContainer.innerHTML = "";
+            imagePreviewContainer.style.display = "none";
+            if (imageFileInput) imageFileInput.value = null;
+        }
+
+        document.addEventListener("click", (e) => {
+            const img = e.target.closest(".chat-image");
+            if (!img) return;
+
+            const viewerImage = document.getElementById("viewerImage");
+            const modalAvatar = document.getElementById("modalAvatar");
+            const modalUserName = document.getElementById("modalUserName");
+            const modalTime = document.getElementById("modalTime");
+
+            viewerImage.src = img.dataset.serverUrl || img.src;
+
+            // 🔍 Tìm tin nhắn gốc
+            const msg = allMessages.find(m => Array.isArray(m.imageUrls) && m.imageUrls.includes(img.dataset.serverUrl));
+            if (msg) {
+                const isAdmin = msg.fromUserId === adminId;
+
+                // ✅ Lấy avatar random cho chính admin
+                const adminAvatar = getAvatar(adminId);
+
+                // 🧠 Đổ dữ liệu vào modal
+                modalUserName.textContent = isAdmin ? "Bạn" : currentCustomerName;
+                modalAvatar.src = isAdmin ? adminAvatar : getAvatar(msg.fromUserId);
+                modalTime.textContent = msg.sentAt
+                    ? `${new Date(msg.sentAt).getHours().toString().padStart(2, "0")}:${new Date(msg.sentAt).getMinutes().toString().padStart(2, "0")} · ${new Date(msg.sentAt).getDate().toString().padStart(2, "0")}/${(new Date(msg.sentAt).getMonth() + 1).toString().padStart(2, "0")}/${new Date(msg.sentAt).getFullYear()}`
+                    : "";
+            }
+
+            const imageModal = new bootstrap.Modal(document.getElementById("imageViewerModal"));
+            imageModal.show();
+            resetPosition();
+        });
+
+        function resetPosition() {
+            scale = 1;
+            viewerImage.style.transform = "translate(0,0) scale(1)";
+        }
+
+        function updateTransform() {
+            viewerImage.style.transform = `scale(${scale})`;
+        }
+
+        document.addEventListener("paste", async (e) => {
+            if (!currentCustomerId) return;
+
+            const items = e.clipboardData?.items || [];
+            let newImages = [];
+
+            for (const item of items) {
+                if (item.type.startsWith("image/")) {
+                    const file = item.getAsFile();
+                    if (!file) continue;
+
+                    const tempUrl = URL.createObjectURL(file);
+                    const tempId = crypto.randomUUID();
+                    newImages.push({ id: tempId, url: tempUrl, file, isTemp: true });
+                }
+            }
+
+            // ⛔ không reset toàn bộ danh sách nữa, chỉ thêm ảnh mới
+            if (newImages.length > 0) {
+                selectedImages = selectedImages.concat(newImages);
+                renderImagePreviews();
+            }
+        });
+
+        downloadBtn.addEventListener("click", () => {
+            if (!viewerImage.src) return;
+
+            const a = document.createElement("a");
+            a.href = viewerImage.src;
+            // Gợi ý tên file từ URL hoặc mặc định
+            const urlParts = viewerImage.src.split("/");
+            a.download = urlParts[urlParts.length - 1] || "image.jpg";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+        zoomInBtn.addEventListener("click", () => {
+            scale = Math.min(scale + 0.2, maxScale);
+            updateTransform();
+        });
+
+        zoomOutBtn.addEventListener("click", () => {
+            scale = Math.max(scale - 0.2, minScale);
+            if(scale === 1) resetPosition();
+            else updateTransform();
+        });
 
         async function updateCustomerList(){
             const res = await fetch("/Admin/Chat/GetCustomers");
@@ -458,34 +978,40 @@
             }
         }
 
-        connection.on("ReceiveMessage", async (senderId, senderName, message, sentAt) => {
-            const li = document.querySelector(`#customers li[data-userid='${senderId}']`);
-            if (!li) return;
+        connection.on("ReceiveMessage", (senderId, senderName, message, imageUrls = [], sentAt) => {
+            try {
+                const newMsg = { fromUserId: senderId, message, imageUrls, sentAt };
 
-            // Nếu đang chat với người gửi
-            if (senderId === currentCustomerId) {
-                allMessages.push({ fromUserId: senderId, message, sentAt });
-                renderMessages(true);
-                
-                let count = parseInt(li.dataset.unread) || 0;
-                count++;
-                li.dataset.unread = count;
-                li.querySelector(".badge").textContent = count;
-                li.querySelector(".badge").style.display = "inline-block";
-                li.classList.add("unread");
-               
-            } else {
-                // Nếu KHÁCH KHÁC thì tăng badge bình thường
-                let count = parseInt(li.dataset.unread) || 0;
-                count++;
-                li.dataset.unread = count;
-                li.querySelector(".badge").textContent = count;
-                li.querySelector(".badge").style.display = "inline-block";
-                li.classList.add("unread");
+                // luôn lưu vào allMessages
+                try { allMessages.push(newMsg); } catch(e){ console.error("push allMessages lỗi:", e); }
+
+                // nếu đang chat với người gửi → hiển thị ngay
+                if (String(senderId) === String(currentCustomerId)) {
+                    try { appendMessage(newMsg); }
+                    catch (ex) { console.error("appendMessage khi nhận tin lỗi:", ex); }
+                } else {
+                    // cập nhật badge nếu không phải người đang chat
+                    const li = document.querySelector(`#customers li[data-userid='${senderId}']`);
+                    if (li) {
+                        let c = parseInt(li.dataset.unread) || 0;
+                        c++;
+                        li.dataset.unread = c;
+                        const badge = li.querySelector(".badge");
+                        if (badge) {
+                            badge.textContent = c;
+                            badge.style.display = "inline-block";
+                        }
+                        li.classList.add("unread");
+                        // đưa lên đầu danh sách an toàn
+                        try { li.parentNode.prepend(li); } catch(e) { console.error("prepend li lỗi:", e); }
+                    } else {
+                        // nếu không tìm thấy li, bạn có thể gọi updateCustomerList() hoặc load lại danh sách nhẹ
+                        console.warn("Không tìm thấy li cho senderId:", senderId);
+                    }
+                }
+            } catch (err) {
+                console.error("ReceiveMessage handler crash:", err);
             }
-
-            // Đưa lên đầu danh sách
-            li.parentNode.prepend(li);
         });
 
         messageInput.addEventListener("focus", async () => {
