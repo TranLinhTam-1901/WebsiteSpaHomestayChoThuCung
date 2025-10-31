@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DoAnCoSo.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = SD.Role_Admin)]
+    [Authorize(Roles = "Admin")]
     public class ServiceController : Controller
     {
         private readonly ApplicationDbContext _context;

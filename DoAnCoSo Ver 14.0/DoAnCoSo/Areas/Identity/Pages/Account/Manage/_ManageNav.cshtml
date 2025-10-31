@@ -2,6 +2,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    var isAdmin = (User != null) && (User.IsInRole("Admin"));
 }
 <ul class="nav flex-column nav-pink">
     <li class="nav-item">
@@ -19,8 +20,10 @@
             <a class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">🔗 External logins</a>
         </li>
     }
-    <li class="nav-item">
-        <a class="nav-link" asp-area="" asp-controller="Pet" asp-action="Index">🐾 Thú cưng</a>
-    </li>
+    @if (!User.IsInRole("Admin"))
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-area="" asp-controller="Pet" asp-action="Index">🐾 Thú cưng</a>
+        </li>
+    }
 </ul>
-

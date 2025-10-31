@@ -26,9 +26,7 @@ public class OrderHistoryController : Controller
                 .Where(o => o.UserId == currentUser.Id)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
-                    .Include(o => o.OrderPromotions)            // 🟢 Thêm dòng này: lấy danh sách khuyến mãi áp dụng
-                .ThenInclude(op => op.Promotion)
-                .OrderByDescending(o => o.OrderDate) 
+                .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
         else

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DoAnCoSo.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = SD.Role_Admin)]
+    [Authorize(Roles = "Admin")]
     public class MasterController : Controller
     {
         private readonly IProductRepository _productRepository;
