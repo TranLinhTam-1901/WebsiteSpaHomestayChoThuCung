@@ -25,6 +25,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     @* liên kết để lấy icon form đăng ký *@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/css/style.css">
     <link rel="stylesheet" href="~/css/adminChat.css">
@@ -316,7 +319,7 @@
                     </li>
 
                     <li class="nav-item ">
-                        <a asp-area="" asp-controller="Promotion" asp-action="Index" class="nav-link" title="KHUYẾN MÃI">
+                        <a asp-area="Admin" asp-controller="Promotion" asp-action="Index" class="nav-link" title="KHUYẾN MÃI">
                             KHUYẾN MÃI
                         </a>
                     </li>
@@ -783,6 +786,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 

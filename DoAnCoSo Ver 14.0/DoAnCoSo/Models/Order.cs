@@ -21,6 +21,7 @@ namespace DoAnCoSo.Models
         public string? PhoneNumber { get; set; }
 
         public OrderStatusEnum Status { get; set; }
+        public BankStatusEnum bankStatus { get; set; } = BankStatusEnum.ChuaThanhToan;
 
         // --- THÊM THUỘC TÍNH NÀY ---
         public string? PaymentMethod { get; set; }

@@ -565,36 +565,36 @@ VALUES
 INSERT INTO [dbo].[PetServiceRecords] ([PetId], [ServiceId], [DateUsed], [Notes], [PriceAtThatTime], [AI_Feedback])
 VALUES
 -- Customer1
-(1, 1, '2025-05-16', N'Sử dụng Homestay 2 ngày, ăn uống tốt', NULL, NULL),
-(1, 4, '2025-05-17', N'Khám tại Vet, kiểm tra sức khỏe ổn', NULL, NULL),
-(2, 2, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(2, 5, '2025-05-16', N'Khám Vet, tiêm phòng', NULL, NULL),
+(13, 1, '2025-05-16', N'Sử dụng Homestay 2 ngày, ăn uống tốt', NULL, NULL),
+(13, 4, '2025-05-17', N'Khám tại Vet, kiểm tra sức khỏe ổn', NULL, NULL),
+(14, 2, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(14, 5, '2025-05-16', N'Khám Vet, tiêm phòng', NULL, NULL),
 
 -- Customer2
-(3, 3, '2025-05-19', N'Khám Vet, xét nghiệm máu', NULL, NULL),
-(3, 5, '2025-05-20', N'Tiêm phòng bổ sung', NULL, NULL),
-(4, 2, '2025-05-16', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(4, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(15, 3, '2025-05-19', N'Khám Vet, xét nghiệm máu', NULL, NULL),
+(15, 5, '2025-05-20', N'Tiêm phòng bổ sung', NULL, NULL),
+(16, 2, '2025-05-16', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(16, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
 
 -- Customer3
-(5, 2, '2025-05-17', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(5, 4, '2025-05-17', N'Khám Vet tổng quát', NULL, NULL),
-(6, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(6, 7, '2025-05-19', N'Sử dụng Spa, tắm lông', NULL, NULL),
+(17, 2, '2025-05-17', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(17, 4, '2025-05-17', N'Khám Vet tổng quát', NULL, NULL),
+(18, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(18, 7, '2025-05-19', N'Sử dụng Spa, tắm lông', NULL, NULL),
 
 -- Customer4
-(7, 1, '2025-06-02', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(8, 6, '2025-06-05', N'Spa, cắt lông', NULL, NULL),
-(7, 3, '2025-06-08', N'Khám Vet', NULL, NULL),
-(8, 4, '2025-06-12', N'Khám Vet, tiêm phòng', NULL, NULL),
-(7, 7, '2025-06-15', N'Homestay 2 ngày', NULL, NULL),
+(19, 1, '2025-06-02', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(20, 6, '2025-06-05', N'Spa, cắt lông', NULL, NULL),
+(19, 3, '2025-06-08', N'Khám Vet', NULL, NULL),
+(20, 4, '2025-06-12', N'Khám Vet, tiêm phòng', NULL, NULL),
+(19, 7, '2025-06-15', N'Homestay 2 ngày', NULL, NULL),
 
 -- Customer5
-(9, 2, '2025-06-03', N'Homestay 2 ngày', NULL, NULL),
-(10, 5, '2025-06-06', N'Khám Vet, tổng quát', NULL, NULL),
-(9, 1, '2025-06-09', N'Homestay 2 ngày', NULL, NULL),
-(10, 2, '2025-06-11', N'Homestay 2 ngày', NULL, NULL),
-(9, 8, '2025-06-18', N'Spa, tắm & chải lông', NULL, NULL);
+(21, 2, '2025-06-03', N'Homestay 2 ngày', NULL, NULL),
+(22, 5, '2025-06-06', N'Khám Vet, tổng quát', NULL, NULL),
+(21, 1, '2025-06-09', N'Homestay 2 ngày', NULL, NULL),
+(22, 2, '2025-06-11', N'Homestay 2 ngày', NULL, NULL),
+(21, 8, '2025-06-18', N'Spa, tắm & chải lông', NULL, NULL);
 
 --Lịch sử đặt lịch--
 --Lưu ý: Copy UserId ở trên xuống--
@@ -603,6 +603,7 @@ SET DATEFORMAT DMY;
 -- Xóa dữ liệu cũ
 DELETE FROM dbo.Appointments;
 
+SELECT Id, UserName FROM AspNetUsers;
 -- Thêm dữ liệu Appointments
 INSERT INTO dbo.Appointments (
     UserId, PetId, ServiceId, 
@@ -711,3 +712,5 @@ DBCC CHECKIDENT ('Appointments', RESEED, 0);
  -- Xóa, reset promotion --
 DELETE FROM Promotions;
 DBCC CHECKIDENT ('Promotions', RESEED, 0);
+
+SELECT Id, UserName FROM AspNetUsers;

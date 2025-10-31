@@ -202,6 +202,14 @@
                     <span asp-validation-for="Order.ShippingAddress" class="text-danger"></span>
                 </div>
 
+                <h5 class="mb-3">🎁 Mã khuyến mãi</h5>
+
+                <div class="input-group mb-3">
+                    <input type="text" name="PromoCode" id="PromoCode" class="form-control" placeholder="Nhập mã khuyến mãi của bạn..." />
+                    <button type="button" id="btnSelectPromo" class="btn btn-outline-info">📋 Chọn mã</button>
+                    @* <button type="button" id="applyPromoBtn" class="btn btn-outline-success">Áp dụng</button> *@
+                </div>
+                <div id="promoResult" class="mt-2"></div>
                 <h5 class="mb-3">💰 Phương thức thanh toán</h5>
 
                 <div class="mb-3">
@@ -224,6 +232,20 @@
                     🛍️ Đặt Hàng Ngay
                 </button>
             </form>
+            <!-- 🪄 Modal danh sách mã khuyến mãi -->
+            <div class="modal fade" id="promoModal" tabindex="-1" aria-labelledby="promoModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-pink text-white">
+                            <h5 class="modal-title" id="promoModalLabel">🎁 Chọn mã khuyến mãi phù hợp</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="promoList" class="row g-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
         else
         {
@@ -235,7 +257,105 @@
 </div>
 
 @section Scripts {
+    <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+
+            // 🟩 [1] Sự kiện khi nhấn "Chọn mã"
+            document.getElementById("btnSelectPromo").addEventListener("click", async function () {
+                const cartTotal = parseFloat("@Model.CartTotal");
+                const res = await fetch(`/ShoppingCart/GetValidPromos?cartTotal=${cartTotal}`);
+                const promos = await res.json();
+
+                const listDiv = document.getElementById("promoList");
+                listDiv.innerHTML = "";
+
+                if (!promos.length) {
+                    listDiv.innerHTML = `<div class="alert alert-warning text-center">
+                        Không có mã nào phù hợp với đơn hàng này 😢
+                    </div>`;
+                    return;
+                }
+
+                       promos.forEach(p => {
+            const discountText = p.isPercent ? `${p.discount}%` : `${p.discount.toLocaleString()}đ`;
+
+            // 🧩 Nếu người dùng đã dùng mã này rồi
+            const isUsed = p.isUsedByUser;
+            const usedBadge = isUsed
+                ? `<span class="badge bg-secondary ms-2">Đã dùng</span>`
+                : "";
+            const disabledClass = isUsed ? "opacity-50" : "";
+            const applyButton = isUsed
+                ? `<button class="btn btn-secondary w-100" disabled>Đã sử dụng</button>`
+                : `<button class="btn btn-outline-success w-100 selectPromoBtn" data-code="${p.code}">
+                        Áp dụng mã ${p.code}
+                    </button>`;
+
+            const item = document.createElement("div");
+            item.className = "col-md-6";
+            item.innerHTML = `
+                <div class="card shadow-sm h-100 ${disabledClass}">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-pink">${p.title} ${usedBadge}</h5>
+                        <p>${p.description || ""}</p>
+                        <p>💰 Giảm <b>${discountText}</b></p>
+                        <p>📅 HSD: ${new Date(p.endDate).toLocaleDateString()}</p>
+                        ${applyButton}
+                    </div>
+                </div>`;
+            listDiv.appendChild(item);
+        });
+                const modal = new bootstrap.Modal(document.getElementById("promoModal"));
+                modal.show();
+
+                // 🟩 [2] Khi chọn mã trong modal → tự động áp dụng (không cần nút Áp dụng)
+                listDiv.querySelectorAll(".selectPromoBtn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const code = btn.dataset.code;
+                        document.getElementById("PromoCode").value = code;
+                        modal.hide();
+                        applyPromoCode(code); // 🟢 gọi hàm trực tiếp, không dùng .click()
+                    });
+                });
+            });
+
+            // 🟩 [3] Hàm applyPromoCode — tách riêng, gọi trực tiếp
+            async function applyPromoCode(code) {
+                const total = parseFloat("@Model.CartTotal");
+
+                document.getElementById("promoResult").innerHTML =
+                    `<div class='alert alert-info text-center'>⏳ Đang kiểm tra mã khuyến mãi...</div>`;
+
+                try {
+                    const res = await fetch("/ShoppingCart/ValidatePromo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code, cartTotal: total })
+                    });
+
+                    const data = await res.json();
+                    document.getElementById("promoResult").innerHTML =
+                        `<div class='alert alert-${data.success ? "success" : "danger"} text-center'>
+                            ${data.message}
+                        </div>`;
+                } catch (err) {
+                    console.error("❌ Lỗi khi gọi API ValidatePromo:", err);
+                    document.getElementById("promoResult").innerHTML =
+                        `<div class='alert alert-danger text-center'>
+                            Không thể kiểm tra mã. Vui lòng thử lại sau.
+                        </div>`;
+                }
+            }
+
+        }); // kết thúc DOMContentLoaded
+    </script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
+<style>
+    .opacity-50 {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+</style>

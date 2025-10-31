@@ -3,13 +3,11 @@
 @{
     ViewData["Title"] = "🛒 Lịch sử đặt hàng";
 }
-
 <style>
     .order-wrapper {
         max-width: 960px;
         margin: auto;
-        padding-left: 15px;
-        padding-right: 15px;
+        padding: 15px;
     }
 
     .section-title {
@@ -37,7 +35,12 @@
         box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
         background-color: #fff;
         overflow: hidden;
+        transition: transform 0.2s ease;
     }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+        }
 
     .card-header {
         background-color: #fff0f5;
@@ -109,9 +112,7 @@
     }
 
     @@media (max-width: 768px) {
-        .section-title
-
-        {
+        .section-title {
             font-size: 1.6rem;
         }
 
@@ -131,11 +132,11 @@
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        <div class="alert alert-danger text-center">@TempData["ErrorMessage"]</div>
     }
 
     @if (!Model.Any())
@@ -147,11 +148,12 @@
         @foreach (var order in Model)
         {
             <div class="order-card mb-4">
+                <!-- Header -->
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                         <strong><i class="fas fa-receipt me-1"></i> Mã đơn:</strong> @order.Id <br />
                         <small class="text-muted">
-                            <i class="fas fa-calendar-alt me-1"></i> Ngày đặt: @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            <i class="fas fa-calendar-alt me-1"></i> @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
                         </small>
                     </div>
                     <div>
@@ -174,12 +176,42 @@
                     </div>
                 </div>
 
+                <!-- Body -->
                 <div class="card-body">
                     <p><strong><i class="fas fa-user me-1"></i> Người nhận:</strong> @order.CustomerName</p>
-                    <p><strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong> <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span></p>
 
-                    <div>
+                    @if (order.OrderPromotions != null && order.OrderPromotions.Any())
+                    {
+                        var promo = order.OrderPromotions.FirstOrDefault()?.Promotion;
+                        var discount = order.OrderPromotions.Sum(op => op.DiscountApplied);
+
+                        <p>
+                            <strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong>
+                            <span class="text-muted text-decoration-line-through">
+                                @((order.TotalPrice + discount).ToString("N0")) VNĐ
+                            </span>
+                            <span class="text-danger fw-bold ms-2">@order.TotalPrice.ToString("N0") VNĐ</span>
+                        </p>
+
+                        <p class="text-success mb-1">
+                            <i class="fas fa-tag me-1"></i>
+                            Mã áp dụng: <strong>@promo?.Code</strong>
+                            <span>(@(promo?.IsPercent == true ? $"{promo.Discount}%" : $"{promo?.Discount.ToString("N0")}đ"))</span>
+                        </p>
+                        <p class="text-muted fst-italic">Đã giảm: @discount.ToString("N0")đ</p>
+                    }
+                    else
+                    {
+                        <p>
+                            <strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong>
+                            <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span>
+                        </p>
+                    }
+
+                    <div class="mt-3">
                         <strong><i class="fas fa-box-open me-1"></i> Chi tiết sản phẩm:</strong>
+                        <small class="text-muted ms-1">(Giá gốc, chưa trừ khuyến mãi)</small>
+
                         @if (order.OrderDetails != null && order.OrderDetails.Any())
                         {
                             <ul class="list-group list-group-flush mt-2">
@@ -207,6 +239,7 @@
                     </div>
                 </div>
 
+                <!-- Footer -->
                 <div class="card-footer text-end">
                     <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail me-2">
                         <i class="fas fa-info-circle me-1"></i> Xem chi tiết
