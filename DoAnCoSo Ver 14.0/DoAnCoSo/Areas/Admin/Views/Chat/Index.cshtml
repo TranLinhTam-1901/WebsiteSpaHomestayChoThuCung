@@ -21,6 +21,7 @@
 
 <div class="container py-5">
     <h2 class="section-title">💬 Chăm sóc khách hàng</h2>
+
     <div class="row g-4">
         <!-- Sidebar khách hàng -->
         <div class="col-md-3">
@@ -469,34 +470,60 @@
         }
 
         function renderMessages(scrollToBottom=false){
-            messagesList.innerHTML = "";
+            const fragment = document.createDocumentFragment();
+
             allMessages.sort((a,b)=> new Date(a.sentAt)-new Date(b.sentAt));
             let lastDate = null;
             allMessages.forEach(msg=>{
                 const {row, date} = createMessageElement(msg);
                 if(!lastDate || lastDate.toDateString()!==date.toDateString()){
-                    addDateSeparator(date);
+                    const sep = addDateSeparator(date, true); // trả về element
+                    fragment.appendChild(sep);
                     lastDate = date;
                 }
-                messagesList.appendChild(row);
+                fragment.appendChild(row);
             });
+
+            messagesList.replaceChildren(fragment); // ⚡ nhanh và mượt hơn innerHTML=""
             if(scrollToBottom) messagesList.scrollTop = messagesList.scrollHeight;
         }
 
         function scrollToBottom(element) {
-            const imgs = element.querySelectorAll("img");
-            const doScroll = () => element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
+            // Nếu không có element thì bỏ qua
+            if (!element) return;
 
+            const imgs = element.querySelectorAll("img");
+            let loaded = 0;
+
+            // Hàm cuộn xuống cuối
+            const doScroll = () => {
+                // Dùng requestAnimationFrame để tránh giật khung
+                requestAnimationFrame(() => {
+                    element.scrollTop = element.scrollHeight;
+                });
+            };
+
+            // Không có ảnh thì cuộn luôn
             if (imgs.length === 0) return doScroll();
 
-            let loaded = 0;
             imgs.forEach(img => {
-                if (img.complete) loaded++;
-                else {
-                    img.addEventListener("load", () => { loaded++; if (loaded === imgs.length) doScroll(); }, { once: true });
-                    img.addEventListener("error", () => { loaded++; if (loaded === imgs.length) doScroll(); }, { once: true });
+                if (img.complete) {
+                    loaded++;
+                    if (loaded === imgs.length) doScroll();
+                } else {
+                    img.addEventListener("load", () => {
+                        loaded++;
+                        if (loaded === imgs.length) doScroll();
+                    }, { once: true });
+
+                    img.addEventListener("error", () => {
+                        loaded++;
+                        if (loaded === imgs.length) doScroll();
+                    }, { once: true });
                 }
             });
+
+            // Trường hợp ảnh nào đó đã cache sẵn (đã complete) thì đảm bảo cuộn luôn
             if (loaded === imgs.length) doScroll();
         }
 
@@ -621,6 +648,18 @@
             // gọi Hub
             connection.invoke("SendMessageToCustomer", currentCustomerId, text, imageUrls, null)
                 .catch(console.error);
+
+            // ✅ reset badge ngay lập tức
+            const li = document.querySelector(`#customers li[data-userid='${currentCustomerId}']`);
+            if (li) {
+                li.dataset.unread = 0;
+                const badge = li.querySelector(".badge");
+                if (badge) badge.style.display = "none";
+                li.classList.remove("unread");
+
+                // gọi backend đồng bộ
+                fetch(`/Admin/Chat/MarkAsRead?customerId=${currentCustomerId}`, { method: "POST" }).catch(console.error);
+            }
 
             messageInput.value = "";
             clearImagePreviews();

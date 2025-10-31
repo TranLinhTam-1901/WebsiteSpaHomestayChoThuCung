@@ -540,6 +540,7 @@ namespace DoAnCoSo.Controllers
                             <td>{(detail.Price * detail.Quantity):N0}đ</td>
                         </tr>";
                     }
+
                     body += $@"
                     </table>
                     <p><b>Tổng cộng:</b> {order.TotalPrice:N0}đ</p>

@@ -1,4 +1,5 @@
-﻿USE DoAnCoSoVer1310
+﻿USE [DoAnCoSoVer23.0]
+
 -- 1️⃣ Homestay Services
 INSERT INTO Services (Category, Name, Description, Price)
 VALUES 
@@ -488,56 +489,46 @@ DELETE FROM dbo.Reviews;
 INSERT INTO dbo.Reviews (UserId, TargetType, TargetId, Rating, Comment, CreatedDate)
 VALUES
 -- Customer1 --
-<<<<<<< HEAD
-('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
-('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
-('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
-('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
-('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
-('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
-('a5110398-ed38-493a-bfe4-42199eb633ac', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
-=======
-('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
-('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
-('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
-('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
-('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
-('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
-('071bcd2a-69ad-4168-b47a-bd0732b35db1', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
->>>>>>> 4ffa3bd9bb1844b5c2324cab7d1007a25f4dd625
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
 
 -- Customer2 --
-('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
-('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
-('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
-('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 10, 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
-('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 13, 4, N'Mèo rất thích nhai loại này.', '2025-05-17 08:00:00'),
-('82221c18-b824-4c4b-bf91-cf5b263aad2c', 0, 16, 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 10, 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 13, 4, N'Mèo rất thích nhai loại này.', '2025-05-17 08:00:00'),
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 16, 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
 
 -- Customer3 --
-('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
-('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
-('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
-('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 17, 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
-('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 18, 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
-('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 19, 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 08:30:00'),
-('ccb985cb-75b4-4926-9240-148b00df69e6', 0, 20, 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00'),
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 17, 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 18, 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 19, 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 08:30:00'),
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 20, 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00'),
 
 -- Customer4 --
-('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 7, 5, N'Sản phẩm dinh dưỡng, chó mình rất thích.', '2025-05-22 09:00:00'),
-('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 11, 4, N'Mèo ăn được nhưng hơi kén một chút.', '2025-05-23 14:00:00'),
-('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 15, 5, N'Rất phù hợp cho Poodle nhà mình.', '2025-05-24 18:30:00'),
-('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 20, 4, N'Gói snack khá thơm, thú cưng rất thích.', '2025-05-28 09:20:00'),
-('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 22, 5, N'Sữa tắm mùi dễ chịu, lông mềm mượt.', '2025-05-29 17:10:00'),
-('3342cd3c-b2e1-418b-89be-d4163f29c4a6', 0, 24, 3, N'Hàng dùng ổn nhưng giao hơi chậm.', '2025-05-30 13:40:00'),
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 0, 7, 5, N'Sản phẩm dinh dưỡng, chó mình rất thích.', '2025-05-22 09:00:00'),
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 0, 11, 4, N'Mèo ăn được nhưng hơi kén một chút.', '2025-05-23 14:00:00'),
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 0, 15, 5, N'Rất phù hợp cho Poodle nhà mình.', '2025-05-24 18:30:00'),
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 0, 20, 4, N'Gói snack khá thơm, thú cưng rất thích.', '2025-05-28 09:20:00'),
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 0, 22, 5, N'Sữa tắm mùi dễ chịu, lông mềm mượt.', '2025-05-29 17:10:00'),
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 0, 24, 3, N'Hàng dùng ổn nhưng giao hơi chậm.', '2025-05-30 13:40:00'),
 
 -- Customer5 --
-('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 8, 5, N'Cún Golden rất thích, lông óng mượt hơn.', '2025-05-25 10:15:00'),
-('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 12, 4, N'Mèo ăn nhanh, giá cả hợp lý.', '2025-05-26 11:45:00'),
-('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 18, 5, N'Chất lượng tốt, đáng để mua lại.', '2025-05-27 16:10:00'),
-('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 21, 5, N'Bổ sung vitamin rất tốt, mèo khỏe hơn.', '2025-05-28 15:00:00'),
-('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 23, 4, N'Khẩu phần phù hợp cho Golden, ăn hết ngay.', '2025-05-29 19:20:00'),
-('955dab58-b34f-4bab-bd75-e9121171cae5', 0, 25, 5, N'Rất hài lòng, sẽ mua lại lần nữa.', '2025-05-31 08:10:00');
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 0, 8, 5, N'Cún Golden rất thích, lông óng mượt hơn.', '2025-05-25 10:15:00'),
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 0, 12, 4, N'Mèo ăn nhanh, giá cả hợp lý.', '2025-05-26 11:45:00'),
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 0, 18, 5, N'Chất lượng tốt, đáng để mua lại.', '2025-05-27 16:10:00'),
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 0, 21, 5, N'Bổ sung vitamin rất tốt, mèo khỏe hơn.', '2025-05-28 15:00:00'),
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 0, 23, 4, N'Khẩu phần phù hợp cho Golden, ăn hết ngay.', '2025-05-29 19:20:00'),
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 0, 25, 5, N'Rất hài lòng, sẽ mua lại lần nữa.', '2025-05-31 08:10:00');
 
 -- Thú cưng --
 -- Lưu ý: Copy UserId ở trên xuống --
@@ -549,29 +540,24 @@ SET DATEFORMAT DMY;
 INSERT INTO [dbo].[Pets] ([Name], [Type], [Breed], [Gender], [Age], [DateOfBirth], [ImageUrl], [Weight], [Height], [Color], [DistinguishingMarks], [VaccinationRecords], [MedicalHistory], [Allergies], [DietPreferences], [HealthNotes], [AI_AnalysisResult], [UserId])
 VALUES
 -- Customer1
-<<<<<<< HEAD
-(N'Yuki', N'Mèo', N'Mèo Anh lông ngắn', N'Male', 2, '2023-05-12', NULL, 4, 25, N'Xám', N'Vệt trắng ở tai', N'Đã tiêm 3 mũi cơ bản', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe mạnh', N'Bình thường', 'a5110398-ed38-493a-bfe4-42199eb633ac'),
-(N'Milo', N'Chó', N'Poodle', N'Male', 3, '2022-05-11', NULL, 6, 30, N'Trắng', NULL, N'Đã tiêm phòng đầy đủ', N'Bệnh da nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', 'a5110398-ed38-493a-bfe4-42199eb633ac'),
-=======
-(N'Yuki', N'Mèo', N'Mèo Anh lông ngắn', N'Male', 2, '2023-05-12', NULL, 4, 25, N'Xám', N'Vệt trắng ở tai', N'Đã tiêm 3 mũi cơ bản', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe mạnh', N'Bình thường', 'ae39751c-a1c1-44af-87e4-c864f106664c'),
-(N'Milo', N'Chó', N'Poodle', N'Male', 3, '2022-05-11', NULL, 6, 30, N'Trắng', NULL, N'Đã tiêm phòng đầy đủ', N'Bệnh da nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', 'ae39751c-a1c1-44af-87e4-c864f106664c'),
->>>>>>> 4ffa3bd9bb1844b5c2324cab7d1007a25f4dd625
+(N'Yuki', N'Mèo', N'Mèo Anh lông ngắn', N'Male', 2, '2023-05-12', NULL, 4, 25, N'Xám', N'Vệt trắng ở tai', N'Đã tiêm 3 mũi cơ bản', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe mạnh', N'Bình thường', '583b7c05-7e2a-4733-b0c6-4f59c59bef03'),
+(N'Milo', N'Chó', N'Poodle', N'Male', 3, '2022-05-11', NULL, 6, 30, N'Trắng', NULL, N'Đã tiêm phòng đầy đủ', N'Bệnh da nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '583b7c05-7e2a-4733-b0c6-4f59c59bef03'),
 
 -- Customer2
-(N'Susu', N'Chó', N'Shiba', N'Female', 1, '2024-05-10', NULL, 7, 35, N'Nâu đỏ', NULL, N'Đã tiêm 4 mũi', N'Không', N'Không', N'Thức ăn mềm', N'Khỏe', N'Bình thường', '989ef163-11bf-4409-807e-9ad09d26fbaa'),
-(N'Bum', N'Chó', N'Corgi', N'Male', 4, '2021-05-09', NULL, 10, 28, N'Nâu', N'Chó lông ngắn', N'Đã tiêm 3 mũi', N'Tiền sử dị ứng', N'Không', N'Hạt khô', N'Ổn định', N'Bình thường', '989ef163-11bf-4409-807e-9ad09d26fbaa'),
+(N'Susu', N'Chó', N'Shiba', N'Female', 1, '2024-05-10', NULL, 7, 35, N'Nâu đỏ', NULL, N'Đã tiêm 4 mũi', N'Không', N'Không', N'Thức ăn mềm', N'Khỏe', N'Bình thường', '19f3cb78-5a30-426a-8117-f4a6cb943b85'),
+(N'Bum', N'Chó', N'Corgi', N'Male', 4, '2021-05-09', NULL, 10, 28, N'Nâu', N'Chó lông ngắn', N'Đã tiêm 3 mũi', N'Tiền sử dị ứng', N'Không', N'Hạt khô', N'Ổn định', N'Bình thường', '19f3cb78-5a30-426a-8117-f4a6cb943b85'),
 
 -- Customer3
-(N'Luna', N'Mèo', N'Munchkin', N'Female', 2, '2023-05-12', NULL, 3, 20, N'Vàng', NULL, N'Đã tiêm 3 mũi', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', 'd268c9cb-a847-4ab5-b51d-5a8df211b2ad'),
-(N'Mina', N'Mèo', N'Ba Tư', N'Male', 3, '2022-05-10', NULL, 5, 25, N'Trắng', NULL, N'Đã tiêm đầy đủ', N'Bệnh tim nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', 'd268c9cb-a847-4ab5-b51d-5a8df211b2ad'),
+(N'Luna', N'Mèo', N'Munchkin', N'Female', 2, '2023-05-12', NULL, 3, 20, N'Vàng', NULL, N'Đã tiêm 3 mũi', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', '3d3c6ba1-3586-4f76-875c-4453696421b6'),
+(N'Mina', N'Mèo', N'Ba Tư', N'Male', 3, '2022-05-10', NULL, 5, 25, N'Trắng', NULL, N'Đã tiêm đầy đủ', N'Bệnh tim nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '3d3c6ba1-3586-4f76-875c-4453696421b6'),
 
 -- Customer4
-(N'Milo', N'Chó', N'Poodle', N'Female', 2, '2023-06-01', NULL, 6.5, 32, N'Trắng', NULL, N'Đã tiêm 3 mũi', N'Không', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', 'ccc6e489-ecb7-4d6e-828b-5bc40c1637bb'),
-(N'Bông', N'Mèo', N'Ba Tư', N'Male', 3, '2022-06-01', NULL, 4, 23, N'Xám', NULL, N'Đã tiêm 3 mũi', N'Không', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', 'ccc6e489-ecb7-4d6e-828b-5bc40c1637bb'),
+(N'Milo', N'Chó', N'Poodle', N'Female', 2, '2023-06-01', NULL, 6.5, 32, N'Trắng', NULL, N'Đã tiêm 3 mũi', N'Không', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', '8d50add7-c892-40c9-a4f4-d69f6bbe7a17'),
+(N'Bông', N'Mèo', N'Ba Tư', N'Male', 3, '2022-06-01', NULL, 4, 23, N'Xám', NULL, N'Đã tiêm 3 mũi', N'Không', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '8d50add7-c892-40c9-a4f4-d69f6bbe7a17'),
 
 -- Customer5
-(N'Lucky', N'Chó', N'Golden Retriever', N'Male', 4, '2021-06-01', NULL, 25, 55, N'Vàng', NULL, N'Đã tiêm 4 mũi', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '409e6f0c-5d4f-4c99-86a1-214da561f440'),
-(N'Mít', N'Mèo', N'Maine Coon', N'Female', 2, '2023-06-01', NULL, 6, 35, N'Xám', NULL, N'Đã tiêm 3 mũi', N'Không', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', '409e6f0c-5d4f-4c99-86a1-214da561f440');
+(N'Lucky', N'Chó', N'Golden Retriever', N'Male', 4, '2021-06-01', NULL, 25, 55, N'Vàng', NULL, N'Đã tiêm 4 mũi', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', 'a80c87eb-f67a-4d3f-8f2f-238a43336944'),
+(N'Mít', N'Mèo', N'Maine Coon', N'Female', 2, '2023-06-01', NULL, 6, 35, N'Xám', NULL, N'Đã tiêm 3 mũi', N'Không', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', 'a80c87eb-f67a-4d3f-8f2f-238a43336944');
 
 -- =========================
 -- 2. PetServiceRecords
@@ -626,43 +612,36 @@ INSERT INTO dbo.Appointments (
 )
 VALUES
 -- Customer1 --
-<<<<<<< HEAD
-('a5110398-ed38-493a-bfe4-42199eb633ac', 1, 1, '2025-05-16', '09:00:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:15:00', '0123456789'), -- Homestay
-('a5110398-ed38-493a-bfe4-42199eb633ac', 1, 4, '2025-05-17', '10:30:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-13 09:45:00', '0123456789'), -- Vet
-('a5110398-ed38-493a-bfe4-42199eb633ac', 2, 2, '2025-05-18', '14:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-14 10:20:00', '0123456789'), -- Homestay
-('a5110398-ed38-493a-bfe4-42199eb633ac', 2, 5, '2025-05-16', '15:30:00', '2025-05-16', '2025-05-16', 'Confirmed', '2025-05-11 16:10:00', '0123456789'), -- Vet
-=======
-('ae39751c-a1c1-44af-87e4-c864f106664c', 13, 1, '2025-05-16', '09:00:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:15:00', '0123456789'), -- Homestay
-('ae39751c-a1c1-44af-87e4-c864f106664c', 13, 4, '2025-05-17', '10:30:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-13 09:45:00', '0123456789'), -- Vet
-('ae39751c-a1c1-44af-87e4-c864f106664c', 14, 2, '2025-05-18', '14:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-14 10:20:00', '0123456789'), -- Homestay
-('ae39751c-a1c1-44af-87e4-c864f106664c', 14, 5, '2025-05-16', '15:30:00', '2025-05-16', '2025-05-16', 'Confirmed', '2025-05-11 16:10:00', '0123456789'), -- Vet
->>>>>>> 4ffa3bd9bb1844b5c2324cab7d1007a25f4dd625
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 1, 1, '2025-05-16', '09:00:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:15:00', '0123456789'), -- Homestay
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 1, 4, '2025-05-17', '10:30:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-13 09:45:00', '0123456789'), -- Vet
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 2, 2, '2025-05-18', '14:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-14 10:20:00', '0123456789'), -- Homestay
+('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 2, 5, '2025-05-16', '15:30:00', '2025-05-16', '2025-05-16', 'Confirmed', '2025-05-11 16:10:00', '0123456789'), -- Vet
 
 -- Customer2 --
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 15, 3, '2025-05-19', '08:15:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-15 09:00:00', '0123456788'), -- Vet
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 15, 5, '2025-05-20', '11:00:00', '2025-05-20', '2025-05-20', 'Confirmed', '2025-05-14 13:20:00', '0123456788'), -- Vet
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 16, 2, '2025-05-16', '13:45:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:50:00', '0123456788'), -- Homestay
-('989ef163-11bf-4409-807e-9ad09d26fbaa', 16, 1, '2025-05-18', '16:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-13 10:40:00', '0123456788'), -- Homestay
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 3, 3, '2025-05-19', '08:15:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-15 09:00:00', '0123456788'), -- Vet
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 3, 5, '2025-05-20', '11:00:00', '2025-05-20', '2025-05-20', 'Confirmed', '2025-05-14 13:20:00', '0123456788'), -- Vet
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 4, 2, '2025-05-16', '13:45:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:50:00', '0123456788'), -- Homestay
+('19f3cb78-5a30-426a-8117-f4a6cb943b85', 4, 1, '2025-05-18', '16:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-13 10:40:00', '0123456788'), -- Homestay
 
 -- Customer3 --
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 17, 2, '2025-05-17', '09:30:00', '2025-05-17', '2025-05-19', 'Confirmed', '2025-05-13 11:30:00', '0123456787'), -- Homestay
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 17, 4, '2025-05-17', '13:00:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-12 09:10:00', '0123456787'), -- Vet
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 18, 1, '2025-05-18', '10:45:00', '2025-05-18', '2025-05-20', 'Confirmed', '2025-05-14 08:55:00', '0123456787'), -- Homestay
-('d268c9cb-a847-4ab5-b51d-5a8df211b2ad', 18, 7, '2025-05-19', '15:00:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-13 14:25:00', '0123456787'), -- Spa
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 5, 2, '2025-05-17', '09:30:00', '2025-05-17', '2025-05-19', 'Confirmed', '2025-05-13 11:30:00', '0123456787'), -- Homestay
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 5, 4, '2025-05-17', '13:00:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-12 09:10:00', '0123456787'), -- Vet
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 6, 1, '2025-05-18', '10:45:00', '2025-05-18', '2025-05-20', 'Confirmed', '2025-05-14 08:55:00', '0123456787'), -- Homestay
+('3d3c6ba1-3586-4f76-875c-4453696421b6', 6, 7, '2025-05-19', '15:00:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-13 14:25:00', '0123456787'), -- Spa
 
 -- Customer4 --
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 19, 1, '2025-06-02', '09:00:00', '2025-06-02', '2025-06-04', 'Confirmed', '2025-05-28 08:40:00', '0123456786'), -- Homestay
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 19, 6, '2025-06-05', '14:30:00', '2025-06-05', '2025-06-05', 'Pending',   '2025-05-30 11:10:00', '0123456786'), -- Spa
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 20, 3, '2025-06-08', '09:30:00', '2025-06-08', '2025-06-08', 'Confirmed', '2025-06-01 13:15:00', '0123456786'), -- Vet
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 19, 4, '2025-06-12', '15:00:00', '2025-06-12', '2025-06-12', 'Pending',   '2025-06-02 09:50:00', '0123456786'), -- Vet
-('ccc6e489-ecb7-4d6e-828b-5bc40c1637bb', 20, 7, '2025-06-15', '10:00:00', '2025-06-15', '2025-06-17', 'Confirmed', '2025-06-04 15:35:00', '0123456786'), -- Homestay
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 7, 1, '2025-06-02', '09:00:00', '2025-06-02', '2025-06-04', 'Confirmed', '2025-05-28 08:40:00', '0123456786'), -- Homestay
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 8, 6, '2025-06-05', '14:30:00', '2025-06-05', '2025-06-05', 'Pending',   '2025-05-30 11:10:00', '0123456786'), -- Spa
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 7, 3, '2025-06-08', '09:30:00', '2025-06-08', '2025-06-08', 'Confirmed', '2025-06-01 13:15:00', '0123456786'), -- Vet
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 8, 4, '2025-06-12', '15:00:00', '2025-06-12', '2025-06-12', 'Pending',   '2025-06-02 09:50:00', '0123456786'), -- Vet
+('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 7, 7, '2025-06-15', '10:00:00', '2025-06-15', '2025-06-17', 'Confirmed', '2025-06-04 15:35:00', '0123456786'), -- Homestay
 
 -- Customer5 --
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 21, 2, '2025-06-03', '10:00:00', '2025-06-03', '2025-06-05', 'Pending',   '2025-05-29 10:25:00', '0123456785'), -- Homestay
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 22, 5, '2025-06-06', '11:15:00', '2025-06-06', '2025-06-06', 'Confirmed', '2025-05-31 12:40:00', '0123456785'), -- Vet
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 21, 1, '2025-06-09', '14:00:00', '2025-06-09', '2025-06-11', 'Pending',   '2025-06-01 09:20:00', '0123456785'), -- Homestay
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 21, 2, '2025-06-11', '16:30:00', '2025-06-11', '2025-06-13', 'Confirmed', '2025-06-03 11:05:00', '0123456785'), -- Homestay
-('409e6f0c-5d4f-4c99-86a1-214da561f440', 22, 8, '2025-06-18', '08:30:00', '2025-06-18', '2025-06-18', 'Confirmed', '2025-06-05 14:15:00', '0123456785'); -- Spa
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 9, 2, '2025-06-03', '10:00:00', '2025-06-03', '2025-06-05', 'Pending',   '2025-05-29 10:25:00', '0123456785'), -- Homestay
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 10, 5, '2025-06-06', '11:15:00', '2025-06-06', '2025-06-06', 'Confirmed', '2025-05-31 12:40:00', '0123456785'), -- Vet
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 9, 1, '2025-06-09', '14:00:00', '2025-06-09', '2025-06-11', 'Pending',   '2025-06-01 09:20:00', '0123456785'), -- Homestay
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 10, 2, '2025-06-11', '16:30:00', '2025-06-11', '2025-06-13', 'Confirmed', '2025-06-03 11:05:00', '0123456785'), -- Homestay
+('a80c87eb-f67a-4d3f-8f2f-238a43336944', 9, 8, '2025-06-18', '08:30:00', '2025-06-18', '2025-06-18', 'Confirmed', '2025-06-05 14:15:00', '0123456785'); -- Spa
 
 -- Dịch vụ khuyến mãi --
 INSERT INTO Promotions (Title, ShortDescription, Description, Image, Discount, StartDate, EndDate)

@@ -7,7 +7,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 {
 
     [Area("Admin")]
-    [Authorize(Roles = SD.Role_Admin)]
+    [Authorize(Roles = "Admin")]
     public class RevenueController : Controller
     {
         private readonly IProductRepository _productRepository;

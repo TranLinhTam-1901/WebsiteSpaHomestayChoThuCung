@@ -1230,20 +1230,32 @@
             }
 
             function scrollToBottom(element) {
+                if (!element) return;
+                // Đảm bảo ảnh load xong mới cuộn
                 const imgs = element.querySelectorAll("img");
-                const doScroll = () => element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
-
-                if (imgs.length === 0) return doScroll();
-
-                let loaded = 0;
-                imgs.forEach(img => {
-                    if (img.complete) loaded++;
-                    else {
-                        img.addEventListener("load", () => { loaded++; if (loaded === imgs.length) doScroll(); }, { once: true });
-                        img.addEventListener("error", () => { loaded++; if (loaded === imgs.length) doScroll(); }, { once: true });
+                if (imgs.length > 0) {
+                    let loaded = 0;
+                    imgs.forEach(img => {
+                        if (img.complete) loaded++;
+                        else img.addEventListener("load", () => {
+                            loaded++;
+                            if (loaded === imgs.length) {
+                                requestAnimationFrame(() => {
+                                    element.scrollTop = element.scrollHeight;
+                                });
+                            }
+                        });
+                    });
+                    if (loaded === imgs.length) {
+                        requestAnimationFrame(() => {
+                            element.scrollTop = element.scrollHeight;
+                        });
                     }
-                });
-                if (loaded === imgs.length) doScroll();
+                } else {
+                    requestAnimationFrame(() => {
+                        element.scrollTop = element.scrollHeight;
+                    });
+                }
             }
 
             function appendMessage(msg) {
@@ -1461,6 +1473,13 @@
             minimizeBtn.addEventListener("click", () => {
                 chatBox.style.display = "none";
                 chatFloatingBtn.style.display = "block";
+            });
+
+            messageInput.addEventListener("focus", () => {
+                if (chatBox.style.display === "flex") {
+                    updateBadge(0);
+                    markAllAsReadServer().catch(()=>{});
+                }
             });
 
             // ✅ Nút gửi tin nhắn - luôn truyền đủ 3 tham số
