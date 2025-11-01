@@ -1,5 +1,4 @@
-﻿USE [DoAnCoSoVer23.0]
-
+﻿USE [DoAnCoSoVer3110]
 -- 1️⃣ Homestay Services
 INSERT INTO Services (Category, Name, Description, Price)
 VALUES 
@@ -489,30 +488,30 @@ DELETE FROM dbo.Reviews;
 INSERT INTO dbo.Reviews (UserId, TargetType, TargetId, Rating, Comment, CreatedDate)
 VALUES
 -- Customer1 --
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
 
 -- Customer2 --
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 10, 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 13, 4, N'Mèo rất thích nhai loại này.', '2025-05-17 08:00:00'),
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 0, 16, 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 0, 10, 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 0, 13, 4, N'Mèo rất thích nhai loại này.', '2025-05-17 08:00:00'),
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 0, 16, 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
 
 -- Customer3 --
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 17, 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 18, 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 19, 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 08:30:00'),
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 0, 20, 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00'),
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 0, 17, 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 0, 18, 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 0, 19, 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 08:30:00'),
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 0, 20, 5, N'Rất hài lòng, sẽ giới thiệu bạn bè!', '2025-05-21 16:45:00'),
 
 -- Customer4 --
 ('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 0, 7, 5, N'Sản phẩm dinh dưỡng, chó mình rất thích.', '2025-05-22 09:00:00'),
@@ -540,16 +539,16 @@ SET DATEFORMAT DMY;
 INSERT INTO [dbo].[Pets] ([Name], [Type], [Breed], [Gender], [Age], [DateOfBirth], [ImageUrl], [Weight], [Height], [Color], [DistinguishingMarks], [VaccinationRecords], [MedicalHistory], [Allergies], [DietPreferences], [HealthNotes], [AI_AnalysisResult], [UserId])
 VALUES
 -- Customer1
-(N'Yuki', N'Mèo', N'Mèo Anh lông ngắn', N'Male', 2, '2023-05-12', NULL, 4, 25, N'Xám', N'Vệt trắng ở tai', N'Đã tiêm 3 mũi cơ bản', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe mạnh', N'Bình thường', '583b7c05-7e2a-4733-b0c6-4f59c59bef03'),
-(N'Milo', N'Chó', N'Poodle', N'Male', 3, '2022-05-11', NULL, 6, 30, N'Trắng', NULL, N'Đã tiêm phòng đầy đủ', N'Bệnh da nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '583b7c05-7e2a-4733-b0c6-4f59c59bef03'),
+(N'Yuki', N'Mèo', N'Mèo Anh lông ngắn', N'Male', 2, '2023-05-12', NULL, 4, 25, N'Xám', N'Vệt trắng ở tai', N'Đã tiêm 3 mũi cơ bản', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe mạnh', N'Bình thường', '83b1bf14-40b7-48f8-adee-f789e4a56a38'),
+(N'Milo', N'Chó', N'Poodle', N'Male', 3, '2022-05-11', NULL, 6, 30, N'Trắng', NULL, N'Đã tiêm phòng đầy đủ', N'Bệnh da nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '83b1bf14-40b7-48f8-adee-f789e4a56a38'),
 
 -- Customer2
-(N'Susu', N'Chó', N'Shiba', N'Female', 1, '2024-05-10', NULL, 7, 35, N'Nâu đỏ', NULL, N'Đã tiêm 4 mũi', N'Không', N'Không', N'Thức ăn mềm', N'Khỏe', N'Bình thường', '19f3cb78-5a30-426a-8117-f4a6cb943b85'),
-(N'Bum', N'Chó', N'Corgi', N'Male', 4, '2021-05-09', NULL, 10, 28, N'Nâu', N'Chó lông ngắn', N'Đã tiêm 3 mũi', N'Tiền sử dị ứng', N'Không', N'Hạt khô', N'Ổn định', N'Bình thường', '19f3cb78-5a30-426a-8117-f4a6cb943b85'),
+(N'Susu', N'Chó', N'Shiba', N'Female', 1, '2024-05-10', NULL, 7, 35, N'Nâu đỏ', NULL, N'Đã tiêm 4 mũi', N'Không', N'Không', N'Thức ăn mềm', N'Khỏe', N'Bình thường', '2e19431c-6da2-4d9f-b874-b1e523c918b9'),
+(N'Bum', N'Chó', N'Corgi', N'Male', 4, '2021-05-09', NULL, 10, 28, N'Nâu', N'Chó lông ngắn', N'Đã tiêm 3 mũi', N'Tiền sử dị ứng', N'Không', N'Hạt khô', N'Ổn định', N'Bình thường', '2e19431c-6da2-4d9f-b874-b1e523c918b9'),
 
 -- Customer3
-(N'Luna', N'Mèo', N'Munchkin', N'Female', 2, '2023-05-12', NULL, 3, 20, N'Vàng', NULL, N'Đã tiêm 3 mũi', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', '3d3c6ba1-3586-4f76-875c-4453696421b6'),
-(N'Mina', N'Mèo', N'Ba Tư', N'Male', 3, '2022-05-10', NULL, 5, 25, N'Trắng', NULL, N'Đã tiêm đầy đủ', N'Bệnh tim nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '3d3c6ba1-3586-4f76-875c-4453696421b6'),
+(N'Luna', N'Mèo', N'Munchkin', N'Female', 2, '2023-05-12', NULL, 3, 20, N'Vàng', NULL, N'Đã tiêm 3 mũi', N'Không bệnh nền', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', '4cf4e43c-5eca-4746-af86-4c99d0a94b90'),
+(N'Mina', N'Mèo', N'Ba Tư', N'Male', 3, '2022-05-10', NULL, 5, 25, N'Trắng', NULL, N'Đã tiêm đầy đủ', N'Bệnh tim nhẹ', N'Không', N'Hạt mềm', N'Tốt', N'Bình thường', '4cf4e43c-5eca-4746-af86-4c99d0a94b90'),
 
 -- Customer4
 (N'Milo', N'Chó', N'Poodle', N'Female', 2, '2023-06-01', NULL, 6.5, 32, N'Trắng', NULL, N'Đã tiêm 3 mũi', N'Không', N'Không', N'Hạt mềm', N'Khỏe', N'Bình thường', '8d50add7-c892-40c9-a4f4-d69f6bbe7a17'),
@@ -565,22 +564,22 @@ VALUES
 INSERT INTO [dbo].[PetServiceRecords] ([PetId], [ServiceId], [DateUsed], [Notes], [PriceAtThatTime], [AI_Feedback])
 VALUES
 -- Customer1
-(13, 1, '2025-05-16', N'Sử dụng Homestay 2 ngày, ăn uống tốt', NULL, NULL),
-(13, 4, '2025-05-17', N'Khám tại Vet, kiểm tra sức khỏe ổn', NULL, NULL),
-(14, 2, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(14, 5, '2025-05-16', N'Khám Vet, tiêm phòng', NULL, NULL),
+(1, 1, '2025-05-16', N'Sử dụng Homestay 2 ngày, ăn uống tốt', NULL, NULL),
+(1, 2, '2025-05-17', N'Khám tại Vet, kiểm tra sức khỏe ổn', NULL, NULL),
+(2, 2, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(2, 5, '2025-05-16', N'Khám Vet, tiêm phòng', NULL, NULL),
 
 -- Customer2
-(15, 3, '2025-05-19', N'Khám Vet, xét nghiệm máu', NULL, NULL),
-(15, 5, '2025-05-20', N'Tiêm phòng bổ sung', NULL, NULL),
-(16, 2, '2025-05-16', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(16, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(3, 3, '2025-05-19', N'Khám Vet, xét nghiệm máu', NULL, NULL),
+(3, 5, '2025-05-20', N'Tiêm phòng bổ sung', NULL, NULL),
+(4, 2, '2025-05-16', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(4, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
 
 -- Customer3
-(17, 2, '2025-05-17', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(17, 4, '2025-05-17', N'Khám Vet tổng quát', NULL, NULL),
-(18, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
-(18, 7, '2025-05-19', N'Sử dụng Spa, tắm lông', NULL, NULL),
+(5, 2, '2025-05-17', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(5, 4, '2025-05-17', N'Khám Vet tổng quát', NULL, NULL),
+(6, 1, '2025-05-18', N'Sử dụng Homestay 2 ngày', NULL, NULL),
+(6, 6, '2025-05-19', N'Sử dụng Spa, tắm lông', NULL, NULL),
 
 -- Customer4
 (19, 1, '2025-06-02', N'Sử dụng Homestay 2 ngày', NULL, NULL),
@@ -602,7 +601,6 @@ SET DATEFORMAT DMY;
 
 -- Xóa dữ liệu cũ
 DELETE FROM dbo.Appointments;
-
 SELECT Id, UserName FROM AspNetUsers;
 -- Thêm dữ liệu Appointments
 INSERT INTO dbo.Appointments (
@@ -612,22 +610,22 @@ INSERT INTO dbo.Appointments (
 )
 VALUES
 -- Customer1 --
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 1, 1, '2025-05-16', '09:00:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:15:00', '0123456789'), -- Homestay
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 1, 4, '2025-05-17', '10:30:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-13 09:45:00', '0123456789'), -- Vet
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 2, 2, '2025-05-18', '14:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-14 10:20:00', '0123456789'), -- Homestay
-('583b7c05-7e2a-4733-b0c6-4f59c59bef03', 2, 5, '2025-05-16', '15:30:00', '2025-05-16', '2025-05-16', 'Confirmed', '2025-05-11 16:10:00', '0123456789'), -- Vet
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 1, 1, '2025-05-16', '09:00:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:15:00', '0123456789'), -- Homestay
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 1, 4, '2025-05-17', '10:30:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-13 09:45:00', '0123456789'), -- Vet
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 2, 2, '2025-05-18', '14:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-14 10:20:00', '0123456789'), -- Homestay
+('83b1bf14-40b7-48f8-adee-f789e4a56a38', 2, 5, '2025-05-16', '15:30:00', '2025-05-16', '2025-05-16', 'Confirmed', '2025-05-11 16:10:00', '0123456789'), -- Vet
 
 -- Customer2 --
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 3, 3, '2025-05-19', '08:15:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-15 09:00:00', '0123456788'), -- Vet
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 3, 5, '2025-05-20', '11:00:00', '2025-05-20', '2025-05-20', 'Confirmed', '2025-05-14 13:20:00', '0123456788'), -- Vet
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 4, 2, '2025-05-16', '13:45:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:50:00', '0123456788'), -- Homestay
-('19f3cb78-5a30-426a-8117-f4a6cb943b85', 4, 1, '2025-05-18', '16:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-13 10:40:00', '0123456788'), -- Homestay
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 3, 3, '2025-05-19', '08:15:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-15 09:00:00', '0123456788'), -- Vet
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 3, 5, '2025-05-20', '11:00:00', '2025-05-20', '2025-05-20', 'Confirmed', '2025-05-14 13:20:00', '0123456788'), -- Vet
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 4, 2, '2025-05-16', '13:45:00', '2025-05-16', '2025-05-18', 'Pending',   '2025-05-12 08:50:00', '0123456788'), -- Homestay
+('2e19431c-6da2-4d9f-b874-b1e523c918b9', 4, 1, '2025-05-18', '16:00:00', '2025-05-18', '2025-05-20', 'Pending',   '2025-05-13 10:40:00', '0123456788'), -- Homestay
 
 -- Customer3 --
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 5, 2, '2025-05-17', '09:30:00', '2025-05-17', '2025-05-19', 'Confirmed', '2025-05-13 11:30:00', '0123456787'), -- Homestay
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 5, 4, '2025-05-17', '13:00:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-12 09:10:00', '0123456787'), -- Vet
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 6, 1, '2025-05-18', '10:45:00', '2025-05-18', '2025-05-20', 'Confirmed', '2025-05-14 08:55:00', '0123456787'), -- Homestay
-('3d3c6ba1-3586-4f76-875c-4453696421b6', 6, 7, '2025-05-19', '15:00:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-13 14:25:00', '0123456787'), -- Spa
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 5, 2, '2025-05-17', '09:30:00', '2025-05-17', '2025-05-19', 'Confirmed', '2025-05-13 11:30:00', '0123456787'), -- Homestay
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 5, 4, '2025-05-17', '13:00:00', '2025-05-17', '2025-05-17', 'Confirmed', '2025-05-12 09:10:00', '0123456787'), -- Vet
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 6, 1, '2025-05-18', '10:45:00', '2025-05-18', '2025-05-20', 'Confirmed', '2025-05-14 08:55:00', '0123456787'), -- Homestay
+('4cf4e43c-5eca-4746-af86-4c99d0a94b90', 6, 7, '2025-05-19', '15:00:00', '2025-05-19', '2025-05-19', 'Pending',   '2025-05-13 14:25:00', '0123456787'), -- Spa
 
 -- Customer4 --
 ('8d50add7-c892-40c9-a4f4-d69f6bbe7a17', 7, 1, '2025-06-02', '09:00:00', '2025-06-02', '2025-06-04', 'Confirmed', '2025-05-28 08:40:00', '0123456786'), -- Homestay
@@ -644,38 +642,52 @@ VALUES
 ('a80c87eb-f67a-4d3f-8f2f-238a43336944', 9, 8, '2025-06-18', '08:30:00', '2025-06-18', '2025-06-18', 'Confirmed', '2025-06-05 14:15:00', '0123456785'); -- Spa
 
 -- Dịch vụ khuyến mãi --
-INSERT INTO Promotions (Title, ShortDescription, Description, Image, Discount, StartDate, EndDate)
+INSERT INTO Promotions
+(Title, ShortDescription, Description, Image,
+ IsCampaign, Discount, StartDate, EndDate,
+ Code, IsPercent, MinOrderValue,
+ MaxUsage, MaxUsagePerUser, IsActive, IsPrivate)
 VALUES
-(N'Giảm 20% Gói Spa Toàn Diện', 
- N'Thư giãn tuyệt đối cho thú cưng với gói spa toàn diện.', 
- N'Dịch vụ bao gồm tắm, sấy, chải lông, cắt móng và massage cho thú cưng. Đặt ngay hôm nay để nhận ưu đãi giảm 20%.', 
- N'sale_1.jpg', 
- 20, '2025-09-20', '2025-10-20'),
+(N'Giảm 20% Gói Spa Toàn Diện',
+ N'Thư giãn tuyệt đối cho thú cưng với gói spa toàn diện.',
+ N'Dịch vụ bao gồm tắm, sấy, chải lông, cắt móng và massage cho thú cưng. Đặt ngay hôm nay để nhận ưu đãi giảm 20%.',
+ N'sale_1.jpg',
+ 0, 20, '2025-09-20', '2025-10-20',
+ N'SPA20', 1, 0,
+ NULL, NULL, 1, 0),
 
-(N'Ở 3 Ngày Tặng 1 Ngày Homestay', 
- N'Đặt phòng homestay cho thú cưng 3 ngày sẽ được tặng thêm 1 ngày miễn phí.', 
- N'Dịch vụ homestay cao cấp với không gian rộng rãi, sạch sẽ, an toàn và đầy đủ tiện nghi. Ưu đãi có hạn, nhanh tay đặt ngay.', 
- N'sale_2.jpg', 
- 25, '2025-09-22', '2025-10-10'),
+(N'Ở 3 Ngày Tặng 1 Ngày Homestay',
+ N'Đặt phòng homestay cho thú cưng 3 ngày sẽ được tặng thêm 1 ngày miễn phí.',
+ N'Dịch vụ homestay cao cấp với không gian rộng rãi, sạch sẽ, an toàn và đầy đủ tiện nghi. Ưu đãi có hạn, nhanh tay đặt ngay.',
+ N'sale_2.jpg',
+ 0, 25, '2025-09-22', '2025-10-10',
+ N'HOMEPLUS', 1, 0,
+ NULL, NULL, 1, 0),
 
-(N'Combo Spa + Homestay Giảm 15%', 
- N'Tiết kiệm khi đặt combo spa và homestay cùng lúc.', 
- N'Kết hợp chăm sóc spa và nghỉ dưỡng homestay cho thú cưng, mang lại trải nghiệm trọn vẹn và tiết kiệm 15% chi phí.', 
- N'sale_3.jpg', 
- 15, '2025-09-25', '2025-10-25'),
+(N'Combo Spa + Homestay Giảm 15%',
+ N'Tiết kiệm khi đặt combo spa và homestay cùng lúc.',
+ N'Kết hợp chăm sóc spa và nghỉ dưỡng homestay cho thú cưng, mang lại trải nghiệm trọn vẹn và tiết kiệm 15% chi phí.',
+ N'sale_3.jpg',
+ 0, 15, '2025-09-25', '2025-10-25',
+ N'COMBO15', 1, 0,
+ NULL, NULL, 1, 0),
 
-(N'Tặng Quà Cho Khách Hàng Mới', 
- N'Đăng ký lần đầu sẽ nhận ngay quà tặng hấp dẫn.', 
- N'Khách hàng lần đầu đặt dịch vụ tại spa & homestay thú cưng sẽ được tặng 1 suất spa mini miễn phí hoặc đồ chơi thú cưng.', 
- N'sale_4.jpg', 
- 10, '2025-09-22', '2025-12-31'),
+(N'Tặng Quà Cho Khách Hàng Mới',
+ N'Đăng ký lần đầu sẽ nhận ngay quà tặng hấp dẫn.',
+ N'Khách hàng lần đầu đặt dịch vụ tại spa & homestay thú cưng sẽ được tặng 1 suất spa mini miễn phí hoặc đồ chơi thú cưng.',
+ N'sale_4.jpg',
+ 0, 10, '2025-09-22', '2025-12-31',
+ N'NEWMEMBER', 1, 0,
+ NULL, NULL, 1, 0),
 
-(N'Giảm 30% Cho Nhóm 2 Thú Cưng', 
- N'Đưa 2 bé cưng đi spa cùng lúc sẽ nhận ngay ưu đãi giảm 30%.', 
- N'Dành cho khách hàng có từ 2 thú cưng trở lên khi đặt dịch vụ spa, giúp tiết kiệm chi phí mà thú cưng vẫn được chăm sóc tận tình.', 
- N'sale_5.jpg', 
- 30, '2025-09-22', '2025-10-15');
- 
+(N'Giảm 30% Cho Nhóm 2 Thú Cưng',
+ N'Đưa 2 bé cưng đi spa cùng lúc sẽ nhận ngay ưu đãi giảm 30%.',
+ N'Dành cho khách hàng có từ 2 thú cưng trở lên khi đặt dịch vụ spa, giúp tiết kiệm chi phí mà thú cưng vẫn được chăm sóc tận tình.',
+ N'sale_5.jpg',
+ 0, 30, '2025-09-22', '2025-10-15',
+ N'SPA2PET', 1, 0,
+ NULL, NULL, 1, 0);
+
  -- Kiểm tra mọi thứ --
 SELECT * FROM Services;
 SELECT * FROM Products;

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class SendPics : Migration
+    public partial class Initial1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -76,10 +76,18 @@ namespace DoAnCoSo.Migrations
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ShortDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Discount = table.Column<int>(type: "int", nullable: false),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsCampaign = table.Column<bool>(type: "bit", nullable: false),
+                    Discount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsPercent = table.Column<bool>(type: "bit", nullable: false),
+                    MinOrderValue = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    MaxUsage = table.Column<int>(type: "int", nullable: true),
+                    MaxUsagePerUser = table.Column<int>(type: "int", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsPrivate = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -284,6 +292,7 @@ namespace DoAnCoSo.Migrations
                     CustomerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
+                    bankStatus = table.Column<int>(type: "int", nullable: false),
                     PaymentMethod = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ShippingAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -356,6 +365,35 @@ namespace DoAnCoSo.Migrations
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserPromotions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    PromotionId = table.Column<int>(type: "int", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    DateSaved = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserPromotions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserPromotions_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserPromotions_Promotions_PromotionId",
+                        column: x => x.PromotionId,
+                        principalTable: "Promotions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -469,6 +507,35 @@ namespace DoAnCoSo.Migrations
                         principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderPromotions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PromotionId = table.Column<int>(type: "int", nullable: false),
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    CodeUsed = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DiscountApplied = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderPromotions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderPromotions_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderPromotions_Promotions_PromotionId",
+                        column: x => x.PromotionId,
+                        principalTable: "Promotions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -849,6 +916,16 @@ namespace DoAnCoSo.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderPromotions_OrderId",
+                table: "OrderPromotions",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderPromotions_PromotionId",
+                table: "OrderPromotions",
+                column: "PromotionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Orders_UserId",
                 table: "Orders",
                 column: "UserId");
@@ -908,6 +985,17 @@ namespace DoAnCoSo.Migrations
                 table: "SpaPricings",
                 column: "ServiceId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPromotions_PromotionId",
+                table: "UserPromotions",
+                column: "PromotionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPromotions_UserId_PromotionId",
+                table: "UserPromotions",
+                columns: new[] { "UserId", "PromotionId" },
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -950,6 +1038,9 @@ namespace DoAnCoSo.Migrations
                 name: "OrderDetails");
 
             migrationBuilder.DropTable(
+                name: "OrderPromotions");
+
+            migrationBuilder.DropTable(
                 name: "Payments");
 
             migrationBuilder.DropTable(
@@ -957,9 +1048,6 @@ namespace DoAnCoSo.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProductImages");
-
-            migrationBuilder.DropTable(
-                name: "Promotions");
 
             migrationBuilder.DropTable(
                 name: "ReviewImages");
@@ -972,6 +1060,9 @@ namespace DoAnCoSo.Migrations
 
             migrationBuilder.DropTable(
                 name: "SystemStates");
+
+            migrationBuilder.DropTable(
+                name: "UserPromotions");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -990,6 +1081,9 @@ namespace DoAnCoSo.Migrations
 
             migrationBuilder.DropTable(
                 name: "Services");
+
+            migrationBuilder.DropTable(
+                name: "Promotions");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

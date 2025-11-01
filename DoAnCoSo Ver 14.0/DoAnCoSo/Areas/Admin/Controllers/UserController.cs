@@ -3,6 +3,7 @@ using DoAnCoSo.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DoAnCoSo.Areas.Admin.Controllers
 {

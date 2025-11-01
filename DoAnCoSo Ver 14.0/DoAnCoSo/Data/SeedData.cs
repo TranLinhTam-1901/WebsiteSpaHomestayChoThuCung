@@ -76,49 +76,49 @@ namespace DoAnCoSo.Data
                     Console.WriteLine("Tài khoản Admin đã tồn tại.");
                 }
 
-                // 🔹 Tạo thêm tài khoản Admin2 nếu chưa tồn tại
-                //var adminUser2 = await userManager.FindByEmailAsync("Admin2@gmail.com");
-                //if (adminUser2 == null)
-                //{
-                //    Console.WriteLine("Tài khoản Admin2 không tìm thấy, đang tạo...");
-                //    adminUser2 = new ApplicationUser
-                //    {
-                //        UserName = "Admin2@gmail.com",
-                //        Email = "Admin2@gmail.com",
-                //        FullName = "Admin2",
-                //        Address = "System 2",
-                //        PhoneNumber = "0987654322"
-                //    };
+                 //🔹 Tạo thêm tài khoản Admin2 nếu chưa tồn tại
+                var adminUser2 = await userManager.FindByEmailAsync("Admin2@gmail.com");
+                if (adminUser2 == null)
+                {
+                    Console.WriteLine("Tài khoản Admin2 không tìm thấy, đang tạo...");
+                    adminUser2 = new ApplicationUser
+                    {
+                        UserName = "Admin2@gmail.com",
+                        Email = "Admin2@gmail.com",
+                        FullName = "Admin2",
+                        Address = "System 2",
+                        PhoneNumber = "0987654322"
+                    };
 
-                //    var password2 = "Admin2@gmail.com";
-                //    var result2 = await userManager.CreateAsync(adminUser2, password2);
+                    var password2 = "Admin2@gmail.com";
+                    var result2 = await userManager.CreateAsync(adminUser2, password2);
 
-                //    if (result2.Succeeded)
-                //    {
-                //        // ✅ Tạo cặp khóa RSA cho admin
-                //        var (pub, priv) = EncryptionHelper.GenerateRsaKeyPair();
-                //        adminUser2.PublicKey = pub;
-                //        adminUser2.PrivateKey = priv;
-                //        await userManager.UpdateAsync(adminUser2);
-                //        Console.WriteLine($"Đã tạo RSA key cho {adminUser2.Email}");
+                    if (result2.Succeeded)
+                    {
+                        // ✅ Tạo cặp khóa RSA cho admin
+                        var (pub, priv) = EncryptionHelper.GenerateRsaKeyPair();
+                        adminUser2.PublicKey = pub;
+                        adminUser2.PrivateKey = priv;
+                        await userManager.UpdateAsync(adminUser2);
+                        Console.WriteLine($"Đã tạo RSA key cho {adminUser2.Email}");
 
-                //        Console.WriteLine("Tài khoản Admin2 đã được tạo thành công.");
-                //        await userManager.AddToRoleAsync(adminUser2, SD.Role_Admin);
-                //        Console.WriteLine("Đã thêm tài khoản Admin2 vào vai trò Admin.");
-                //    }
-                //    else
-                //    {
-                //        Console.WriteLine("Lỗi khi tạo tài khoản Admin2:");
-                //        foreach (var error in result2.Errors)
-                //        {
-                //            Console.WriteLine($"Lỗi: {error.Description}");
-                //        }
-                //    }
-                //}
-                //else
-                //{
-                //    Console.WriteLine("Tài khoản Admin2 đã tồn tại.");
-                //}
+                        Console.WriteLine("Tài khoản Admin2 đã được tạo thành công.");
+                        await userManager.AddToRoleAsync(adminUser2, SD.Role_Admin);
+                        Console.WriteLine("Đã thêm tài khoản Admin2 vào vai trò Admin.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Lỗi khi tạo tài khoản Admin2:");
+                        foreach (var error in result2.Errors)
+                        {
+                            Console.WriteLine($"Lỗi: {error.Description}");
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Tài khoản Admin2 đã tồn tại.");
+                }
 
                 if (!context.SystemStates.Any())
                 {
