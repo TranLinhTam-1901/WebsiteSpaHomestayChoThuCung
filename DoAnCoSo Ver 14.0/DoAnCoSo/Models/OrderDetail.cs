@@ -10,6 +10,9 @@
         public Order Order { get; set; }
         public Product Product { get; set; }
 
+        public decimal OriginalPrice { get; set; }    
+        public decimal DiscountedPrice { get; set; }
+
         public string? SelectedFlavor { get; set; }
     }
 }

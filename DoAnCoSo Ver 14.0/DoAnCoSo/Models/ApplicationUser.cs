@@ -18,5 +18,6 @@ namespace DoAnCoSo.Models
         // Private key (Base64 of exported private key bytes)
         // **Cảnh báo**: private key lưu ở DB = server có thể giải mã.
         public string? PrivateKey { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

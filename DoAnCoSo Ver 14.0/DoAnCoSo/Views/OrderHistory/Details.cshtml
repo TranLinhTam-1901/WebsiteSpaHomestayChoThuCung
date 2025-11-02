@@ -44,25 +44,18 @@
         font-weight: bold;
         color: #FF6185;
         margin-bottom: 15px;
-        position: relative;
-    }
-
-    .section-subtitle {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #FF6185;
-        margin-top: 30px;
-        margin-bottom: 10px;
     }
 
     .table th {
         background-color: #fff0f5;
         color: #FF6185;
         vertical-align: middle;
+        text-align: center;
     }
 
     .table td {
         vertical-align: middle;
+        text-align: center;
     }
 
     .badge {
@@ -96,17 +89,13 @@
         margin-bottom: 10px;
     }
 
+    .text-decoration-line-through {
+        opacity: 0.8;
+    }
+
     @@media (max-width: 768px) {
-        .section-title {
-            font-size: 1.6rem;
-        }
-
-        .section-subtitle {
-            font-size: 1.1rem;
-        }
-
         .table th, .table td {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             padding: 8px;
         }
 
@@ -122,6 +111,7 @@
         <h2 class="order-detail-title">📦 Chi tiết đơn hàng #@Model.Id</h2>
 
         <div>
+            <!-- 🟩 Thông tin tổng quan -->
             <h4 class="section-title">📋 Thông tin tổng quan</h4>
             <hr />
             <dl class="row">
@@ -132,7 +122,22 @@
                 <dd class="col-sm-8">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
 
                 <dt class="col-sm-4">Tổng tiền:</dt>
-                <dd class="col-sm-8">@Model.TotalPrice.ToString("N0") VNĐ</dd>
+                <dd class="col-sm-8">
+                    @if (Model.OrderPromotions != null && Model.OrderPromotions.Any())
+                    {
+                        var discount = Model.OrderPromotions.Sum(op => op.DiscountApplied);
+                        <span class="text-muted text-decoration-line-through">@((Model.TotalPrice + discount).ToString("N0")) đ</span>
+                        <span class="text-danger fw-bold ms-2">@Model.TotalPrice.ToString("N0") đ</span>
+                        <br />
+                        <small class="text-success">
+                            (Đã giảm: <strong>@discount.ToString("N0") đ</strong>)
+                        </small>
+                    }
+                    else
+                    {
+                        <span class="fw-bold">@Model.TotalPrice.ToString("N0") đ</span>
+                    }
+                </dd>
 
                 <dt class="col-sm-4">Trạng thái:</dt>
                 <dd class="col-sm-8">
@@ -155,6 +160,7 @@
                 </dd>
             </dl>
 
+            <!-- 🟩 Thông tin giao hàng -->
             <h4 class="section-title">🚚 Thông tin người nhận & giao hàng</h4>
             <hr />
             <dl class="row">
@@ -174,18 +180,20 @@
                 <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Notes) ? "Không có" : Model.Notes)</dd>
             </dl>
 
-            <h4 class="section-title">🧾 Chi tiết sản phẩm</h4>
+            <!-- 🟩 Chi tiết sản phẩm -->
+            <h4 class="section-title">🧾 Chi tiết dịch vụ / sản phẩm</h4>
             <hr />
             @if (Model.OrderDetails != null && Model.OrderDetails.Any())
             {
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>Sản phẩm</th>
+                            <th>Tên sản phẩm / dịch vụ</th>
                             <th>Số lượng</th>
-                            <th>Đơn giá</th>
-                            <th>Vị/Màu sắc</th>
-                            <th>Tổng tiền</th>
+                            <th>Giá gốc</th>
+                            <th>Giá sau giảm</th>
+                            <th>Phân loại</th>
+                            <th>Thành tiền</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -194,9 +202,21 @@
                             <tr>
                                 <td>@item.Product.Name</td>
                                 <td>@item.Quantity</td>
-                                <td>@item.Price.ToString("N0") VNĐ</td>
-                                <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "N/A" : item.SelectedFlavor)</td>
-                                <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td>
+                                <td>
+                                    @if (item.DiscountedPrice < item.OriginalPrice)
+                                    {
+                                        <span class="text-muted text-decoration-line-through">@item.OriginalPrice.ToString("N0") đ</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@item.OriginalPrice.ToString("N0") đ</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="text-danger fw-bold">@item.DiscountedPrice.ToString("N0") đ</span>
+                                </td>
+                                <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "Không có" : item.SelectedFlavor)</td>
+                                <td>@((item.Quantity * item.DiscountedPrice).ToString("N0")) đ</td>
                             </tr>
                         }
                     </tbody>
@@ -205,6 +225,26 @@
             else
             {
                 <p class="text-muted">Không có sản phẩm nào trong đơn hàng này.</p>
+            }
+
+            <!-- 🟩 Thông tin khuyến mãi -->
+            @if (Model.OrderPromotions != null && Model.OrderPromotions.Any())
+            {
+                var promo = Model.OrderPromotions.FirstOrDefault()?.Promotion;
+                <h4 class="section-title">🎁 Thông tin khuyến mãi</h4>
+                <hr />
+                <dl class="row">
+                    <dt class="col-sm-4">Mã khuyến mãi:</dt>
+                    <dd class="col-sm-8">@promo?.Code</dd>
+
+                    <dt class="col-sm-4">Loại giảm:</dt>
+                    <dd class="col-sm-8">
+                        @(promo?.IsPercent == true ? $"{promo.Discount}%" : $"{promo?.Discount.ToString("N0")} đ")
+                    </dd>
+
+                    <dt class="col-sm-4">Giá trị đã giảm:</dt>
+                    <dd class="col-sm-8">@Model.OrderPromotions.Sum(op => op.DiscountApplied).ToString("N0") đ</dd>
+                </dl>
             }
 
             <div class="text-center mt-4">
