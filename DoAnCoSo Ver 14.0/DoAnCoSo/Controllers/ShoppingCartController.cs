@@ -359,11 +359,12 @@ namespace DoAnCoSo.Controllers
             order.PaymentMethod = model.Order.PaymentMethod;
 
             decimal total = 0;
+            // 🟩 [THÊM MỚI] Ghi nhận giá gốc và giá sau giảm cho từng sản phẩm
             foreach (var item in itemsForOrder)
             {
                 if (item.Product != null)
                 {
-                    var price = item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0
+                    var basePrice = item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0
                         ? (decimal)item.Product.PriceReduced.Value
                         : item.Product.Price;
 
@@ -371,12 +372,16 @@ namespace DoAnCoSo.Controllers
                     {
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
-                        Price = price,
-                        SelectedFlavor = item.SelectedFlavor ?? ""
+                        SelectedFlavor = item.SelectedFlavor ?? "",
+
+                        // 🟩 Ghi nhận giá tại thời điểm đặt hàng
+                        OriginalPrice = basePrice,         // giá gốc
+                        DiscountedPrice = basePrice,       // ban đầu bằng giá gốc
+                        Price = basePrice                  // giữ để tương thích với hệ thống hiện tại
                     };
 
                     order.OrderDetails.Add(orderDetail);
-                    total += orderDetail.Price * orderDetail.Quantity;
+                    total += basePrice * item.Quantity;
                 }
             }
             order.TotalPrice = total;
@@ -444,9 +449,25 @@ namespace DoAnCoSo.Controllers
                             if (discountAmount > total)
                                 discountAmount = total;
 
-                            // ✅ Giảm vào tổng tiền
                             order.TotalPrice = total - discountAmount;
                             Console.WriteLine($"✅ Tổng sau giảm: {order.TotalPrice} (Giảm {discountAmount})");
+
+                            // 🟩 THÊM MỚI: Phân bổ giảm giá đều cho từng sản phẩm
+                            if (discountAmount > 0 && order.OrderDetails.Any())
+                            {
+                                decimal totalBeforeDiscount = total;
+
+                                foreach (var detail in order.OrderDetails)
+                                {
+                                    decimal proportion = (detail.OriginalPrice * detail.Quantity) / totalBeforeDiscount;
+                                    decimal lineDiscount = discountAmount * proportion;
+                                    decimal discountPerUnit = lineDiscount / detail.Quantity;
+
+                                    // 🟩 Cập nhật giá giảm cho từng dòng sản phẩm
+                                    detail.DiscountedPrice = Math.Round(detail.OriginalPrice - discountPerUnit, 2);
+                                    detail.Price = detail.DiscountedPrice; // đồng bộ giá hiển thị cũ
+                                }
+                            } 
 
                             // ✅ Ghi nhận việc dùng mã
                             var orderPromo = new OrderPromotion
@@ -459,7 +480,7 @@ namespace DoAnCoSo.Controllers
                             };
 
                             _context.OrderPromotions.Add(orderPromo);
-                            // 🧩 ĐÃ THÊM: Đánh dấu mã đã dùng trong UserPromotion (nếu tồn tại)
+                            // Đánh dấu mã đã dùng trong UserPromotion (nếu tồn tại)
                             var userPromo = await _context.UserPromotions
                                 .FirstOrDefaultAsync(up => up.UserId == user.Id && up.PromotionId == promo.Id);
 
@@ -507,44 +528,44 @@ namespace DoAnCoSo.Controllers
                 //_context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
-                // 2. Gửi email xác nhận (nếu lỗi → chỉ log, không phá Checkout)
+                // 🟧 CHỈNH SỬA: Cập nhật email hiển thị thêm giá gốc & giá sau giảm
                 try
                 {
                     var customerEmail = user.Email;
-
-                    // ✅ Chuyển giờ UTC sang giờ VN
-                    var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
+                    var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
                     var vnDate = TimeZoneInfo.ConvertTimeFromUtc(order.OrderDate.ToUniversalTime(), vnTimeZone);
 
                     string body = $@"
-                    <h2>🎉 Cảm ơn {user.FullName} đã đặt hàng tại PawHouse!</h2>
-                    <p><b>Mã đơn:</b> {order.Id}</p>
-                    <p><b>Ngày đặt:</b> {vnDate:dd/MM/yyyy HH:mm}</p>
-                    <p><b>Chi tiết đơn hàng:</b></p>
-                    <table border='1' cellpadding='5' cellspacing='0'>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th>Số lượng</th>
-                            <th>Giá</th>
-                            <th>Thành tiền</th>
-                        </tr>";
+            <h2>🎉 Cảm ơn {user.FullName} đã đặt hàng tại PawHouse!</h2>
+            <p><b>Mã đơn:</b> {order.Id}</p>
+            <p><b>Ngày đặt:</b> {vnDate:dd/MM/yyyy HH:mm}</p>
+            <p><b>Chi tiết đơn hàng:</b></p>
+            <table border='1' cellpadding='5' cellspacing='0'>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Giá gốc</th>           <!-- 🟩 THÊM MỚI -->
+                    <th>Giá sau giảm</th>      <!-- 🟩 THÊM MỚI -->
+                    <th>Thành tiền</th>
+                </tr>";
 
                     foreach (var detail in order.OrderDetails)
                     {
                         var product = await _context.Products.FindAsync(detail.ProductId);
                         body += $@"
-                        <tr>
-                            <td>{product?.Name}</td>
-                            <td>{detail.Quantity}</td>
-                            <td>{detail.Price:N0}đ</td>
-                            <td>{(detail.Price * detail.Quantity):N0}đ</td>
-                        </tr>";
+                <tr>
+                    <td>{product?.Name}</td>
+                    <td>{detail.Quantity}</td>
+                    <td>{detail.OriginalPrice:N0}đ</td>   <!-- 🟩 THÊM MỚI -->
+                    <td>{detail.DiscountedPrice:N0}đ</td> <!-- 🟩 THÊM MỚI -->
+                    <td>{(detail.DiscountedPrice * detail.Quantity):N0}đ</td>
+                </tr>";
                     }
 
                     body += $@"
-                    </table>
-                    <p><b>Tổng cộng:</b> {order.TotalPrice:N0}đ</p>
-                    <p>Chúng tôi sẽ liên hệ để xác nhận đơn hàng trong thời gian sớm nhất.</p>";
+            </table>
+            <p><b>Tổng cộng:</b> {order.TotalPrice:N0}đ</p>
+            <p>Chúng tôi sẽ liên hệ để xác nhận đơn hàng trong thời gian sớm nhất.</p>";
 
                     await _emailService.SendEmailAsync(customerEmail, "Đặt thành công đơn hàng #" + order.Id, body);
                 }

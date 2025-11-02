@@ -168,7 +168,33 @@
                         <small class="text-muted"><i class="fas fa-user me-1"></i> Người đặt: @order.User?.FullName</small>
                     </div>
                     <div class="text-end">
-                        <p class="mb-1"><strong>Tổng tiền:</strong> <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span></p>
+                        @* <p class="mb-1"><strong>Tổng tiền:</strong> <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span></p> *@
+                        @if (order.OrderPromotions != null && order.OrderPromotions.Any())
+                        {
+                            var totalDiscount = order.OrderPromotions.Sum(op => op.DiscountApplied);
+                            var originalPrice = order.TotalPrice + totalDiscount;
+
+                            <p class="mb-1">
+                                <strong>Giá gốc:</strong>
+                                <span class="text-muted">@originalPrice.ToString("N0") VNĐ</span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Đã giảm:</strong>
+                                <span class="text-danger fw-bold">-@totalDiscount.ToString("N0") VNĐ</span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Thành tiền:</strong>
+                                <span class="text-success fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span>
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="mb-1">
+                                <strong>Tổng tiền:</strong>
+                                <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span>
+                            </p>
+                        }
+
                         @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
                         {
                             <span class="badge bg-warning text-dark">Chờ xác nhận</span>

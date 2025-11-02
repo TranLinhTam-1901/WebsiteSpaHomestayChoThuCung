@@ -23,12 +23,15 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         // 1. Admin xem toàn bộ lịch sử đặt hàng
         public async Task<IActionResult> Index()
         {
+
             var orders = await _context.Orders
-                                       .Include(o => o.User) // Include thông tin người dùng
-                                       .Include(o => o.OrderDetails)
-                                           .ThenInclude(od => od.Product)
-                                       .OrderByDescending(o => o.OrderDate)
-                                       .ToListAsync();
+                .Include(o => o.User) 
+            .Include(o => o.OrderDetails)
+            .ThenInclude(od => od.Product) 
+            .Include(o => o.OrderPromotions)
+            .ThenInclude(op => op.Promotion) 
+        .OrderByDescending(o => o.OrderDate)
+        .ToListAsync();
             return View(orders);
         }
 
@@ -44,6 +47,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                                       .Include(o => o.User)
                                       .Include(o => o.OrderDetails)
                                           .ThenInclude(od => od.Product)
+                                       .Include(o => o.OrderPromotions)             
+                                           .ThenInclude(op => op.Promotion)
                                       .FirstOrDefaultAsync(m => m.Id == id);
             if (order == null)
             {
@@ -67,10 +72,20 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             if (order.Status == OrderStatusEnum.ChoXacNhan)
             {
-                order.Status = OrderStatusEnum.DaXacNhan; // Chuyển trạng thái sang "Đã xác nhận"
+                // Cập nhật trạng thái đơn hàng
+                order.Status = OrderStatusEnum.DaXacNhan;
+
+                // Nếu là COD → xem như đã thanh toán khi admin xác nhận
+                if (order.PaymentMethod == "COD")
+                {
+                    order.bankStatus = BankStatusEnum.DaThanhToan;
+                }
+
+                // Nếu là Banking thì không cần đổi vì đã thanh toán tự động trước đó
                 _context.Update(order);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Đơn hàng đã được xác nhận thành công.";
+
+                TempData["SuccessMessage"] = "✅ Đơn hàng đã được xác nhận thành công.";
             }
             else
             {
