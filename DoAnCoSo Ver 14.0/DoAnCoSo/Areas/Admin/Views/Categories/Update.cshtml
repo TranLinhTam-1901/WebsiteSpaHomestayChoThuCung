@@ -2,22 +2,98 @@
 @{
     ViewData["Title"] = "Chỉnh sửa Danh Mục";
 }
-<div class="container py-5">
-<h2>Chỉnh sửa Danh Mục</h2>
 
-<form asp-action="Update" method="post">
-    <input type="hidden" asp-for="Id" />
+<div class="container py-5 d-flex justify-content-center">
+    <div class="card shadow-lg border-0 rounded-4 w-50">
+        <div class="card-header text-center rounded-top-4 table-pink py-3">
+            <h2 class="mb-0 fw-bold">✏️ Chỉnh sửa Danh Mục</h2>
+        </div>
 
-    <div class="form-group">
-        <label asp-for="Name">Tên</label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+        <div class="card-body p-4">
+            <form asp-action="Update" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label fw-semibold text-pink">Tên danh mục</label>
+                    <input asp-for="Name" class="form-control border-pink rounded-3" placeholder="Nhập tên danh mục..." />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-pink-gradient px-4 py-2 rounded-pill shadow-sm">
+                        💾 Lưu
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill ms-2">
+                        ← Trở lại
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <div class="form-group">
-        <input type="submit" value="Lưu" class="btn btn-primary" />
-    </div>
-</form>
-
-<a asp-action="Index">Trở lại danh sách</a>
 </div>
+
+<style>
+    :root {
+        --pink-main: #FF6185;
+        --pink-light: #FFB6C1;
+        --pink-dark: #e74c7b;
+    }
+
+    body {
+        background-color: #FFF5F8;
+    }
+
+    .text-pink {
+        color: var(--pink-main);
+    }
+
+    .btn-pink-gradient {
+        background: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        border: none;
+        transition: 0.25s;
+    }
+
+        .btn-pink-gradient:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-outline-pink {
+        border: 1.5px solid var(--pink-main);
+        color: var(--pink-main);
+        background-color: #fff;
+        transition: 0.25s;
+        font-weight: 500;
+    }
+
+        .btn-outline-pink:hover {
+            background-color: var(--pink-main);
+            color: #fff;
+        }
+
+    .table-pink {
+        background: linear-gradient(90deg, var(--pink-main), var(--pink-light));
+        color: black;
+    }
+
+    .border-pink {
+        border: 1.5px solid var(--pink-light);
+        transition: 0.3s;
+    }
+
+        .border-pink:focus {
+            border-color: var(--pink-main);
+            box-shadow: 0 0 0 0.25rem rgba(255, 97, 133, 0.25);
+        }
+
+    .card {
+        border-radius: 18px;
+    }
+
+    .card-header {
+        border-top-left-radius: 18px !important;
+        border-top-right-radius: 18px !important;
+    }
+</style>

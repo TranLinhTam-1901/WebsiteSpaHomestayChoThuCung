@@ -1,0 +1,43 @@
+﻿@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
+    {
+        Layout = parentLayout.ToString();
+    }
+    else
+    {
+        Layout = "/Areas/Identity/Pages/_Layout.cshtml";
+    }
+}
+
+<div class="container py-5">
+    <h2 class="section-title">Tài khoản cá nhân</h2>
+
+    <div class="row">
+        <!-- Menu -->
+        <div class="col-md-3 mb-3">
+            <div class="card-pink shadow-sm">
+                <div class="card-pink-header">
+                    <strong>Menu tài khoản</strong>
+                </div>
+                <div class="card-pink-body">
+                    <partial name="_ManageNav" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Nội dung -->
+        <div class="col-md-9">
+            <div class="card-pink shadow-sm">
+                <div class="card-pink-body">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}
+
+<link rel="stylesheet" href="~/css/manage.css" />

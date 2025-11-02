@@ -1,13 +1,13 @@
-﻿using DoAnCoSo.Data;
+using DoAnCoSo.Data;
+using DoAnCoSo.Hubs;
 using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
+using DoAnCoSo.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.Globalization;
-using DoAnCoSo.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,10 +80,24 @@ builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
+// Bind EmailSettings từ appsettings.json
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
+// Đăng ký EmailService
+builder.Services.AddScoped<EmailService>();
+
 var app = builder.Build();
 
 app.UseRequestLocalization(); // Sử dụng Middleware cấu hình Culture
 
+var supportedCultures = new[] { new CultureInfo("vi-VN") };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("vi-VN"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
 
 // SEED DATA 
 using (var scope = app.Services.CreateScope()) // Tạo một scope dịch vụ để có thể truy cập các dịch vụ đã đăng ký
@@ -98,7 +112,7 @@ using (var scope = app.Services.CreateScope()) // Tạo một scope dịch vụ 
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>(); // Lấy logger để ghi log lỗi
         logger.LogError(ex, "An error occurred seeding the DB."); // Ghi log nếu có lỗi xảy ra trong quá trình seed
     }
-}   
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -128,7 +142,7 @@ app.UseEndpoints(endpoints =>
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}");
 
-    // ✅ Route cho SignalR Hub
+    // Route cho SignalR Hub
     endpoints.MapHub<ChatHub>("/chathub");
 });
 

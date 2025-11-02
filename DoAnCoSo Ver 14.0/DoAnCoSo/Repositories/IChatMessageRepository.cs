@@ -1,9 +1,5 @@
-﻿using DoAnCoSo.Data;
-using DoAnCoSo.Models;
+﻿using DoAnCoSo.Models;
 using Microsoft.EntityFrameworkCore; // ✅ thêm dòng này
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace DoAnCoSo.Repositories
 {

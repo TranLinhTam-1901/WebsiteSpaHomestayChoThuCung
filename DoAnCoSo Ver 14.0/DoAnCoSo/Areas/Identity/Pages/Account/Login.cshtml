@@ -35,7 +35,9 @@
                             </div>
 
                             <div class="d-flex justify-content-center">
-                                <button id="login-submit" type="submit" class="btn btn-primary btn-lg">Đăng Nhập</button>
+                                <button id="login-submit" type="submit" class="btn btn-lg btn-login-custom">
+                                    Đăng Nhập
+                                </button>
                             </div>
 
                             <p class="text-center mt-4">
@@ -44,8 +46,11 @@
 
                             <p class="text-center">
                                 Bạn chưa có tài khoản?
-                                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="link-primary">Đăng ký tại đây</a>
+                                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="link-register">
+                                    Đăng ký tại đây
+                                </a>
                             </p>
+
                         </form>
                     </div>
 

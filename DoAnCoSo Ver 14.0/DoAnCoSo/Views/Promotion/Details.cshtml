@@ -1,0 +1,96 @@
+﻿@model DoAnCoSo.Models.Promotion
+@{
+    ViewData["Title"] = "Chi tiết khuyến mãi";
+}
+
+@if (Model.IsCampaign)
+{
+    @await Html.PartialAsync("_DetailCampaign", Model)
+}
+else
+{
+    @await Html.PartialAsync("_DetailNormal", Model)
+}
+<style>
+    /* === Shared === */
+    .promotion-detail-section {
+        background: linear-gradient(180deg, #fff5f8 0%, #fff 100%);
+    }
+
+    .promo-title {
+        color: #FF6185;
+        font-weight: 800;
+    }
+
+    /* === Campaign banner === */
+    /* .campaign-banner {
+        width: 100%;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 8px 20px rgba(255, 97, 133, 0.2);
+    } */
+
+    /* .banner-img {
+        width: 100%;
+        height: 300px; /* 🔽 giảm chiều cao để ảnh vuông ít bị crop hơn */
+        background-size: cover;
+        background-position: center center;
+        border-radius: 20px;
+    } */
+
+    /* .campaign-banner:hover .banner-img {
+        transform: scale(1.05);
+    } */
+
+    /* === Badge === */
+    .badge-hot {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        background: #FF6185;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 25px;
+        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(255, 97, 133, 0.3);
+    }
+
+    /* === Button consistency === */
+    .btn {
+        border-radius: 50px !important;
+        font-weight: 600;
+    }
+
+    .text-pink {
+        color: #FF6185 !important;
+    }
+
+    /* === Campaign banner === */
+    .campaign-banner {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto 30px auto;
+        aspect-ratio: 16 / 9; /* ✅ tự điều chỉnh khung ảnh theo tỉ lệ 16:9 */
+        border-radius: 20px;
+        overflow: hidden;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 8px 20px rgba(255, 97, 133, 0.2);
+    }
+
+    .banner-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* ✅ ảnh nào cũng hiển thị toàn bộ, không cắt */
+        object-position: center;
+        transition: transform 0.4s ease;
+        background-color: #fff;
+    }
+
+    .campaign-banner:hover .banner-img {
+        transform: scale(1.04); /* hiệu ứng hover nhẹ */
+    } 
+</style>

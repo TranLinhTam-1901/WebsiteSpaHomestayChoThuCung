@@ -27,6 +27,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/css/style.css">
+    <link rel="stylesheet" href="~/css/userChat.css">
 </head>
 <body>
     <header class="header">
@@ -355,29 +356,41 @@
                         </a>
                     </li>
 
-                    @* <li class="nav-item "> *@
-                    @*     <a asp-area="" asp-controller="Service" asp-action="ThuY" class="nav-link" title="THÚ Y"> *@
-                    @*         THÚ Y *@
-                    @*     </a> *@
-                    @* </li> *@
-                    @* <li class="nav-item "> *@
-                    @*     <a asp-area="" asp-controller="Service" asp-action="#" class="nav-link" title="KHUYẾN MÃI"> *@
-                    @*         KHUYỄN MÃI *@
-                    @*     </a> *@
-                    @* </li> *@
-
                     <li class="nav-item ">
-                        <a asp-area="" asp-controller="Appointments" asp-action="CustomerAppointmentHistory" class="nav-link" title="Lịch sử đặt lịch">
-                            LỊCH SỬ ĐẶT LỊCH
+                        <a asp-area="" asp-controller="VetServices" asp-action="Index" class="nav-link" title="THÚ Y">
+                            THÚ Y
                         </a>
                     </li>
 
                     <li class="nav-item ">
-                        @* <-- ĐÂY LÀ PHẦN THÊM MỚI *@
-                        <a asp-area="" asp-controller="OrderHistory" asp-action="Index" class="nav-link" title="Lịch sử đặt hàng">
-                            LỊCH SỬ ĐẶT HÀNG 
+                        <a asp-area="" asp-controller="Promotion" asp-action="Index" class="nav-link" title="KHUYẾN MÃI">
+                            KHUYẾN MÃI
                         </a>
                     </li>
+
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+
+                        <li class="nav-item ">
+                            <a asp-area="" asp-controller="Appointments" asp-action="CustomerAppointmentHistory" class="nav-link" title="Lịch sử đặt lịch">
+                                LỊCH SỬ ĐẶT LỊCH
+                            </a>
+                        </li>
+
+                       
+                        <li class="nav-item ">
+                            <a asp-area="" asp-controller="OrderHistory" asp-action="Index" class="nav-link" title="Lịch sử đặt hàng">
+                                LỊCH SỬ ĐẶT HÀNG
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Promotion" asp-action="MyPromotions">
+                                MÃ KHUYẾN MÃI CỦA TÔI
+                            </a>
+                        </li>
+
+                    }
 
                     <li class="nav-item booking-calendar-item ">
                         <a class="nav-link" href="#" title="Đặt hẹn"
@@ -398,13 +411,15 @@
     </header>
 
     @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
-    <div class="modal fade" id="bookingOptionsModal" tabindex="-1" aria-labelledby="bookingOptionsModalLabel" aria-hidden="true">
+    <div class="modal fade booking-modal" id="bookingOptionsModal" tabindex="-1" aria-labelledby="bookingOptionsModalLabel" aria-hidden="true">
+        @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="bookingOptionsModalLabel">Chọn dịch vụ bạn muốn đặt lịch </h5>
+                    <h5 class="modal-title" id="bookingOptionsModalLabel">Chọn dịch vụ bạn muốn đặt lịch</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+
                 <div class="modal-body text-center">
                     <p class="lead mb-4">Vui lòng chọn loại dịch vụ bạn muốn đặt:</p>
 
@@ -412,9 +427,13 @@
                         <div class="col-md-6 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i> <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
+                                    <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i>
+                                    <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
                                     <p class="card-text text-muted">Nơi nghỉ ngơi thoải mái cho thú cưng của bạn.</p>
-                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments")" class="btn btn-homestay-theme mt-3">Chọn Homestay</a>
+                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments", new { area = "" })"
+                                       class="btn btn-homestay-theme mt-3">
+                                        Chọn Homestay
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -422,14 +441,19 @@
                         <div class="col-md-6 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
-                                    <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i> <h5 class="card-title mt-3">Đặt lịch Spa</h5>
+                                    <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i>
+                                    <h5 class="card-title mt-3">Đặt lịch Spa</h5>
                                     <p class="card-text text-muted">Chăm sóc và làm đẹp cho thú cưng yêu.</p>
-                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments")" class="btn btn-spa-theme mt-3">Chọn Spa</a>
+                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments", new { area = "" })"
+                                       class="btn btn-spa-theme mt-3">
+                                        Chọn Spa
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 </div>
@@ -438,9 +462,9 @@
     </div>
 
     <!-- Floating Button -->
-    <button id="chatFloatingBtn" class="btn shadow rounded-circle"
-            style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; z-index: 10000; background-color:#FF6185; color:white;">
+    <button id="chatFloatingBtn" class="btn shadow">
         <i class="bi bi-chat-dots-fill" style="font-size: 24px;"></i>
+        <span id="unreadBadge">0</span>
     </button>
 
     <!-- Chatbox -->
@@ -452,175 +476,73 @@
 
         <div id="messagesList"></div>
 
-        <div id="chatInputWrapper">
-            <input id="messageInput" placeholder="Nhập tin nhắn...">
-            <button id="sendButton">Gửi</button>
+        <div id="chatInputWrapper" style="display:flex; flex-direction:column; gap:5px;">
+            <!-- Preview ảnh nằm ngang, cuộn ngang -->
+            <div id="imagePreviewContainer" style="
+                display:flex;
+                flex-direction:row;
+                gap:5px;
+                overflow-x:auto;
+                max-height:100px;
+                padding-bottom:5px;">
+            </div>
+
+            <div style="display:flex; align-items:center; gap:5px;">
+                <input id="messageInput" placeholder="Nhập tin nhắn..." style="flex:1;">
+                <button id="uploadImageBtn" class="btn btn-primary btn-icon" title="Upload ảnh">
+                    <i class="bi bi-paperclip"></i>
+                </button>
+                <button id="sendButton">Gửi</button>
+                <input type="file" id="imageFileInput" accept="image/*" multiple style="display:none">
+            </div>
         </div>
     </div>
 
-    <style>
-        #chatBox {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
-            background: #fff;
-            border: 3px solid #FFB6C1;
-            border-radius: 10px;
-            display: none;
-            flex-direction: column;
-            z-index: 10001;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            font-family: "Segoe UI", sans-serif;
-            overflow: hidden;
-        }
+    <div class="modal fade" id="imageViewerModal" tabindex="-1" aria-hidden="true" style="z-index:10100">
+        <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+            <div class="modal-content bg-dark d-flex flex-column">
 
-        #chatHeader {
-            background: #FF6185;
-            color: white;
-            padding: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            font-size: 20px;
-            border-bottom: 3px solid #FFB6C1;
-        }
+                <!-- Header -->
+                <div class="modal-header custom-header border-0 justify-content-end">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-            #chatHeader button {
-                background: rgba(255,255,255,0.3);
-                border: none;
-                color: #fff;
-                font-size: 18px;
-                border-radius: 50%;
-                width: 28px;
-                height: 28px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+                <!-- Body -->
+                <div class="modal-body d-flex justify-content-center align-items-center flex-grow-1 p-0">
+                    <div id="viewerWrapper">
+                        <img id="viewerImage" src="" class="viewer-image" alt="Image Viewer">
+                    </div>
+                </div>
 
-                #chatHeader button:hover {
-                    background: rgba(255,255,255,0.6);
-                }
+                <!-- Footer -->
+                <div class="modal-footer custom-footer border-0 d-flex justify-content-between align-items-center">
 
-        /* Tin nhắn */
-        #messagesList {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            background: #f0f2f5;
-        }
+                    <!-- Góc trái: avatar + tên + thời gian -->
+                    <div class="user-info d-flex align-items-center">
+                        <img src="" alt="User Avatar" class="avatar rounded-circle me-2" id="modalAvatar">
+                        <div class="user-text">
+                            <div class="user-name" id="modalUserName"></div>
+                            <div class="time-info" id="modalTime"></div>
+                        </div>
+                    </div>
 
-        .message-row {
-            display: flex;
-            margin-bottom: 8px;
-            align-items: flex-end;
-        }
+                    <!-- Giữa: Zoom + Download -->
+                    <div class="action-buttons d-flex align-items-center">
+                        <button type="button" class="btn btn-dark btn-sm me-2" id="zoomInBtn" title="Phóng to">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+                        <button type="button" class="btn btn-dark btn-sm me-2" id="zoomOutBtn" title="Thu nhỏ">
+                            <i class="bi bi-zoom-out"></i>
+                        </button>
+                        <button type="button" class="btn btn-dark btn-sm" id="downloadBtn" title="Tải ảnh">
+                            <i class="bi bi-download"></i>
+                        </button>
+                    </div>
 
-            .message-row.admin {
-                justify-content: flex-end;
-            }
-
-        .message-bubble {
-            max-width: 70%;
-            padding: 10px 15px;
-            border-radius: 20px;
-            word-wrap: break-word;
-            font-size: 0.9rem;
-            position: relative;
-        }
-
-            .message-bubble.admin {
-                background-color: #FF6185;
-                color: white;
-                border-bottom-right-radius: 0;
-            }
-
-            .message-bubble.customer {
-                background-color: #d2c6f0;
-                color: black;
-                border-bottom-left-radius: 0;
-            }
-
-        /* Avatar khách */
-        .message-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .message-time {
-            font-size: 0.7rem;
-            color: inherit;
-            margin-top: 2px;
-            text-align: right;
-        }
-
-        /* Input */
-        #chatInputWrapper {
-            display: flex;
-            padding: 8px;
-            border-top: 3px solid #FFB6C1;
-            background: #fff;
-            flex-shrink: 0;
-        }
-
-        #messageInput {
-            flex: 1;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 20px;
-            outline: none;
-            background: #f0f2f5;
-            font-size: 14px;
-            margin-right: 5px;
-        }
-
-        #sendButton {
-            background-color: #FF6185;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        /* Ngắt ngày giống admin */
-        .date-separator {
-            text-align: center;
-            font-size: 0.75rem; /* nhỏ hơn tin nhắn */
-            color: #888; /* xám nhạt */
-            margin: 10px 0; /* cách đều 2 bên */
-            position: relative;
-        }
-
-            /* Tạo 2 đường kẻ ngang hai bên separator */
-            .date-separator::before,
-            .date-separator::after {
-                content: "";
-                position: absolute;
-                top: 50%;
-                width: 30%;
-                height: 1px;
-                background-color: #ccc;
-            }
-
-            .date-separator::before {
-                left: 15px;
-            }
-
-            .date-separator::after {
-                right: 15px;
-            }
-    </style>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="main-content">
         @RenderBody()
@@ -874,99 +796,143 @@
 
     <!-- Swiper -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script>
-        var swiper = new Swiper(".mySwiper", {
-            slidesPerView: 1,
-            spaceBetween: 20,
-            loop: false,
-            autoplay: { delay: 3000, disableOnInteraction: false },
-            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
-            breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1200: { slidesPerView: 4 } }
-        });
-    </script>
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
-    <!-- Active nav menu -->
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const currentPath = window.location.pathname.toLowerCase();
+        document.addEventListener("DOMContentLoaded", function () {
+            /* ------------------ Swiper ------------------ */
+            var swiper = new Swiper(".mySwiper", {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                loop: false,
+                autoplay: { delay: 3000, disableOnInteraction: false },
+                navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1200: { slidesPerView: 4 } }
+            });
+
+            /* ------------------ Active nav menu ------------------ */
+            function normalizePath(path) {
+                return path.toLowerCase().replace(/\/+$/, "");
+            }
+            const currentPath = normalizePath(window.location.pathname);
             document.querySelectorAll(".nav-item").forEach(item => {
                 let isActive = false;
-
                 const mainLink = item.querySelector(".nav-link");
                 if (mainLink) {
                     const href = mainLink.getAttribute("href");
                     if (href && href !== "#") {
-                        const fullPath = new URL(href, window.location.origin).pathname.toLowerCase();
-                        if (currentPath === fullPath || (fullPath === "/" && currentPath.includes("home"))) isActive = true;
+                        const fullPath = normalizePath(new URL(href, window.location.origin).pathname);
+                        if (currentPath === fullPath || (fullPath === "/" && currentPath.includes("home"))) {
+                            isActive = true;
+                        }
                     }
                 }
-
                 if (!isActive) {
                     item.querySelectorAll(".hmega").forEach(subLink => {
                         const href = subLink.getAttribute("href");
                         if (href && href !== "#") {
-                            const fullPath = new URL(href, window.location.origin).pathname.toLowerCase();
+                            const fullPath = normalizePath(new URL(href, window.location.origin).pathname);
                             if (currentPath === fullPath) isActive = true;
                         }
                     });
                 }
-
                 if (isActive) item.classList.add("active");
             });
-        });
-    </script>
 
-    <!-- SignalR ForceLogout -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script>
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chathub")
-            .build();
+            /* ------------------ SignalR ------------------ */
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chathub")
+                .withAutomaticReconnect()
+                .build();
 
-        connection.on("ForceLogout", () => {
-            alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
+            connection.on("ForceLogout", () => {
+                alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
+                window.location.href = "/Identity/Account/Login";
+            });
 
-            // Redirect ngay sang trang login
-            window.location.href = "/Identity/Account/Login";
-        });
-
-        connection.start().catch(err => console.error("SignalR connection error:", err));
-    </script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+            /* ------------------ Chat Box ------------------ */
             const chatBox = document.getElementById("chatBox");
             const chatFloatingBtn = document.getElementById("chatFloatingBtn");
             const minimizeBtn = document.getElementById("minimizeChat");
             const messagesList = document.getElementById("messagesList");
             const sendButton = document.getElementById("sendButton");
             const messageInput = document.getElementById("messageInput");
-            const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value";
+            const unreadBadge = document.getElementById("unreadBadge");
 
-            let skipCount = 0;
-            const pageSize = 50;
-            let loadingOlder = false;
-            let noMoreMessages = false;
-            let allMessages = [];
+            const imageFileInput = document.getElementById("imageFileInput");
+            const uploadImageBtn = document.getElementById("uploadImageBtn");
+            const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+            const imageModal = document.getElementById("imageViewerModal");
+            const viewerImage = document.getElementById("viewerImage");
+            const zoomInBtn = document.getElementById("zoomInBtn");
+            const zoomOutBtn = document.getElementById("zoomOutBtn");
+            const downloadBtn = document.getElementById("downloadBtn");
 
+            let scale = 1;
+            const minScale = 1;   // ảnh mặc định
+            const maxScale = 3;   // phóng to tối đa
+            let selectedImages = [];
+
+            const userId = "@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" || "";
+            let skipCount = 0, pageSize = 50, loadingOlder = false, noMoreMessages = false;
+            let allMessages = [], unreadCount = 0;
             let customerAvatars = {};
 
+            function updateBadge(count) {
+                unreadCount = count;
+                if (count > 0) {
+                    unreadBadge.innerText = count > 99 ? "99+" : String(count);
+                    unreadBadge.style.display = "inline-block";
+                } else {
+                    unreadBadge.style.display = "none";
+                }
+            }
+            async function loadUnreadCount() {
+                try {
+                    const res = await fetch("/Chat/GetUnreadCount", { cache: "no-store" });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    updateBadge(Number(data.count || 0));
+                } catch { }
+            }
+            async function markAllAsReadServer() {
+                try { await fetch("/Chat/MarkAllAsRead", { method: "POST" }); } catch { }
+            }
             function getAvatarForCustomer(customerId) {
-                if(!customerAvatars[customerId]){
-                    customerAvatars[customerId] = `/images/avatar/avatar_${Math.floor(Math.random()*5+1)}.jpg`;
+                if (!customerAvatars[customerId]) {
+                    customerAvatars[customerId] = `/images/avatar/avatar_${Math.floor(Math.random() * 5 + 1)}.jpg`;
                 }
                 return customerAvatars[customerId];
             }
 
+            function parseServerDate(raw) {
+                if (!raw) return new Date();
+                if (raw instanceof Date) return raw;
+                if (typeof raw === "number") return new Date(raw);
+                const s = String(raw);
+
+                const m = /\/Date\((-?\d+)(?:[+-]\d+)?\)\//.exec(s);
+                if (m) return new Date(Number(m[1]));
+
+
+                if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(s)) {
+                    return new Date(s + "Z");
+                }
+
+                const parsed = Date.parse(s);
+                if (!isNaN(parsed)) return new Date(parsed);
+
+                return new Date();
+            }
+
             function createMessageElement(msg) {
-                const date = new Date(msg.sentAt);
-                // Đảo vị trí: khách nằm bên phải, admin nằm bên trái
-                const isAdmin = msg.senderId === userId; // khách => admin=false, admin => admin=true
+                const date = msg.localSentAt ? new Date(msg.localSentAt) : parseServerDate(msg.sentAt);
+                const isAdmin = String(msg.senderId || "") === String(userId || "");
                 const row = document.createElement("div");
                 row.className = "message-row " + (isAdmin ? "admin" : "customer");
 
-                if(!isAdmin){ // avatar chỉ hiện khách (bên phải)
+                if (!isAdmin) {
                     const avatar = document.createElement("img");
                     avatar.className = "message-avatar";
                     avatar.src = getAvatarForCustomer(msg.senderId);
@@ -975,125 +941,752 @@
 
                 const bubble = document.createElement("div");
                 bubble.className = "message-bubble " + (isAdmin ? "admin" : "customer");
-                bubble.innerHTML = msg.message +
-                    `<div class="message-time">${date.toLocaleTimeString("vi-VN",{hour12:false,hour:'2-digit',minute:'2-digit'})}</div>`;
-                row.appendChild(bubble);
 
+                // Xử lý ảnh
+                let urls = [];
+                if (Array.isArray(msg.imageUrls)) urls = msg.imageUrls;
+                else if (typeof msg.imageUrls === "string") {
+                    try { urls = JSON.parse(msg.imageUrls); } catch { urls = []; }
+                }
+
+                if (urls.length > 0) {
+                    const maxDisplay = 12; // hiển thị tối đa (có thể tùy chỉnh)
+                    const imgContainer = document.createElement("div");
+                    imgContainer.className = "message-images";
+
+                    // tạo các ảnh, gán data-src trước, đợi load để classify type
+                    const loaders = urls.slice(0, maxDisplay).map((url, index) => {
+                        return new Promise((resolve) => {
+                            const img = document.createElement("img");
+                            img.src = url;
+                            img.dataset.serverUrl = url;
+                            img.className = "chat-image";
+                            // tạm set kích thước để tránh layout nhảy khi load chậm
+                            img.style.minWidth = "60px";
+                            img.style.minHeight = "60px";
+                            img.style.maxWidth = "100%";
+                            img.style.objectFit = "cover";
+
+                            // khi load xong, phân loại kích thước và gán data-type
+                            const tmp = new Image();
+                            tmp.onload = () => {
+                                const w = tmp.width || img.naturalWidth || 1;
+                                const h = tmp.height || img.naturalHeight || 1;
+                                const ratio = w / h;
+
+                                // phân loại:
+                                if (ratio > 1.7) img.dataset.type = "wide";   // panorama ngang
+                                else if (ratio < 0.85) img.dataset.type = "tall"; // dọc/cao
+                                else img.dataset.type = "square"; // vuông/bình thường
+
+                                resolve(img);
+                            };
+                            tmp.onerror = () => {
+                                // fallback nếu load bị lỗi
+                                img.dataset.type = "square";
+                                resolve(img);
+                            };
+                            tmp.src = url;
+
+                            // nếu load cực nhanh thì tmp.onload sẽ chạy sớm; vẫn append img sớm để tránh nhảy layout
+                            // append vào container ngay để giữ thứ tự; layoutAdjust sẽ điều chỉnh sau khi tất cả resolved
+                            imgContainer.appendChild(img);
+                        });
+                    });
+
+                    // sau khi tất cả ảnh đã ít nhất được phân loại, điều chỉnh layout
+                    Promise.all(loaders).then((imgs) => {
+                        adjustImageLayout(imgContainer, imgs);
+                    }).catch(() => {
+                        // nếu có lỗi vẫn gọi adjust dự phòng
+                        adjustImageLayout(imgContainer, Array.from(imgContainer.querySelectorAll("img")));
+                    });
+
+                    bubble.appendChild(imgContainer);
+                }
+
+                if (msg.message && msg.message.trim() !== "") {
+                    const text = document.createElement("div");
+                    text.innerHTML = msg.message;
+                    bubble.appendChild(text);
+                }
+
+                const time = document.createElement("div");
+                time.className = "message-time";
+                time.textContent = date.toLocaleTimeString("vi-VN", {
+                    hour12: false,
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+                bubble.appendChild(time);
+
+                row.appendChild(bubble);
                 return { row, date };
             }
 
-            function formatDateSeparator(date) {
-                const today = new Date();
-                const yesterday = new Date();
-                yesterday.setDate(today.getDate() - 1);
+             /* --- Hàm helper: điều chỉnh grid/layout dựa trên loại ảnh --- */
+            function adjustImageLayout(container, imgs) {
+                const total = imgs.length;
 
-                if(date.toDateString() === today.toDateString()) return "Hôm nay";
-                if(date.toDateString() === yesterday.toDateString()) return "Hôm qua";
-                return `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
-            }
+                function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+                function lcm(a, b) { return (a * b) / gcd(a, b); }
+                function lcmArray(arr) {
+                    if (!arr.length) return 1;
+                    return arr.reduce((acc, v) => lcm(acc, v), arr[0]);
+                }
 
-            function addDateSeparator(date, prepend=false) {
-                const dateText = formatDateSeparator(date);
-                const existing = Array.from(messagesList.querySelectorAll(".date-separator"))
-                    .some(s => s.innerText === dateText);
-                if(existing) return;
-
-                const separator = document.createElement("div");
-                separator.className = "date-separator";
-                separator.innerText = dateText;
-
-                if(prepend) messagesList.insertBefore(separator, messagesList.firstChild);
-                else messagesList.appendChild(separator);
-            }
-
-            function renderMessages(scrollToBottom=false){
-                messagesList.innerHTML = "";
-                allMessages.sort((a,b)=> new Date(a.sentAt) - new Date(b.sentAt));
-
-                let lastDate = null;
-                allMessages.forEach(msg => {
-                    const { row, date } = createMessageElement(msg);
-                    if(!lastDate || lastDate.toDateString() !== date.toDateString()){
-                        addDateSeparator(date);
-                        lastDate = date;
+                // === 1) Chờ ảnh load để đọc đúng kích thước ===
+                imgs.forEach(img => {
+                    if (!img.complete) {
+                        img.addEventListener("load", () => adjustImageLayout(container, imgs), { once: true });
                     }
-                    messagesList.appendChild(row);
                 });
 
-                if(scrollToBottom) messagesList.scrollTop = messagesList.scrollHeight;
-            }
+                // === 2) Auto detect type ===
+                const types = imgs.map(img => {
+                    const explicit = img.dataset?.type;
+                    if (explicit) return explicit;
+                    const w = img.naturalWidth || img.width || 0;
+                    const h = img.naturalHeight || img.height || 0;
+                    if (w > 0 && h > 0) {
+                        const ratio = w / h;
+                        if (ratio > 1.25) return "wide";
+                        if (ratio < 0.9) return "tall";
+                        return "square";
+                    }
+                    return "square";
+                });
 
-            async function loadMessages(prepend=false){
-                if(loadingOlder || noMoreMessages) return;
-                loadingOlder = true;
+                const hasWide = types.includes("wide");
+                const tallCount = types.filter(t => t === "tall").length;
 
-                const res = await fetch(`/Chat/GetChatHistory?skip=${skipCount}&take=${pageSize}`);
-                const messages = await res.json();
+                // === 3) Reset container style ===
+                Object.assign(container.style, {
+                    display: "grid",
+                    gap: "2px",
+                    gridTemplateColumns: "",
+                    gridAutoRows: "minmax(0, auto)",
+                    gridAutoFlow: "row",
+                    alignItems: "start",
+                    justifyItems: "stretch",
+                });
 
-                if(messages.length === 0){
-                    noMoreMessages = true;
-                    loadingOlder = false;
+                imgs.forEach(el => {
+                    Object.assign(el.style, {
+                        display: "block",
+                        width: "100%",
+                        height: "auto",
+                        objectFit: "cover",
+                        padding: "0",
+                        margin: "0",
+                        background: "#fff",
+                        gridColumn: "",
+                        gridRow: "",
+                        maxHeight: "",
+                    });
+                });
+
+                // === 4) Ảnh ngang (wide) ===
+                if (hasWide) {
+                    container.style.gridTemplateColumns = "repeat(2, 1fr)";
+                    imgs.forEach((imgEl, i) => {
+                        const t = types[i];
+                        if (t === "wide") {
+                            Object.assign(imgEl.style, {
+                                gridColumn: "1 / -1",
+                                maxHeight: "220px",
+                                objectFit: "contain",
+                                padding: "2px"
+                            });
+                        } else {
+                            imgEl.style.maxHeight = "150px";
+                        }
+                    });
                     return;
                 }
 
-                if(prepend) allMessages = messages.concat(allMessages);
-                else allMessages = allMessages.concat(messages);
+                // === 5) 1 ảnh duy nhất ===
+                if (total === 1) {
+                    container.style.gridTemplateColumns = "1fr";
+                    imgs[0].style.maxHeight = "300px";
+                    imgs[0].style.objectFit = "contain";
+                    return;
+                }
 
-                renderMessages(!prepend);
-                skipCount += pageSize;
-                loadingOlder = false;
+                // === 6) Tất cả đều tall ===
+                if (tallCount === total) {
+                    let layout;
+                    switch (total) {
+                        case 2: layout = [2]; break;
+                        case 3: layout = [2, 1]; break;   // ✅ fix chia 2 ảnh trên, 1 full dưới
+                        case 4: layout = [2, 2]; break;
+                        case 5: layout = [3, 2]; break;
+                        case 6: layout = [3, 3]; break;
+                        case 7: layout = [2, 2, 3]; break; // ✅ fix 7 ảnh chia 2-2-3
+                        default:
+                            const firstRow = Math.min(3, total);
+                            const rem = total - firstRow;
+                            layout = rem > 0 ? [firstRow, rem] : [firstRow];
+                    }
+
+                    const globalCols = lcmArray(layout);
+                    container.style.gridTemplateColumns = `repeat(${globalCols}, 1fr)`;
+
+                    let idx = 0;
+                    layout.forEach(colsInRow => {
+                        const span = Math.floor(globalCols / colsInRow);
+                        for (let i = 0; i < colsInRow && idx < total; i++, idx++) {
+                            const imgEl = imgs[idx];
+                            Object.assign(imgEl.style, {
+                                gridColumn: `span ${span}`,
+                                maxHeight: "160px",
+                                objectFit: "contain",
+                                padding: "2px",
+                            });
+                        }
+                    });
+
+                    // ✅ Fix riêng cho TH có 3 ảnh cao/dọc (2 trên - 1 dưới)
+                    if (total === 3) {
+                        const topImgs = [imgs[0], imgs[1]];
+                        const bottomImg = imgs[2];
+
+                        // Đặt 2 hàng tách biệt, không ép chiều cao bằng nhau
+                        container.style.gridTemplateRows = "auto auto";
+                        container.style.gridAutoRows = "unset";
+
+                        topImgs.forEach(img => {
+                            Object.assign(img.style, {
+                                maxHeight: "120px",
+                                objectFit: "contain",
+                                alignSelf: "start",
+                            });
+                        });
+
+                        Object.assign(bottomImg.style, {
+                            maxHeight: "200px",
+                            objectFit: "contain",
+                            gridColumn: "1 / -1", // full chiều ngang
+                        });
+                    }
+
+                    return;
+                }
+
+                // === 7) Ảnh vuông hoặc hỗn hợp ===
+                container.style.display = "flex";
+                container.style.flexWrap = "wrap";
+                container.style.justifyContent = "center";
+                container.style.alignContent = "flex-start";
+                container.style.gap = "3px";
+                container.style.height = "auto";
+                container.style.overflow = "hidden";
+                container.style.padding = "2px";
+
+                imgs.forEach((imgEl) => {
+                    imgEl.style.flex = "1 1 auto";
+                    imgEl.style.maxWidth = "calc(50% - 3px)";
+                    imgEl.style.height = "auto";
+                    imgEl.style.objectFit = "contain"; // không crop
+                    imgEl.style.display = "block";
+                    imgEl.style.margin = "0";
+                    imgEl.style.borderRadius = "8px";
+                    imgEl.style.background = "none";
+                    imgEl.style.verticalAlign = "top";
+                });
+
+                // Nếu chỉ có 3 ảnh → chia 2-1 bố cục tự nhiên hơn
+                if (imgs.length === 3) {
+                    imgs[0].style.maxWidth = "calc(50% - 3px)";
+                    imgs[1].style.maxWidth = "calc(50% - 3px)";
+                    imgs[2].style.maxWidth = "100%";
+                }
+
+                // === 8) Nếu lẻ, ảnh cuối full hàng ===
+                if (total % 2 === 1 && total > 1) {
+                    const last = imgs[imgs.length - 1];
+                    Object.assign(last.style, {
+                        gridColumn: "1 / -1",
+                        maxHeight: "160px",
+                    });
+                }
             }
 
-            chatFloatingBtn.addEventListener("click", ()=>{
+            function formatDateSeparator(date) {
+                const today = new Date(), yesterday = new Date();
+                yesterday.setDate(today.getDate() - 1);
+                if (date.toDateString() === today.toDateString()) return "Hôm nay";
+                if (date.toDateString() === yesterday.toDateString()) return "Hôm qua";
+                return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+            }
+            function addDateSeparator(date, prepend = false) {
+                const dateText = formatDateSeparator(date);
+                if (Array.from(messagesList.querySelectorAll(".date-separator")).some(s => s.innerText === dateText)) return;
+                const separator = document.createElement("div");
+                separator.className = "date-separator";
+                separator.innerText = dateText;
+                if (prepend) messagesList.insertBefore(separator, messagesList.firstChild);
+                else messagesList.appendChild(separator);
+            }
+
+            function scrollToBottom(element) {
+                if (!element) return;
+                // Đảm bảo ảnh load xong mới cuộn
+                const imgs = element.querySelectorAll("img");
+                if (imgs.length > 0) {
+                    let loaded = 0;
+                    imgs.forEach(img => {
+                        if (img.complete) loaded++;
+                        else img.addEventListener("load", () => {
+                            loaded++;
+                            if (loaded === imgs.length) {
+                                requestAnimationFrame(() => {
+                                    element.scrollTop = element.scrollHeight;
+                                });
+                            }
+                        });
+                    });
+                    if (loaded === imgs.length) {
+                        requestAnimationFrame(() => {
+                            element.scrollTop = element.scrollHeight;
+                        });
+                    }
+                } else {
+                    requestAnimationFrame(() => {
+                        element.scrollTop = element.scrollHeight;
+                    });
+                }
+            }
+
+            function appendMessage(msg) {
+                if (!msg.localSentAt) msg.localSentAt = msg.sentAt ? (typeof msg.sentAt === "string" ? parseServerDate(msg.sentAt) : msg.sentAt) : new Date();
+
+                // Find the date of the very last actual message in the list
+                const allRows = messagesList.querySelectorAll(".message");
+                const lastMsgElement = allRows.length > 0 ? allRows[allRows.length - 1] : null;
+
+                // Use an internal property or data attribute to store the date of the last rendered message
+                const lastDate = lastMsgElement ? lastMsgElement.dataset.localdate : null;
+                const currentDate = msg.localSentAt.toDateString();
+
+                // Only add a separator if there was a previous message AND the date is different
+                if (lastDate && lastDate !== currentDate) {
+                    const separator = document.createElement("div");
+                    separator.className = "date-separator";
+                    separator.textContent = formatDateSeparator(msg.localSentAt);
+                    messagesList.appendChild(separator);
+                }
+                // For the very first message appended (lastDate === null), no separator is added.
+
+                const { row } = createMessageElement(msg);
+                row.classList.add("message");
+                row.dataset.localdate = currentDate; // Set the date for the next comparison
+                messagesList.appendChild(row);
+
+                allMessages.push(msg);
+                scrollToBottom(messagesList);
+            }
+
+            function prependMessages(messages) {
+                if (!messages || messages.length === 0) return;
+
+                messages.sort((a, b) => a.localSentAt - b.localSentAt);
+
+                const fragment = document.createDocumentFragment();
+                let lastDate = null;
+
+                // Lấy ngày đầu tiên đã hiển thị trong danh sách tin nhắn
+                const firstVisibleMsg = messagesList.querySelector(".message");
+                if (firstVisibleMsg) {
+                    lastDate = firstVisibleMsg.dataset.localdate;
+                }
+
+                messages.forEach(msg => {
+                    if (!msg.localSentAt) {
+                        msg.localSentAt = msg.sentAt ? parseServerDate(msg.sentAt) : new Date();
+                    }
+
+                    const currentDate = msg.localSentAt.toDateString();
+
+                    // Chỉ tạo date-separator nếu currentDate khác lastDate
+                    if (lastDate !== currentDate) {
+                        const separator = document.createElement("div");
+                        separator.className = "date-separator";
+                        separator.textContent = formatDateSeparator(msg.localSentAt);
+                        fragment.appendChild(separator);
+                        lastDate = currentDate;
+                    }
+
+                    const { row } = createMessageElement(msg);
+                    row.classList.add("message");
+                    row.dataset.localdate = currentDate;
+                    fragment.appendChild(row);
+                });
+
+                const oldScrollHeight = messagesList.scrollHeight;
+                messagesList.prepend(fragment);
+                messagesList.scrollTop += messagesList.scrollHeight - oldScrollHeight;
+            }
+
+            async function loadMessages(prepend = false) {
+                if (loadingOlder || noMoreMessages) return;
+                loadingOlder = true;
+
+                try {
+                    const res = await fetch(`/Chat/GetChatHistory?skip=${skipCount}&take=${pageSize}`, { cache: "no-store" });
+                    if (!res.ok) return;
+
+                    const messages = await res.json();
+                    if (!messages || messages.length === 0) { noMoreMessages = true; return; }
+
+                    messages.forEach(m => m.localSentAt = m.sentAt ? parseServerDate(m.sentAt) : new Date());
+
+                    if (prepend) {
+                        allMessages = messages.concat(allMessages);
+                        prependMessages(messages);
+                    } else {
+                        messages.forEach(m => appendMessage(m));
+                        allMessages = allMessages.concat(messages);
+                    }
+
+                    renderImagePreviews();
+                    skipCount += pageSize;
+                } finally {
+                    loadingOlder = false;
+                }
+            }
+
+            function makeId() {
+                return Date.now().toString(36) + "-" + Math.floor(Math.random() * 100000).toString(36);
+            }
+
+            function renderImagePreviews() {
+                imagePreviewContainer.innerHTML = "";
+                if (!selectedImages.length) {
+                    imagePreviewContainer.style.display = "none";
+                    return;
+                }
+
+                imagePreviewContainer.style.display = "flex";
+                imagePreviewContainer.style.flexDirection = "row";
+                imagePreviewContainer.style.overflowX = "auto";
+                imagePreviewContainer.style.gap = "8px";
+                imagePreviewContainer.style.padding = "5px";
+
+                selectedImages.forEach(item => {
+                    const wrapper = document.createElement("div");
+                    wrapper.style.position = "relative";
+                    wrapper.style.flex = "0 0 auto";
+
+                    const img = document.createElement("img");
+                    img.src = item.url;
+                    img.style.width = "80px";
+                    img.style.height = "80px";
+                    img.style.objectFit = "cover";
+                    img.style.borderRadius = "8px";
+                    img.style.boxShadow = "0 0 4px rgba(0,0,0,0.2)";
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.type = "button";
+                    removeBtn.setAttribute("aria-label", "Xóa ảnh");
+                    removeBtn.innerText = "✖";
+                    removeBtn.style.position = "absolute";
+                    removeBtn.style.top = "2px";
+                    removeBtn.style.right = "2px";
+                    removeBtn.style.background = "rgba(0,0,0,0.6)";
+                    removeBtn.style.color = "white";
+                    removeBtn.style.border = "none";
+                    removeBtn.style.borderRadius = "50%";
+                    removeBtn.style.cursor = "pointer";
+                    removeBtn.style.fontSize = "12px";
+
+                    removeBtn.addEventListener("click", () => {
+                        const idx = selectedImages.findIndex(x => x.id === item.id);
+                        if (idx > -1) {
+                            try { if (item.isTemp && item.url.startsWith("blob:")) URL.revokeObjectURL(item.url); } catch(e){}
+                            selectedImages.splice(idx, 1);
+                            renderImagePreviews();
+                        }
+                    });
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(removeBtn);
+                    imagePreviewContainer.appendChild(wrapper);
+                });
+            }
+
+            function clearImagePreviews() {
+                selectedImages.forEach(it => { try { if (it.isTemp && it.url.startsWith("blob:")) URL.revokeObjectURL(it.url); } catch(e){} });
+                selectedImages = [];
+                imagePreviewContainer.innerHTML = "";
+                imagePreviewContainer.style.display = "none";
+                if (imageFileInput) imageFileInput.value = null;
+            }
+
+            async function uploadImage(file) {
+                const formData = new FormData();
+                formData.append("file", file);
+                const res = await fetch("/Chat/UploadImage", { method: "POST", body: formData });
+                if (!res.ok) throw new Error("Upload thất bại");
+
+                const data = await res.json();
+                if (!data || !data.imageUrl) throw new Error("Server không trả về imageUrl");
+                return { url: data.imageUrl, key: null };
+            }
+
+            function resetPosition() {
+                scale = 1;
+                viewerImage.style.transform = "translate(0,0) scale(1)";
+            }
+
+            function updateTransform() {
+                viewerImage.style.transform = `scale(${scale})`;
+            }
+
+            /* ------------------ Chat Events ------------------ */
+            chatFloatingBtn.addEventListener("click", () => {
                 chatBox.style.display = "flex";
                 chatFloatingBtn.style.display = "none";
-                allMessages = [];
-                skipCount = 0;
-                noMoreMessages = false;
-                loadMessages();
+
+                // Nếu có spinner loading, xóa đi
+                messagesList.querySelector(".loading-container")?.remove();
+
+                // Render lại tin nhắn cũ nếu có (chỉ scroll xuống)
+                if (allMessages.length > 0) {
+                    // Tin nhắn đã có sẵn → chỉ scroll xuống cuối
+                    requestAnimationFrame(() => {
+                        scrollToBottom(messagesList);
+                    });
+                } else {
+                    // Chưa có tin nhắn → hiển thị loading
+                    messagesList.innerHTML = `
+                        <div class="loading-container">
+                            <div class="loading-msg">Đang tải tin nhắn...</div>
+                        </div>
+                    `;
+                    loadMessages().then(() => {
+                        messagesList.querySelector(".loading-container")?.remove();
+                    });
+                }
             });
 
-            minimizeBtn.addEventListener("click", ()=>{
+            minimizeBtn.addEventListener("click", () => {
                 chatBox.style.display = "none";
                 chatFloatingBtn.style.display = "block";
             });
 
-            const connection = new signalR.HubConnectionBuilder().withUrl("/chathub").build();
-            connection.start();
-
-            connection.on("ReceiveMessage", (senderId, senderName, message, sentAt)=>{
-                allMessages.push({ senderId, message, sentAt });
-                renderMessages(true);
+            messageInput.addEventListener("focus", () => {
+                if (chatBox.style.display === "flex") {
+                    updateBadge(0);
+                    markAllAsReadServer().catch(()=>{});
+                }
             });
 
-            sendButton.addEventListener("click", ()=> {
+            // ✅ Nút gửi tin nhắn - luôn truyền đủ 3 tham số
+            sendButton.addEventListener("click", async () => {
                 const msg = messageInput.value.trim();
-                if(!msg) return;
 
-                // Gửi lên server, không push vào allMessages
-                connection.invoke("SendMessageToAdmin", msg);
+                const imageUrls = selectedImages
+                    .filter(x => !x.url.startsWith("blob:"))
+                    .map(x => x.url);
+
+                const imageKeys = selectedImages
+                    .filter(x => !x.url.startsWith("blob:"))
+                    .map(x => x.key || "");
+
+                if (!msg && imageUrls.length === 0) return;
+
+                try {
+                    // Note: server SignalR method signature: SendMessageToAdmin(string message, string[] imageUrls, string[] imageKeys)
+                    await connection.invoke("SendMessageToAdmin", msg, imageUrls, imageKeys);
+                } catch (err) {
+                    console.error("SignalR invoke failed", err);
+                }
+
                 messageInput.value = "";
+                clearImagePreviews();
             });
 
-
-            messageInput.addEventListener("keydown", e=>{
-                if(e.key==="Enter" && !e.shiftKey){
+            messageInput.addEventListener("keydown", e => {
+                if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     sendButton.click();
                 }
             });
 
-            messagesList.addEventListener("scroll", async ()=>{
-                if(messagesList.scrollTop === 0 && !loadingOlder && !noMoreMessages){
+            messagesList.addEventListener("scroll", async () => {
+                // use <= 5 to avoid floating point issues
+                if (messagesList.scrollTop <= 5 && !loadingOlder && !noMoreMessages) {
                     const oldHeight = messagesList.scrollHeight;
                     await loadMessages(true);
+                    // keep relative scroll position
                     messagesList.scrollTop = messagesList.scrollHeight - oldHeight;
                 }
             });
+
+            // 📋 Paste images (preview only, upload async)
+            document.addEventListener("paste", async (e) => {
+                try {
+                    const items = e.clipboardData?.items || [];
+                    const files = Array.from(items)
+                        .filter(item => item.kind === "file" && item.type.startsWith("image/"))
+                        .map(item => item.getAsFile())
+                        .filter(f => !!f);
+
+                    if (files.length === 0) return;
+
+                    for (const file of files) {
+                        const tempUrl = URL.createObjectURL(file);
+                        const tempId = makeId();
+
+                        selectedImages.push({ id: tempId, url: tempUrl, key: null });
+                        renderImagePreviews();
+
+                        uploadImage(file).then(({ url, key }) => {
+                            const img = selectedImages.find(x => x.id === tempId);
+                            if (img) {
+                                img.url = url;
+                                img.key = key;
+                            }
+                            // chỉ render lại 1 lần toàn bộ sau khi update
+                            renderImagePreviews();
+                            // KHÔNG revoke ngay – vì nếu đang dùng URL đó để preview, nó sẽ biến mất
+                            setTimeout(() => URL.revokeObjectURL(tempUrl), 3000);
+                        }).catch(err => console.error("Upload failed", err));
+                    }
+
+                } catch (err) {
+                    console.error("Paste handling error", err);
+                }
+            });
+
+            // when user selects files via input
+            uploadImageBtn.addEventListener("click", () => imageFileInput.click());
+
+            imageFileInput.addEventListener("change", async (e) => {
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
+
+                for (const file of files) {
+                    try {
+                        // show temp preview while uploading
+                        const tempUrl = URL.createObjectURL(file);
+                        const tempId = makeId();
+                        selectedImages.push({ id: tempId, url: tempUrl, key: null, isTemp: true });
+
+                        const { url, key } = await uploadImage(file);
+                        const img = selectedImages.find(x => x.id === tempId);
+                        if (img) {
+                            img.url = url;
+                            img.key = key || null;
+                            img.isTemp = false;
+                        } else {
+                            // dedupe by url
+                            if (!selectedImages.some(x => x.url === url)) {
+                                selectedImages.push({ id: makeId(), url: url, key: key || null, isTemp: false });
+                            }
+                        }
+                        // revoke object url
+                        try { URL.revokeObjectURL(tempUrl); } catch(e){}
+                    } catch (err) {
+                        console.error("Upload error", err);
+                        // optionally show toast to user
+                    }
+                }
+
+                // optionally send immediately:
+                sendButton.click();
+            });
+
+            // Khi click vào ảnh trong chat
+            document.addEventListener("click", function(e) {
+                const img = e.target.closest(".chat-image");
+                if (!img) return;
+
+                const imageUrl = img.dataset.serverUrl; // lấy URL server
+                const message = allMessages.find(m => m.imageUrls?.includes(imageUrl));
+                if (!message) return;
+
+                const senderAvatar = message.senderId ? getAvatarForCustomer(message.senderId) : "/images/avatar/default.png";
+                const senderName = message.senderName || (message.senderId === userId ? "Bạn" : "Admin");
+                const sentAt = message.localSentAt || parseServerDate(message.sentAt);
+
+                viewerImage.src = imageUrl;
+                document.getElementById("modalAvatar").src = senderAvatar;
+                document.getElementById("modalUserName").textContent = senderName;
+                document.getElementById("modalTime").textContent = `${sentAt.getHours().toString().padStart(2,'0')}:${sentAt.getMinutes().toString().padStart(2,'0')} · ${sentAt.getDate().toString().padStart(2,'0')}/${(sentAt.getMonth()+1).toString().padStart(2,'0')}/${sentAt.getFullYear()}`;
+
+                const modal = new bootstrap.Modal(imageModal);
+                modal.show();
+                resetPosition();
+            });
+
+            downloadBtn.addEventListener("click", () => {
+                if (!viewerImage.src) return;
+
+                const a = document.createElement("a");
+                a.href = viewerImage.src;
+                // Gợi ý tên file từ URL hoặc mặc định
+                const urlParts = viewerImage.src.split("/");
+                a.download = urlParts[urlParts.length - 1] || "image.jpg";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+
+            zoomInBtn.addEventListener("click", () => {
+                scale = Math.min(scale + 0.2, maxScale);
+                updateTransform();
+            });
+
+            zoomOutBtn.addEventListener("click", () => {
+                scale = Math.max(scale - 0.2, minScale);
+                if(scale === 1) resetPosition();
+                else updateTransform();
+            });
+
+            /* ------------------ SignalR ReceiveMessage ------------------ */
+            connection.on("ReceiveMessage", async (senderId, senderName, message, imageUrls, sentAt) => {
+                const sid = String(senderId || "");
+                // ensure sentAt is ISO string from server; if server passed Date object it becomes string when serialized
+                const msgTime = sentAt ? sentAt : new Date().toISOString();
+
+                if (chatBox.style.display === "flex") {
+                    allMessages.push({
+                        senderId: sid,
+                        message: message,
+                        imageUrls: imageUrls || [],
+                        sentAt: msgTime
+                    });
+
+                    appendMessage({
+                        senderId: sid,
+                        message: message,
+                        imageUrls: imageUrls || [],
+                        sentAt: msgTime
+                    });
+
+                    await markAllAsReadServer();
+                    updateBadge(0);
+                } else {
+                    if (sid !== userId) updateBadge(unreadCount + 1);
+                }
+            });
+
+            connection.start().then(() => {
+                loadUnreadCount();
+                setInterval(loadUnreadCount, 30000);
+            }).catch(() => loadUnreadCount());
+
+            window.__chatDebug = { getUnread: () => unreadCount, reloadUnread: loadUnreadCount };
         });
     </script>
 
+    <!-- 🗓️ Flatpickr (CSS + JS + locale) dùng chung cho toàn site -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

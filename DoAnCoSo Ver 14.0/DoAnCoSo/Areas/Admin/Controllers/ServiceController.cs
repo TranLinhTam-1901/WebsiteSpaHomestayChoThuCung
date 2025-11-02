@@ -1,15 +1,12 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
-using DoAnCoSo.Models;
-using System.Linq;
+﻿using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace DoAnCoSo.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = SD.Role_Admin)]
+    [Authorize(Roles = "Admin")]
     public class ServiceController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,91 +16,75 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             _context = context;
         }
 
-        // Hiển thị danh sách dịch vụ Spa
-        public IActionResult Spa()
-        {
-            var spaServices = _context.Services.Where(s => s.Name.Contains("Spa")).ToList();
-            return View(spaServices);
-        }
-
-        // Hiển thị danh sách dịch vụ Lưu trú
-        public IActionResult LuuTru()
-        {
-            var luuTruServices = _context.Services.Where(s => s.Name.Contains("Lưu trú")).ToList();
-            return View(luuTruServices);
-        }
-
         // Hiển thị các đơn đặt lịch chờ xác nhận
-        public IActionResult PendingAppointments()
+        public async Task<IActionResult> PendingAppointments()
         {
-            var pendingAppointments = _context.Appointments
+            var pendingAppointments = await _context.Appointments
                 .Include(a => a.User)
                 .Include(a => a.Pet)
                 .Include(a => a.Service)
                 .Where(a => a.Status == AppointmentStatus.Pending)
-                .ToList();
+                .OrderBy(a => a.AppointmentId) // có thể sắp xếp theo ngày đặt
+                .AsNoTracking()
+                .ToListAsync();
 
             return View(pendingAppointments);
         }
 
         // Duyệt đơn
-        public IActionResult AcceptAppointment(int id)
+        [HttpPost]
+        public async Task<IActionResult> AcceptAppointment(int id)
         {
-            var appointment = _context.Appointments.Find(id);
+            var appointment = await _context.Appointments.FindAsync(id);
             if (appointment != null)
             {
-                appointment.Status = AppointmentStatus.Confirmed;
-                _context.SaveChanges();
+                appointment.Status = AppointmentStatus.Confirmed; // hoặc Cancelled
+                await _context.SaveChangesAsync();
             }
-            return RedirectToAction("PendingAppointments");
+
+            return RedirectToAction(nameof(PendingAppointments));
         }
 
         // Hủy đơn
-        public IActionResult CancelAppointment(int id)
+        [HttpPost]
+        public async Task<IActionResult> CancelAppointment(int id)
         {
-            var appointment = _context.Appointments.Find(id);
+            var appointment = await _context.Appointments.FindAsync(id);
             if (appointment != null)
             {
-                appointment.Status = AppointmentStatus.Cancelled;
-                _context.SaveChanges();
+                appointment.Status = AppointmentStatus.Cancelled; // hoặc Confirmed
+                await _context.SaveChangesAsync();
             }
-            return RedirectToAction("PendingAppointments");
+
+            return RedirectToAction(nameof(PendingAppointments));
         }
 
-        //Xem lịch sử đặt lịch
-        public IActionResult AppointmentHistory()
+        // Xem lịch sử đặt lịch (không còn Pending)
+        public async Task<IActionResult> AppointmentHistory()
         {
-            var history = _context.Appointments
+            var history = await _context.Appointments
                 .Include(a => a.User)
                 .Include(a => a.Pet)
                 .Include(a => a.Service)
-                .Where(a => a.Status != AppointmentStatus.Pending)
-                .ToList();
+                .OrderByDescending(a => a.AppointmentId)
+                .AsNoTracking()
+                .ToListAsync();
+
             return View(history);
         }
 
-        public async Task<IActionResult> AppointmentDetails(int id) // 'id' nhận giá trị từ asp-route-id="@item.AppointmentId"
+        // Xem chi tiết một lịch đặt
+        public async Task<IActionResult> AppointmentDetails(int id)
         {
-            // *** Nên kiểm tra Admin đã đăng nhập và có quyền không ở đây nếu Controller không có [Authorize] chung ***
-            if (!User.Identity.IsAuthenticated || !User.IsInRole("Admin")) { return Forbid(); }
-
-            // Tìm lịch đặt theo ID và NẠP các thông tin liên quan
             var appointment = await _context.Appointments
+                .Include(a => a.User)
                 .Include(a => a.Pet)
                 .Include(a => a.Service)
-
-                .Include(a => a.User)
-
-
                 .FirstOrDefaultAsync(a => a.AppointmentId == id);
 
-
             if (appointment == null)
-            {
-                return NotFound(); // Trả về lỗi 404 nếu không tìm thấy
-            }
+                return NotFound();
 
-            // Trả về View AppointmentDetails và truyền đối tượng appointment với dữ liệu đã nạp
             return View(appointment);
         }
     }

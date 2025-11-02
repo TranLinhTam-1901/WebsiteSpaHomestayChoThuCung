@@ -1,0 +1,109 @@
+﻿@model DoAnCoSo.Models.Pet
+
+@{
+    ViewData["Title"] = "📋 Chi tiết thú cưng";
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <!-- Ảnh thú cưng -->
+        <div class="text-center mb-4">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="Ảnh thú cưng"
+                     class="rounded-circle shadow-sm"
+                     style="width:150px;height:150px;object-fit:cover;border:4px solid #FFB6C1;" />
+            }
+            else
+            {
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
+                     style="width:150px;height:150px;background-color:#FFF0F5;border:4px solid #FFB6C1;">
+                    <i class="fas fa-paw fa-3x" style="color:#FF6185;"></i>
+                </div>
+            }
+        </div>
+
+        <!-- Thông tin chủ sở hữu -->
+        <h5><span class="section-icon">👤</span> Thông tin chủ sở hữu</h5>
+        @if (Model.User != null)
+        {
+            <div class="row">
+                <div class="col-md-6 mb-3"><strong>Họ và tên:</strong> @(string.IsNullOrWhiteSpace(Model.User.FullName) ? "Chưa có" : Model.User.FullName)</div>
+                <div class="col-md-6 mb-3"><strong>Email:</strong> @(string.IsNullOrWhiteSpace(Model.User.Email) ? "Chưa có" : Model.User.Email)</div>
+                <div class="col-md-6"><strong>Số điện thoại:</strong> @(string.IsNullOrWhiteSpace(Model.User.PhoneNumber) ? "Chưa có" : Model.User.PhoneNumber)</div>
+                <div class="col-md-6"><strong>Địa chỉ:</strong> @(string.IsNullOrWhiteSpace(Model.User.Address) ? "Chưa có" : Model.User.Address)</div>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">❌ Thú cưng này chưa được gán cho người sở hữu nào.</p>
+        }
+
+        <!-- Thông tin cơ bản -->
+        <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3"><strong>Tên thú cưng:</strong> @(string.IsNullOrWhiteSpace(Model.Name) ? "Chưa có" : Model.Name)</div>
+            <div class="col-md-6 mb-3"><strong>Loại:</strong> @(string.IsNullOrWhiteSpace(Model.Type) ? "Chưa có" : Model.Type)</div>
+            <div class="col-md-6 mb-3"><strong>Giống:</strong> @(string.IsNullOrWhiteSpace(Model.Breed) ? "Chưa có" : Model.Breed)</div>
+            <div class="col-md-6 mb-3">
+                <strong>Giới tính:</strong> @(
+                Model.Gender == "Male" ? "Đực" :
+                Model.Gender == "Female" ? "Cái" :
+                "Chưa có"
+                                )
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Tuổi:</strong>
+                @(
+                                Model.Age.HasValue
+                                ? (Model.Age == 0 ? "< 1 tuổi" : Model.Age + " tuổi")
+                                : "Chưa có"
+                                )
+            </div>
+            <div class="col-md-6 mb-3"><strong>Ngày sinh:</strong> @(Model.DateOfBirth.HasValue? Model.DateOfBirth.Value.ToString("dd/MM/yyyy") : "Chưa có")</div>
+            <div class="col-md-6"><strong>Màu sắc:</strong> @(string.IsNullOrWhiteSpace(Model.Color) ? "Chưa có" : Model.Color)</div>
+            <div class="col-md-6"><strong>Dấu hiệu nhận dạng:</strong> @(string.IsNullOrWhiteSpace(Model.DistinguishingMarks) ? "Chưa có" : Model.DistinguishingMarks)</div>
+        </div>
+
+        <!-- Thông tin thể chất -->
+        <h5><span class="section-icon">⚖️</span> Thông tin thể chất</h5>
+        <div class="row">
+            <div class="col-md-6"><strong>Cân nặng:</strong> @(Model.Weight.HasValue? Model.Weight + " kg" : "Chưa có")</div>
+            <div class="col-md-6"><strong>Chiều cao:</strong> @(Model.Height.HasValue? Model.Height + " cm" : "Chưa có")</div>
+        </div>
+
+        <!-- Thông tin sức khỏe -->
+        <h5><span class="section-icon">🩺</span> Thông tin sức khỏe</h5>
+        <p><strong>Hồ sơ tiêm phòng:</strong> @(string.IsNullOrWhiteSpace(Model.VaccinationRecords) ? "Chưa có" : Model.VaccinationRecords)</p>
+        <p><strong>Tiền sử bệnh:</strong> @(string.IsNullOrWhiteSpace(Model.MedicalHistory) ? "Không có" : Model.MedicalHistory)</p>
+        <p><strong>Dị ứng:</strong> @(string.IsNullOrWhiteSpace(Model.Allergies) ? "Không có" : Model.Allergies)</p>
+        <p><strong>Chế độ ăn:</strong> @(string.IsNullOrWhiteSpace(Model.DietPreferences) ? "Không có" : Model.DietPreferences)</p>
+        <p><strong>Ghi chú sức khỏe:</strong> @(string.IsNullOrWhiteSpace(Model.HealthNotes) ? "Không có" : Model.HealthNotes)</p>
+
+        <!-- Phân tích AI (nếu có) -->
+        @if (!string.IsNullOrWhiteSpace(Model.AI_AnalysisResult))
+        {
+            <h5><span class="section-icon">🤖</span> Kết quả phân tích AI</h5>
+            <div class="alert alert-info">
+                @Model.AI_AnalysisResult
+            </div>
+        }
+        else
+        {
+            <h5><span class="section-icon">🤖</span> Kết quả phân tích AI</h5>
+            <div class="alert alert-info">
+                <p>Chưa được phân tích</p>
+            </div>
+        }
+
+        <!-- Nút thao tác -->
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Index" class="btn btn-secondary">⬅️ Quay lại</a>
+            <a asp-action="Update" asp-route-id="@Model.PetId" class="btn btn-warning">🛠️ Sửa</a>
+        </div>
+    </div>
+</div>

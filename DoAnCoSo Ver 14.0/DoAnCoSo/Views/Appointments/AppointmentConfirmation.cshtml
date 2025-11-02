@@ -1,14 +1,67 @@
 ﻿@{
-    ViewData["Title"] = "Xác nhận đặt lịch";
+    ViewData["Title"] = "🎉 Xác nhận đặt lịch";
 }
+
+<style>
+    .confirmation-card {
+        border-radius: 20px;
+        background: #fff;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 8px 20px rgba(255, 182, 193, 0.4);
+        padding: 30px;
+        max-width: 750px;
+    }
+
+    .confirmation-title {
+        font-weight: bold;
+        color: #FF6185;
+        font-size: 1.8rem;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .confirmation-message {
+        font-size: 1.1rem;
+        color: #444;
+        line-height: 1.6;
+    }
+
+        .confirmation-message strong {
+            color: #FF6185;
+        }
+
+    .btn-confirm-back {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        padding: 12px 24px;
+        border-radius: 12px;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-confirm-back:hover {
+            background-color: #e75478;
+        }
+</style>
+
 <div class="container py-5">
-<div class="container mt-5">
-    <div class="alert alert-success" role="alert">
-        <h4 class="alert-heading">Đặt lịch thành công!</h4>
-        <p>Cảm ơn bạn đã đặt lịch dịch vụ Spa cho thú cưng của mình. Chúng tôi sẽ liên hệ với bạn để xác nhận chi tiết.</p>
-        <hr>
-        <p class="mb-0">Bạn có thể xem lại lịch sử đặt lịch của mình trong tài khoản cá nhân.</p>
+    <div class="confirmation-card mx-auto">
+        <h2 class="confirmation-title">@ViewData["Title"]</h2>
+
+        <div class="alert alert-success border-0">
+            <h4 class="alert-heading">✅ Đặt lịch thành công!</h4>
+            <p class="confirmation-message">
+                Cảm ơn bạn đã đặt lịch dịch vụ <strong>Spa</strong> cho thú cưng của mình. Chúng tôi sẽ liên hệ với bạn để xác nhận chi tiết.
+            </p>
+            <hr>
+            <p class="confirmation-message mb-0">
+                Bạn có thể xem lại lịch sử đặt lịch của mình trong <strong>lịch sử đặt lịch</strong>.
+            </p>
+        </div>
+
+        <div class="text-center mt-4">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-confirm-back">🏠 Quay lại trang chủ</a>
+        </div>
     </div>
-    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Quay lại trang chủ</a>
-</div>
 </div>

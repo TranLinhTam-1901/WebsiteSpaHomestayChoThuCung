@@ -1,14 +1,10 @@
-﻿using Azure.Core;
-using DoAnCoSo.Extensions;
-using DoAnCoSo.Models;
+﻿using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
+using DoAnCoSo.Services;
 using DoAnCoSo.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System; // Thêm using này cho DateTime
-
 
 namespace DoAnCoSo.Controllers
 {
@@ -18,12 +14,18 @@ namespace DoAnCoSo.Controllers
         private readonly IProductRepository _productRepository;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly EmailService _emailService;
 
-        public ShoppingCartController(IProductRepository productRepository, UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+
+        public ShoppingCartController(IProductRepository productRepository,
+                                      UserManager<ApplicationUser> userManager,
+                                      ApplicationDbContext context,
+                                      EmailService emailService)
         {
             _productRepository = productRepository;
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // Helper method để lấy sản phẩm từ database (giữ nguyên)
@@ -98,7 +100,7 @@ namespace DoAnCoSo.Controllers
 
             // Tìm kiếm mục giỏ hàng của người dùng cho sản phẩm này trong DB
             var existingCartItem = await _context.CartItems
-                                                 .FirstOrDefaultAsync(ci => ci.UserId == userId 
+                                                 .FirstOrDefaultAsync(ci => ci.UserId == userId
                                                  && ci.ProductId == productId
                                                  && ci.SelectedFlavor == flavor);
 
@@ -115,7 +117,7 @@ namespace DoAnCoSo.Controllers
                     UserId = userId,
                     ProductId = productId,
                     Quantity = quantity,
-                    SelectedFlavor = flavor ??"",
+                    SelectedFlavor = flavor ?? "",
                     DateCreated = DateTime.UtcNow // Gán thời gian tạo
                 };
                 _context.CartItems.Add(newCartItem);
@@ -124,11 +126,10 @@ namespace DoAnCoSo.Controllers
             // Lưu thay đổi vào database
             await _context.SaveChangesAsync();
 
-          
+
             return RedirectToAction("Index");
         }
 
-        
         [HttpPost]
         public async Task<IActionResult> BuyNow(int productId, int quantity = 1)
         {
@@ -142,15 +143,15 @@ namespace DoAnCoSo.Controllers
             {
                 return NotFound("Product not found");
             }
-          
+
             return RedirectToAction("Checkout", new { isBuyNow = true, buyNowProductId = productId, buyNowQuantity = quantity });
 
         }
 
         [HttpPost]
-        public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request) 
+        public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request)
         {
-            
+
             Console.WriteLine($"RemoveFromCart called for CartItemId: {request.CartItemId}");
 
             var userId = _userManager.GetUserId(User);
@@ -160,7 +161,7 @@ namespace DoAnCoSo.Controllers
                 Console.WriteLine("Lỗi: Không tìm thấy User ID. Người dùng có thể chưa đăng nhập.");
                 return Json(new { success = false, message = "Bạn cần đăng nhập để xóa sản phẩm khỏi giỏ hàng." });
             }
-            Console.WriteLine($"User ID: {userId}"); 
+            Console.WriteLine($"User ID: {userId}");
 
             var itemToRemove = await _context.CartItems
                                              .FirstOrDefaultAsync(ci => ci.Id == request.CartItemId && ci.UserId == userId); // SỬ DỤNG request.CartItemId
@@ -198,10 +199,7 @@ namespace DoAnCoSo.Controllers
             }
         }
 
-
-
         // Trong ShoppingCartController.cs
-
         [HttpGet]
         public async Task<IActionResult> Checkout(
             [FromQuery] List<int> selectedCartItemIds, // Dành cho giỏ hàng có tích chọn
@@ -282,9 +280,9 @@ namespace DoAnCoSo.Controllers
                 BuyNowQuantity = isBuyNowFlow ? buyNowQuantity : null,
                 BuyNowFlavor = isBuyNowFlow ? buyNowFlavor : null,
 
-              
+
                 SelectedCartItemIds = itemsToProcess.Where(ci => ci.Id != 0).Select(ci => ci.Id).ToList()
-               
+
             };
             viewModel.Order = new Order
             {
@@ -296,7 +294,6 @@ namespace DoAnCoSo.Controllers
         }
 
         // Trong ShoppingCartController.cs
-
         [HttpPost]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
@@ -309,24 +306,24 @@ namespace DoAnCoSo.Controllers
 
             List<CartItem> itemsForOrder = new List<CartItem>();
 
+            // --- Lấy sản phẩm ---
             if (model.IsBuyNowCheckout)
             {
                 if (model.BuyNowProductId.HasValue && model.BuyNowQuantity.HasValue && model.BuyNowQuantity.Value > 0)
                 {
                     var product = await GetProductFromDatabase(model.BuyNowProductId.Value);
-
                     if (product != null)
                     {
-                        var buyNowItem = new CartItem
+                        itemsForOrder.Add(new CartItem
                         {
                             ProductId = model.BuyNowProductId.Value,
                             Quantity = model.BuyNowQuantity.Value,
                             Product = product,
                             SelectedFlavor = model.BuyNowFlavor ?? ""
-                        };
-                        itemsForOrder.Add(buyNowItem);
+                        });
                     }
                 }
+
                 if (!itemsForOrder.Any())
                 {
                     TempData["ErrorMessage"] = "Không tìm thấy sản phẩm 'Mua ngay' hợp lệ để thanh toán.";
@@ -342,41 +339,170 @@ namespace DoAnCoSo.Controllers
                 }
 
                 itemsForOrder = await _context.CartItems
-                                               .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
-                                               .Include(ci => ci.Product)
-                                               .ToListAsync();
+                    .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
+                    .Include(ci => ci.Product)
+                    .ToListAsync();
 
-                if (itemsForOrder == null || !itemsForOrder.Any())
+                if (!itemsForOrder.Any())
                 {
                     TempData["ErrorMessage"] = "Không tìm thấy sản phẩm hợp lệ nào trong giỏ hàng đã chọn.";
                     return RedirectToAction("Index");
                 }
             }
 
+            // --- Tạo Order ---
             var order = model.Order;
             order.UserId = userId;
             order.OrderDate = DateTime.UtcNow;
             order.Status = OrderStatusEnum.ChoXacNhan;
-
             order.OrderDetails = new List<OrderDetail>();
-            decimal total = 0;
+            order.PaymentMethod = model.Order.PaymentMethod;
 
+            decimal total = 0;
+            // 🟩 [THÊM MỚI] Ghi nhận giá gốc và giá sau giảm cho từng sản phẩm
             foreach (var item in itemsForOrder)
             {
                 if (item.Product != null)
                 {
+                    var basePrice = item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0
+                        ? (decimal)item.Product.PriceReduced.Value
+                        : item.Product.Price;
+
                     var orderDetail = new OrderDetail
                     {
                         ProductId = item.ProductId,
                         Quantity = item.Quantity,
-                        Price = item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? (decimal)item.Product.PriceReduced.Value : item.Product.Price,
                         SelectedFlavor = item.SelectedFlavor ?? "",
+
+                        // 🟩 Ghi nhận giá tại thời điểm đặt hàng
+                        OriginalPrice = basePrice,         // giá gốc
+                        DiscountedPrice = basePrice,       // ban đầu bằng giá gốc
+                        Price = basePrice                  // giữ để tương thích với hệ thống hiện tại
                     };
+
                     order.OrderDetails.Add(orderDetail);
-                    total += orderDetail.Price * orderDetail.Quantity;
+                    total += basePrice * item.Quantity;
                 }
             }
             order.TotalPrice = total;
+            _context.Orders.Add(order);
+            // --- Áp dụng khuyến mãi nếu người dùng nhập mã ---
+            if (!string.IsNullOrEmpty(model.PromoCode))
+            {
+                string code = model.PromoCode.Trim().ToUpper();
+
+                var promo = await _context.Promotions
+                    .FirstOrDefaultAsync(p =>
+                        p.Code.ToUpper() == code &&
+                        p.IsActive &&
+                        p.StartDate <= DateTime.Now &&
+                        p.EndDate >= DateTime.Now);
+
+                if (promo != null)
+                {
+                    if (promo.IsPrivate)
+                    {
+                        bool allowed = await _context.UserPromotions
+                            .AnyAsync(up => up.UserId == user.Id && up.PromotionId == promo.Id);
+
+                        if (!allowed)
+                        {
+                            TempData["ErrorMessage"] = "❌ Mã này không dành cho tài khoản của bạn.";
+                            promo = null;
+                        }
+                    }
+                    // ✅ Kiểm tra số lượt dùng
+                    int usedCount = await _context.OrderPromotions.CountAsync(op => op.PromotionId == promo.Id);
+                    if (promo.MaxUsage.HasValue && usedCount >= promo.MaxUsage.Value)
+                    {
+                        TempData["ErrorMessage"] = "Mã khuyến mãi đã hết lượt sử dụng.";
+                        promo = null;
+                    }
+
+                    // 🧩 ĐÃ THÊM: Kiểm tra số lần user đã dùng mã
+                    if (promo != null && promo.MaxUsagePerUser.HasValue)
+                    {
+                        int userUsedCount = await _context.OrderPromotions
+                            .CountAsync(op => op.PromotionId == promo.Id && op.Order.UserId == user.Id);
+
+                        if (userUsedCount >= promo.MaxUsagePerUser.Value)
+                        {
+                            TempData["ErrorMessage"] = "Bạn đã sử dụng mã này tối đa số lần cho phép.";
+                            promo = null;
+                        }
+                    }
+                    // ✅ Kiểm tra điều kiện tối thiểu
+                    if (promo != null)
+                    {
+                        if (promo.MinOrderValue.HasValue && total < promo.MinOrderValue.Value)
+                        {
+                            TempData["ErrorMessage"] = $"Đơn hàng chưa đạt giá trị tối thiểu ({promo.MinOrderValue:N0}đ) để sử dụng mã này.";
+                        }
+                        else
+                        {
+                            // ✅ Tính số tiền giảm
+                            decimal discountAmount = promo.IsPercent
+                                ? total * (promo.Discount / 100)
+                                : promo.Discount;
+
+                            // Không cho âm
+                            if (discountAmount > total)
+                                discountAmount = total;
+
+                            order.TotalPrice = total - discountAmount;
+                            Console.WriteLine($"✅ Tổng sau giảm: {order.TotalPrice} (Giảm {discountAmount})");
+
+                            // 🟩 THÊM MỚI: Phân bổ giảm giá đều cho từng sản phẩm
+                            if (discountAmount > 0 && order.OrderDetails.Any())
+                            {
+                                decimal totalBeforeDiscount = total;
+
+                                foreach (var detail in order.OrderDetails)
+                                {
+                                    decimal proportion = (detail.OriginalPrice * detail.Quantity) / totalBeforeDiscount;
+                                    decimal lineDiscount = discountAmount * proportion;
+                                    decimal discountPerUnit = lineDiscount / detail.Quantity;
+
+                                    // 🟩 Cập nhật giá giảm cho từng dòng sản phẩm
+                                    detail.DiscountedPrice = Math.Round(detail.OriginalPrice - discountPerUnit, 2);
+                                    detail.Price = detail.DiscountedPrice; // đồng bộ giá hiển thị cũ
+                                }
+                            } 
+
+                            // ✅ Ghi nhận việc dùng mã
+                            var orderPromo = new OrderPromotion
+                            {
+                                PromotionId = promo.Id,
+                                Order = order,
+                                CodeUsed = promo.Code,
+                                DiscountApplied = discountAmount,
+                                UsedAt = DateTime.Now
+                            };
+
+                            _context.OrderPromotions.Add(orderPromo);
+                            // Đánh dấu mã đã dùng trong UserPromotion (nếu tồn tại)
+                            var userPromo = await _context.UserPromotions
+                                .FirstOrDefaultAsync(up => up.UserId == user.Id && up.PromotionId == promo.Id);
+
+                            if (userPromo != null)
+                            {
+                                userPromo.IsUsed = true;
+                                userPromo.UsedAt = DateTime.Now;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Mã khuyến mãi không hợp lệ hoặc đã hết hạn.";
+                }
+            }
+            else
+            {
+                // Không có mã khuyến mãi → tổng tiền là tổng gốc
+                order.TotalPrice = total;
+            }      
+
 
             if (!order.OrderDetails.Any())
             {
@@ -384,16 +510,76 @@ namespace DoAnCoSo.Controllers
                 return RedirectToAction("Index");
             }
 
+            if(order.PaymentMethod == "BankTransfer")
+            {
+                await _context.SaveChangesAsync();
+                return RedirectToAction(
+                    actionName: "Payment",
+                    controllerName: "BankTransfer",
+                    routeValues: new { orderId = order.Id }
+                );
+            }
+
             try
             {
-                _context.Orders.Add(order);
+                //order.TotalPrice = total;
+
+                // 1. Lưu đơn hàng
+                //_context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // 🟧 CHỈNH SỬA: Cập nhật email hiển thị thêm giá gốc & giá sau giảm
+                try
+                {
+                    var customerEmail = user.Email;
+                    var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+                    var vnDate = TimeZoneInfo.ConvertTimeFromUtc(order.OrderDate.ToUniversalTime(), vnTimeZone);
+
+                    string body = $@"
+            <h2>🎉 Cảm ơn {user.FullName} đã đặt hàng tại PawHouse!</h2>
+            <p><b>Mã đơn:</b> {order.Id}</p>
+            <p><b>Ngày đặt:</b> {vnDate:dd/MM/yyyy HH:mm}</p>
+            <p><b>Chi tiết đơn hàng:</b></p>
+            <table border='1' cellpadding='5' cellspacing='0'>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Giá gốc</th>           <!-- 🟩 THÊM MỚI -->
+                    <th>Giá sau giảm</th>      <!-- 🟩 THÊM MỚI -->
+                    <th>Thành tiền</th>
+                </tr>";
+
+                    foreach (var detail in order.OrderDetails)
+                    {
+                        var product = await _context.Products.FindAsync(detail.ProductId);
+                        body += $@"
+                <tr>
+                    <td>{product?.Name}</td>
+                    <td>{detail.Quantity}</td>
+                    <td>{detail.OriginalPrice:N0}đ</td>   <!-- 🟩 THÊM MỚI -->
+                    <td>{detail.DiscountedPrice:N0}đ</td> <!-- 🟩 THÊM MỚI -->
+                    <td>{(detail.DiscountedPrice * detail.Quantity):N0}đ</td>
+                </tr>";
+                    }
+
+                    body += $@"
+            </table>
+            <p><b>Tổng cộng:</b> {order.TotalPrice:N0}đ</p>
+            <p>Chúng tôi sẽ liên hệ để xác nhận đơn hàng trong thời gian sớm nhất.</p>";
+
+                    await _emailService.SendEmailAsync(customerEmail, "Đặt thành công đơn hàng #" + order.Id, body);
+                }
+                catch (Exception exMail)
+                {
+                    Console.WriteLine($"⚠️ Lỗi gửi mail: {exMail.Message}");
+                }
+
+                // 3. Xóa sản phẩm trong giỏ hàng nếu không phải "Mua ngay"
                 if (!model.IsBuyNowCheckout)
                 {
                     var cartItemsToRemove = await _context.CartItems
-                                                          .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
-                                                          .ToListAsync();
+                        .Where(ci => model.SelectedCartItemIds.Contains(ci.Id) && ci.UserId == userId)
+                        .ToListAsync();
 
                     if (cartItemsToRemove.Any())
                     {
@@ -402,20 +588,13 @@ namespace DoAnCoSo.Controllers
                     }
                 }
 
+                // 4. Trả về trang hoàn tất
                 return View("OrderCompleted", order);
-            }
-            catch (DbUpdateException ex)
-            {
-                Console.WriteLine($"DbUpdateException error: {ex.Message}");
-                Console.WriteLine($"Inner Exception: {ex.InnerException?.Message}");
-                ModelState.AddModelError("", "Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.");
-                await LoadCheckoutViewModelForError(model, userId);
-                return View("Checkout", model);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi khi xử lý đơn hàng: {ex.Message}");
-                ModelState.AddModelError("", "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
+                Console.WriteLine($"❌ Lỗi khi xử lý đơn hàng: {ex.Message}");
+                ModelState.AddModelError("", "Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.");
                 await LoadCheckoutViewModelForError(model, userId);
                 return View("Checkout", model);
             }
@@ -460,7 +639,6 @@ namespace DoAnCoSo.Controllers
             }
         }
 
-
         [HttpPost]
         public async Task<IActionResult> UpdateQuantity([FromBody] UpdateQuantityRequest request)
         {
@@ -494,7 +672,7 @@ namespace DoAnCoSo.Controllers
 
             // Tìm mục giỏ hàng chính xác bằng CartItem.Id và UserId
             var cartItem = await _context.CartItems
-                                         .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.UserId == userId); // <--- Dòng đã sửa: Tìm theo CartItem.Id
+                                         .FirstOrDefaultAsync(ci => ci.Id == cartItemId && ci.UserId == userId); 
 
             if (cartItem == null)
             {
@@ -553,6 +731,173 @@ namespace DoAnCoSo.Controllers
             {
                 return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi server: " + ex.Message });
             }
+
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetValidPromos(decimal cartTotal)
+        {
+            var now = DateTime.Now;
+            var user = await _userManager.GetUserAsync(User);
+            var userId = user?.Id;
+
+            // Lấy id các promo đã gán riêng cho user (nếu có)
+            var assignedIds = userId == null
+                ? new List<int>()
+                : await _context.UserPromotions
+                    .Where(up => up.UserId == userId)
+                    .Select(up => up.PromotionId)
+                    .ToListAsync();
+
+            // Lấy các mã public, còn hạn, còn hiệu lực
+            var promos = await _context.Promotions
+                .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
+                .ToListAsync();
+
+            // Lọc theo giá trị tối thiểu, lượt dùng, v.v.
+            var validPromos = new List<object>();
+            foreach (var p in promos)
+            {
+                if (p.IsPrivate)
+                {
+                    if (user == null)
+                        continue;
+
+                    bool allowed = await _context.UserPromotions
+                        .AnyAsync(up => up.UserId == user.Id && up.PromotionId == p.Id);
+
+                    if (!allowed)
+                        continue;
+                }
+
+                if (p.MinOrderValue.HasValue && cartTotal < p.MinOrderValue.Value)
+                    continue;
+
+                if (p.MaxUsage.HasValue)
+                {
+                    int used = await _context.OrderPromotions.CountAsync(op => op.PromotionId == p.Id);
+                    if (used >= p.MaxUsage.Value)
+                        continue;
+                }
+                bool isUsed = false;
+                if (user != null && p.MaxUsagePerUser.HasValue)
+                {
+                    int userUsedCount = await _context.OrderPromotions
+                        .CountAsync(op => op.PromotionId == p.Id && op.Order.UserId == user.Id);
+                    isUsed = userUsedCount >= p.MaxUsagePerUser.Value;
+                }
+                validPromos.Add(new
+                {
+                    p.Id,
+                    p.Code,
+                    p.Title,
+                    p.Discount,
+                    p.IsPercent,
+                    p.EndDate,
+                    p.MinOrderValue,
+                    Description = p.ShortDescription ?? "",
+                    IsUsedByUser = isUsed // đanh dấu đã dùng bởi user
+                });      
+            }
+            //validPromos = validPromos
+            //.GroupBy(p => (string)p.Code)
+            //.Select(g => g.First())
+            //.ToList();
+
+            return Json(validPromos);
+        }
+        [HttpPost]
+        public async Task<IActionResult> ValidatePromo([FromBody] PromoCheckRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Code))
+                return Json(new { success = false, message = "⚠️ Vui lòng nhập mã khuyến mãi." });
+
+            var code = request.Code.Trim().ToUpper();
+            var total = request.CartTotal;
+            var now = DateTime.Now;
+
+            var promo = await _context.Promotions
+                .FirstOrDefaultAsync(p => p.Code.ToUpper() == code
+                                          && p.IsActive
+                                          && p.StartDate <= now
+                                          && p.EndDate >= now);
+
+            if (promo == null)
+                return Json(new { success = false, message = "❌ Mã khuyến mãi không hợp lệ hoặc đã hết hạn." });
+
+            // 🧩 Nếu mã là riêng tư → kiểm tra quyền sử dụng
+            var user = await _userManager.GetUserAsync(User);
+            if (promo.IsPrivate)
+            {
+                if (user == null)
+                    return Json(new { success = false, message = "❌ Bạn cần đăng nhập để sử dụng mã này." });
+
+                bool allowed = await _context.UserPromotions
+                    .AnyAsync(up => up.UserId == user.Id && up.PromotionId == promo.Id);
+
+                if (!allowed)
+                    return Json(new { success = false, message = "❌ Mã này không dành cho tài khoản của bạn." });
+            }
+
+            if (promo.MinOrderValue.HasValue && total < promo.MinOrderValue.Value)
+                return Json(new { success = false, message = $"⚠️ Đơn hàng chưa đạt {promo.MinOrderValue.Value:N0}đ để sử dụng mã này." });
+
+            if (promo.MaxUsage.HasValue)
+            {
+                var used = await _context.OrderPromotions.CountAsync(op => op.PromotionId == promo.Id);
+                if (used >= promo.MaxUsage.Value)
+                    return Json(new { success = false, message = "❌ Mã đã hết lượt sử dụng." });
+            }
+
+            // 🧩 ĐÃ THÊM: Kiểm tra số lần user này đã sử dụng mã
+            //var user = await _userManager.GetUserAsync(User);
+            if (user != null && promo.MaxUsagePerUser.HasValue)
+            {
+                int userUsedCount = await _context.OrderPromotions
+                    .CountAsync(op => op.PromotionId == promo.Id && op.Order.UserId == user.Id);
+
+                if (userUsedCount >= promo.MaxUsagePerUser.Value)
+                {
+                    return Json(new { success = false, message = "❌ Bạn đã sử dụng mã này tối đa số lần cho phép." });
+                }
+            }
+
+            decimal discount = promo.IsPercent ? total * (promo.Discount / 100) : promo.Discount;
+            if (discount > total) discount = total;
+
+            var discountLabel = promo.IsPercent ? $"{promo.Discount}%" : $"{promo.Discount:N0}đ";
+
+            // 🟩 Phân biệt cách hiển thị message
+            string message = promo.IsPercent
+                ? $"✅ Áp dụng thành công! Giảm {discount:N0}đ ({discountLabel})."
+                : $"✅ Áp dụng thành công! Giảm {discount:N0}đ.";
+
+            return Json(new
+            {
+                success = true,
+                message,
+                discount
+            });
+        }
+        //test
+        //[HttpGet]
+        //public IActionResult BankTransferPayment(int orderId, decimal amount)
+        //{
+        //    if (orderId <= 0 || amount <= 0)
+        //    {
+        //        return RedirectToAction("Index", "ShoppingCart");
+        //    }
+
+        //    ViewData["OrderId"] = orderId;
+        //    ViewData["Amount"] = amount;
+
+        //    string qrText = $"Thanh toán đơn #{orderId} - Số tiền: {amount}";
+
+        //    ViewBag.QRImageUrl =
+        //        $"https://img.vietqr.io/image/MBBank-0123456789-compact.png?amount={amount}&addInfo=ORDER{orderId}";
+
+        //    return View();
+        //}
+
     }
 }
