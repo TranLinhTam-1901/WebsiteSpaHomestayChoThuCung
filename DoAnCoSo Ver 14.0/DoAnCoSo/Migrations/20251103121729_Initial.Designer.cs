@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DoAnCoSo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251101165335_Initial1")]
-    partial class Initial1
+    [Migration("20251103121729_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
