@@ -211,6 +211,105 @@ namespace DoAnCoSo.Controllers
             return View(model);
         }
 
+        // --- VET (Thú y) ---
+        public async Task<IActionResult> BookAppointmentVet()
+        {
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var userId = _userManager.GetUserId(User);
+            var user = await _userManager.FindByIdAsync(userId);
+
+            var model = new VetBookingViewModel
+            {
+                AppointmentDate = DateTime.Now,
+                OwnerPhoneNumber = user?.PhoneNumber
+            };
+
+            ViewBag.VetServices = _context.Services
+                .Where(s => s.Category == ServiceCategory.Vet)
+                .ToList();
+
+            model.UserPets = _context.Pets
+                .Where(p => p.UserId == userId)
+                .ToList();
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BookAppointmentVet(VetBookingViewModel model)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var userId = _userManager.GetUserId(User);
+            var user = await _userManager.FindByIdAsync(userId);
+            model.OwnerPhoneNumber = user?.PhoneNumber;
+
+            var selectedService = await _context.Services
+                .FirstOrDefaultAsync(s => s.ServiceId == model.ServiceId && s.Category == ServiceCategory.Vet);
+
+            if (selectedService == null)
+            {
+                ModelState.AddModelError("", "Dịch vụ không hợp lệ.");
+                ViewBag.VetServices = _context.Services.Where(s => s.Category == ServiceCategory.Vet).ToList();
+                model.UserPets = _context.Pets.Where(p => p.UserId == userId).ToList();
+                return View(model);
+            }
+
+            Pet pet;
+            if (model.ExistingPetId.HasValue)
+            {
+                pet = await _context.Pets
+                    .FirstOrDefaultAsync(p => p.PetId == model.ExistingPetId && p.UserId == userId);
+
+                if (pet == null)
+                {
+                    ModelState.AddModelError("", "Chọn thú cưng không hợp lệ.");
+                    ViewBag.VetServices = _context.Services.Where(s => s.Category == ServiceCategory.Vet).ToList();
+                    model.UserPets = _context.Pets.Where(p => p.UserId == userId).ToList();
+                    return View(model);
+                }
+
+                model.PetName = pet.Name;
+                model.PetType = pet.Type;
+                model.PetBreed = pet.Breed;
+                model.PetAge = pet.Age;
+            }
+            else
+            {
+                pet = new Pet
+                {
+                    Name = model.PetName,
+                    Type = model.PetType,
+                    Breed = model.PetBreed,
+                    Age = model.PetAge,
+                    UserId = userId
+                };
+                _context.Pets.Add(pet);
+                await _context.SaveChangesAsync();
+            }
+
+            var appointment = new Appointment
+            {
+                AppointmentDate = model.AppointmentDate,
+                AppointmentTime = model.AppointmentTime,
+                Status = AppointmentStatus.Pending,
+                ServiceId = model.ServiceId,
+                UserId = userId,
+                PetId = pet.PetId,
+                CreatedDate = DateTime.UtcNow,
+                OwnerPhoneNumber = model.OwnerPhoneNumber
+            };
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("AppointmentConfirmation");
+        }
+
+
         public IActionResult AppointmentConfirmation() => View();
 
         public IActionResult AppointmentSuccess() => View();
