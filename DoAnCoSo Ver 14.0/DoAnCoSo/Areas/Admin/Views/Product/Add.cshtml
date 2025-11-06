@@ -15,26 +15,41 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="Name" class="form-label fw-semibold">Tên sản phẩm</label>
-                            <input id="Name" name="Name" class="form-control border-pink" placeholder="Nhập tên sản phẩm..." />
+                            <label asp-for="Name" class="form-label fw-semibold"></label>
+                            <input asp-for="Name" class="form-control border-pink" placeholder="Nhập tên sản phẩm..." />
                             <span asp-validation-for="Name" class="text-danger small"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label for="Price" class="form-label fw-semibold">Giá sản phẩm</label>
-                            <input id="Price" name="Price" class="form-control border-pink" placeholder="Nhập giá..." />
+                            <label asp-for="Price" class="form-label fw-semibold"></label>
+                            <input asp-for="Price" class="form-control border-pink" placeholder="Nhập giá..." />
                             <span asp-validation-for="Price" class="text-danger small"></span>
                         </div>
 
+
                         <div class="mb-3">
-                            <label for="PriceReduced" class="form-label fw-semibold">Giá giảm (nếu có)</label>
-                            <input id="PriceReduced" name="PriceReduced" class="form-control border-pink" placeholder="Nhập giá giảm..." />
+                            <label asp-for="PriceReduced" class="form-label fw-semibold"></label>
+                            <input asp-for="PriceReduced" class="form-control border-pink" placeholder="Nhập giá giảm..." />
                             <span asp-validation-for="PriceReduced" class="text-danger small"></span>
                         </div>
 
+                        <!-- Tồn kho ban đầu -->
                         <div class="mb-3">
-                            <label for="Trademark" class="form-label fw-semibold">Thương hiệu</label>
-                            <input id="Trademark" name="Trademark" class="form-control border-pink" placeholder="Nhập thương hiệu..." />
+                            <label asp-for="StockQuantity" class="form-label fw-semibold">Tồn kho ban đầu</label>
+                            <input asp-for="StockQuantity" type="number" min="0" class="form-control border-pink" placeholder="VD: 10" />
+                            <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Ngưỡng cảnh báo -->
+                        <div class="mb-3">
+                            <label asp-for="LowStockThreshold" class="form-label fw-semibold">Ngưỡng cảnh báo sắp hết</label>
+                            <input asp-for="LowStockThreshold" type="number" min="0" class="form-control border-pink" placeholder="VD: 5" />
+                            <span asp-validation-for="LowStockThreshold" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Trademark" class="form-label fw-semibold"></label>
+                            <input asp-for="Trademark" class="form-control border-pink" placeholder="Nhập thương hiệu..." />
                             <span asp-validation-for="Trademark" class="text-danger small"></span>
                         </div>
                     </div>
@@ -58,8 +73,9 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="Description" class="form-label fw-semibold">Mô tả sản phẩm</label>
-                    <textarea id="Description" name="Description" class="form-control border-pink" rows="3" placeholder="Nhập mô tả..."></textarea>
+                    <label asp-for="Description" class="form-label fw-semibold"></label>
+                    <textarea asp-for="Description" class="form-control border-pink" rows="3" placeholder="Nhập mô tả..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
                 </div>
 
                 <div class="mb-3">

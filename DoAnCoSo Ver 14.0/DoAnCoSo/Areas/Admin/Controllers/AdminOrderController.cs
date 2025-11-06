@@ -3,21 +3,24 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using DoAnCoSo.Services;
 
 namespace DoAnCoSo.Areas.Admin.Controllers
 {
-    [Area("Admin")] // Chỉ thêm dòng này nếu bạn đang sử dụng ASP.NET Core Areas
-    [Authorize(Roles = "Admin")] // Yêu cầu người dùng phải có Role "Admin" để truy cập
+    [Area("Admin")] 
+    [Authorize(Roles = "Admin")] 
     public class OrderController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IInventoryService _inventory;
 
-        public OrderController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public OrderController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IInventoryService inventory)
         {
             _context = context;
             _userManager = userManager;
             _userManager = userManager;
+            _inventory = inventory;
         }
 
         // 1. Admin xem toàn bộ lịch sử đặt hàng
@@ -85,7 +88,17 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 _context.Update(order);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "✅ Đơn hàng đã được xác nhận thành công.";
+                try
+                {
+                    await _inventory.DeductForOrderAsync(order.Id,
+                    byUserId: _userManager.GetUserId(User));
+                    TempData["SuccessMessage"] = "✅ Đơn hàng đã xác nhận và đã trừ kho.";
+                }
+                catch (Exception ex)
+                {
+                  
+                    TempData["ErrorMessage"] = "Xác nhận thất bại do tồn kho: " + ex.Message;
+                }
             }
             else
             {
@@ -107,25 +120,56 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 TempData["ErrorMessage"] = "Không tìm thấy đơn hàng này.";
                 return RedirectToAction(nameof(Index));
             }
-
-            if (order.Status == OrderStatusEnum.ChoXacNhan)
+            else if (order.Status == OrderStatusEnum.DaXacNhan || order.bankStatus == BankStatusEnum.DaThanhToan)
             {
+                // ✅ Đơn đã xác nhận → hoàn kho thật
+                try
+                {
+                    await _inventory.RestockForOrderAsync(order.Id,
+                        byUserId: _userManager.GetUserId(User));
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = "Không thể hoàn kho: " + ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+
                 order.Status = OrderStatusEnum.DaHuy;
                 _context.Update(order);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Đơn hàng đã được hủy thành công.";
+                TempData["SuccessMessage"] = "Đơn hàng đã hủy và đã hoàn kho.";
+            }
+            else if (order.Status == OrderStatusEnum.ChoXacNhan)
+            {
+                // ✅ Đơn chưa xác nhận → chỉ bỏ giữ hàng tạm
+                try
+                {
+                    await _inventory.UnreserveForOrderAsync(order.Id,
+                        byUserId: _userManager.GetUserId(User));
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = "Không thể bỏ giữ hàng tạm: " + ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+
+                order.Status = OrderStatusEnum.DaHuy;
+                _context.Update(order);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Đơn hàng đã hủy và đã bỏ giữ hàng tạm.";
             }
             else
             {
-                TempData["ErrorMessage"] = "Chỉ có thể hủy đơn hàng ở trạng thái 'Chờ xác nhận'.";
+                TempData["ErrorMessage"] = "Trạng thái đơn hàng không hợp lệ để hủy.";
             }
+
 
             return RedirectToAction(nameof(Index));
         }
 
-        // 4. Xóa đơn hàng (Hard Delete)
-        // CẦN CỰC KỲ CẨN TRỌNG VỚI HÀNH ĐỘNG NÀY!
+        // 4. Xóa đơn hàng    
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)

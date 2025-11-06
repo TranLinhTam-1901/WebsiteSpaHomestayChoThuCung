@@ -33,6 +33,18 @@
                             <input asp-for="PriceReduced" class="form-control border-pink" placeholder="Nhập giá giảm..." />
                             <span asp-validation-for="PriceReduced" class="text-danger small"></span>
                         </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="StockQuantity" class="form-label fw-semibold">Tồn kho hiện tại</label>
+                            <input asp-for="StockQuantity" type="number" min="0" class="form-control border-pink" readonly/>
+                            <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LowStockThreshold" class="form-label fw-semibold">Ngưỡng cảnh báo sắp hết</label>
+                            <input asp-for="LowStockThreshold" type="number" min="0" class="form-control border-pink" />
+                            <span asp-validation-for="LowStockThreshold" class="text-danger small"></span>
+                        </div>
 
                         <div class="mb-3">
                             <label asp-for="Trademark" class="form-label fw-semibold">Thương hiệu</label>
@@ -56,6 +68,7 @@
                             <label for="additionalImagesInput" class="form-label fw-semibold">Ảnh sản phẩm khác (Upload nhiều file)</label>
                             <input type="file" id="additionalImagesInput" name="images" class="form-control border-pink" multiple />
                         </div>
+
                     </div>
                 </div>
 
@@ -87,6 +100,27 @@
                 </div>
             </form>
 
+            <!-- THÊM FORM NHẬP/XUẤT KHO TẠI ĐÂY -->
+            <form asp-action="AdjustStock" method="post" class="mt-4">
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Điều chỉnh tồn kho</label>
+                        <input name="delta" type="number" class="form-control border-pink" placeholder="+ nhập / - xuất" required />
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Lý do</label>
+                        <input name="reason" type="text" class="form-control border-pink" placeholder="VD: Manual / Điều chỉnh lỗi..." />
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm w-100">
+                            ⟲ Cập nhật kho (nhanh)
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-1">Ví dụ: nhập 10 → <b>10</b>; xuất 2 → <b>-2</b>.</small>
+            </form>
+         
             <div class="text-center mt-4">
                 <h5 class="text-gradient-pink mb-3">Ảnh hiện tại</h5>
                 <img src="@Model.ImageUrl" alt="Ảnh sản phẩm" class="img-fluid rounded shadow-sm border border-pink" style="max-width:220px;" id="previewImage" />
