@@ -42,11 +42,22 @@ namespace DoAnCoSo.Models
                 : string.Empty;
         }
 
+
+        // kho hàng 
+        public int StockQuantity { get; set; } = 0;       
+        public int LowStockThreshold { get; set; } = 5;   
+        public int SoldQuantity { get; set; } = 0;
+
+        public int ReservedQuantity { get; set; } = 0;
+
+
         // Yêu thích
         public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 
+
         // Đánh giá (đã thay ProductReview -> Review)
         public List<Review> Reviews { get; set; } = new();
+
 
         // % Giảm giá
         [NotMapped]

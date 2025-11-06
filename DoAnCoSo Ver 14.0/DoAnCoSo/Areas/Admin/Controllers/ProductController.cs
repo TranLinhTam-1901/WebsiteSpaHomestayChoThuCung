@@ -99,6 +99,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             existingProduct.Trademark = product.Trademark;
             existingProduct.Description = product.Description;
             existingProduct.CategoryId = product.CategoryId;
+            existingProduct.LowStockThreshold = product.LowStockThreshold;
+
 
             ProcessFlavors(existingProduct, flavorsList);
             ProcessPriceReduced(existingProduct);
@@ -228,5 +230,21 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         }
 
         #endregion
+
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AdjustStock(int productId, int delta, string? reason,
+            [FromServices] DoAnCoSo.Services.IInventoryService inventory)
+        {
+            var prod = await _context.Products.FindAsync(productId);
+            if (prod == null) return NotFound();
+
+            await inventory.AdjustStockAsync(productId, delta, reason ?? "Manual");
+            TempData["SuccessMessage"] = "Đã cập nhật tồn kho.";
+            return RedirectToAction(nameof(Update), new { id = productId });
+        }
+       
+
     }
 }

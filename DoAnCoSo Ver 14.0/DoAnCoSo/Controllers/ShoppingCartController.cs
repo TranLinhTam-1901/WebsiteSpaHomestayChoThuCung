@@ -15,17 +15,20 @@ namespace DoAnCoSo.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly EmailService _emailService;
+        private readonly IInventoryService _inventory;
 
 
         public ShoppingCartController(IProductRepository productRepository,
                                       UserManager<ApplicationUser> userManager,
                                       ApplicationDbContext context,
-                                      EmailService emailService)
+                                      EmailService emailService,
+                                      IInventoryService inventory)
         {
             _productRepository = productRepository;
             _context = context;
             _userManager = userManager;
             _emailService = emailService;
+            _inventory = inventory;
         }
 
         // Helper method để lấy sản phẩm từ database (giữ nguyên)
@@ -34,8 +37,7 @@ namespace DoAnCoSo.Controllers
             var product = await _productRepository.GetByIdAsync(productId);
             return product;
         }
-
-        // GET: /ShoppingCart/Index (Hiển thị giỏ hàng đầy đủ)
+        
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
@@ -60,19 +62,13 @@ namespace DoAnCoSo.Controllers
                     }
                 }
             }
-
-            // --- THAY ĐỔI LỚN TẠI ĐÂY ---
-            // Tạo một instance của ShoppingCartViewModel
+       
             var viewModel = new ShoppingCartViewModel
             {
                 CartItemsFromDb = cartItems, // Gán danh sách CartItem vào thuộc tính này
                 CartTotal = cartTotal        // Gán tổng tiền của toàn bộ giỏ hàng vào thuộc tính này
             };
-
-            // --- KHÔNG CẦN DÙNG ViewBag NỮA ---
-            // ViewBag.InitialCartTotalFormatted = initialTotal.ToString("N0");
-
-            // --- TRẢ VỀ VIEWMODEL THAY VÌ LIST<CARTITEM> ---
+           
             return View(viewModel);
         }
 
@@ -98,35 +94,47 @@ namespace DoAnCoSo.Controllers
                 return NotFound("Product not found");
             }
 
-            // Tìm kiếm mục giỏ hàng của người dùng cho sản phẩm này trong DB
-            var existingCartItem = await _context.CartItems
-                                                 .FirstOrDefaultAsync(ci => ci.UserId == userId
-                                                 && ci.ProductId == productId
-                                                 && ci.SelectedFlavor == flavor);
+
+            var available = await _inventory.GetAvailableAsync(product.Id);
+            var flavorKey = flavor ?? "";
+
+            // SL trùng (cùng product + flavor) đã có trong giỏ
+            var existingQtySameFlavor = await _context.CartItems
+                .Where(ci => ci.UserId == userId && ci.ProductId == productId && ci.SelectedFlavor == flavorKey)
+                .Select(ci => ci.Quantity)
+                .FirstOrDefaultAsync();
+
+            // ✅ Chuẩn hoá số lượng thêm
+            int addQty = quantity <= 0 ? 1 : quantity;
+
+            // Check tồn: số muốn thêm + số đã có > available ?
+            if (addQty + existingQtySameFlavor > available)
+            {
+                TempData["ErrorMessage"] = $"Sản phẩm '{product.Name}' chỉ còn {available} cái trong kho.";
+                return RedirectToAction("Details", "Product", new { id = productId });
+            }
+
+            // Thêm/cộng số lượng sử dụng addQty (không dùng quantity gốc nữa)
+            var existingCartItem = await _context.CartItems.FirstOrDefaultAsync(ci =>
+                ci.UserId == userId && ci.ProductId == productId && ci.SelectedFlavor == flavorKey);
 
             if (existingCartItem != null)
             {
-                // Nếu sản phẩm đã có trong giỏ, tăng số lượng
-                existingCartItem.Quantity += quantity;
+                existingCartItem.Quantity += addQty;                 
             }
             else
             {
-                // Nếu sản phẩm chưa có, tạo một mục giỏ hàng mới trong DB
-                var newCartItem = new CartItem
+                _context.CartItems.Add(new CartItem
                 {
                     UserId = userId,
                     ProductId = productId,
-                    Quantity = quantity,
-                    SelectedFlavor = flavor ?? "",
-                    DateCreated = DateTime.UtcNow // Gán thời gian tạo
-                };
-                _context.CartItems.Add(newCartItem);
+                    Quantity = addQty,                                
+                    SelectedFlavor = flavorKey,
+                    DateCreated = DateTime.UtcNow
+                });
             }
 
-            // Lưu thay đổi vào database
             await _context.SaveChangesAsync();
-
-
             return RedirectToAction("Index");
         }
 
@@ -151,52 +159,39 @@ namespace DoAnCoSo.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request)
         {
-
-            Console.WriteLine($"RemoveFromCart called for CartItemId: {request.CartItemId}");
+            if (request == null || request.CartItemId <= 0)
+                return Json(new { success = false, message = "Dữ liệu xóa không hợp lệ." });
 
             var userId = _userManager.GetUserId(User);
-
             if (string.IsNullOrEmpty(userId))
+                return StatusCode(401, new { success = false, message = "Bạn cần đăng nhập." });
+
+            var item = await _context.CartItems
+                .FirstOrDefaultAsync(ci => ci.Id == request.CartItemId && ci.UserId == userId);
+
+            if (item == null)
+                return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ." });
+
+            _context.CartItems.Remove(item);
+            await _context.SaveChangesAsync();
+
+            var updated = await _context.CartItems
+                .Where(ci => ci.UserId == userId)
+                .Include(ci => ci.Product)
+                .ToListAsync();
+
+            decimal newTotal = updated.Sum(ci =>
+                (ci.Product.PriceReduced.HasValue && ci.Product.PriceReduced > 0
+                    ? ci.Product.PriceReduced.Value
+                    : ci.Product.Price) * ci.Quantity);
+
+            return Json(new
             {
-                Console.WriteLine("Lỗi: Không tìm thấy User ID. Người dùng có thể chưa đăng nhập.");
-                return Json(new { success = false, message = "Bạn cần đăng nhập để xóa sản phẩm khỏi giỏ hàng." });
-            }
-            Console.WriteLine($"User ID: {userId}");
-
-            var itemToRemove = await _context.CartItems
-                                             .FirstOrDefaultAsync(ci => ci.Id == request.CartItemId && ci.UserId == userId); // SỬ DỤNG request.CartItemId
-
-            if (itemToRemove != null)
-            {
-                try
-                {
-                    _context.CartItems.Remove(itemToRemove);
-                    await _context.SaveChangesAsync();
-
-                    // Cập nhật tổng tiền giỏ hàng sau khi xóa
-                    var updatedCartItems = await _context.CartItems
-                                                         .Where(ci => ci.UserId == userId)
-                                                         .Include(ci => ci.Product)
-                                                         .ToListAsync();
-                    decimal newOverallCartTotal = updatedCartItems.Sum(ci => (ci.Product.PriceReduced.HasValue && ci.Product.PriceReduced > 0 ? ci.Product.PriceReduced.Value : ci.Product.Price) * ci.Quantity);
-
-                    return Json(new { success = true, message = "Sản phẩm đã được xóa khỏi giỏ hàng thành công.", cartOverallTotal = newOverallCartTotal.ToString("N0") + "đ" });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Lỗi khi xóa sản phẩm khỏi giỏ hàng (CartItemId: {request.CartItemId}, UserId: {userId}): {ex.Message}");
-                    if (ex.InnerException != null)
-                    {
-                        Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                    }
-                    return Json(new { success = false, message = "Đã xảy ra lỗi server khi xóa sản phẩm. Vui lòng thử lại." });
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Không tìm thấy CartItem với ID: {request.CartItemId} cho User ID: {userId}.");
-                return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ hàng để xóa. Vui lòng làm mới trang." });
-            }
+                success = true,
+                message = "Đã xóa sản phẩm khỏi giỏ.",
+                cartOverallTotal = newTotal.ToString("N0") + "đ",
+                isEmpty = updated.Count == 0
+            });
         }
 
         // Trong ShoppingCartController.cs
@@ -208,6 +203,25 @@ namespace DoAnCoSo.Controllers
             [FromQuery] int? buyNowQuantity = null,
             [FromQuery] string buyNowFlavor = null)
         {
+
+            // 🔹 Kiểm tra tồn kho cho luồng "Mua ngay" trước khi xử lý user
+            if (isBuyNow && buyNowProductId.HasValue && buyNowQuantity.HasValue)
+            {
+                var product = await _context.Products.FindAsync(buyNowProductId.Value);
+                if (product == null)
+                {
+                    TempData["ErrorMessage"] = "Sản phẩm không tồn tại.";
+                    return RedirectToAction("AllProducts", "Product");
+                }
+
+                if (product.StockQuantity < buyNowQuantity.Value)
+                {
+                    TempData["ErrorMessage"] = $"Sản phẩm '{product.Name}' chỉ còn {product.StockQuantity} cái trong kho.";
+                    return RedirectToAction("Details", "Product", new { id = product.Id });
+                }
+            }
+
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -350,7 +364,20 @@ namespace DoAnCoSo.Controllers
                 }
             }
 
+
+            foreach (var item in itemsForOrder)
+            {
+                var availableCheckout = await _inventory.GetAvailableAsync(item.ProductId);
+                if (item.Quantity > availableCheckout)
+                {
+                    TempData["ErrorMessage"] = $"Sản phẩm '{item.Product?.Name}' chỉ còn {availableCheckout} cái trong kho.";
+                    await LoadCheckoutViewModelForError(model, userId);
+                    return View("Checkout", model);
+                }
+            }
+
             // --- Tạo Order ---
+
             var order = model.Order;
             order.UserId = userId;
             order.OrderDate = DateTime.UtcNow;
@@ -521,14 +548,29 @@ namespace DoAnCoSo.Controllers
             }
 
             try
-            {
-                //order.TotalPrice = total;
-
-                // 1. Lưu đơn hàng
-                //_context.Orders.Add(order);
+            {              
+                //Lưu đơn hàng              
                 await _context.SaveChangesAsync();
 
-                // 🟧 CHỈNH SỬA: Cập nhật email hiển thị thêm giá gốc & giá sau giảm
+                //Giữ hàng tạm sau khi đơn đã được lưu thành công
+                try
+                {
+                    await _inventory.ReserveForOrderAsync(order.Id, userId);
+                }
+                catch (Exception exReserve)
+                {
+                    Console.WriteLine($"⚠️ Lỗi giữ hàng: {exReserve.Message}");
+
+                    _context.Orders.Remove(order);
+                    await _context.SaveChangesAsync();
+
+                    TempData["ErrorMessage"] = "Sản phẩm đã hết hàng trong lúc bạn đặt. Đơn hàng không thể hoàn tất.";
+                    await LoadCheckoutViewModelForError(model, userId);
+                    return View("Checkout", model);
+                }
+
+
+                //CHỈNH SỬA: Cập nhật email hiển thị thêm giá gốc & giá sau giảm
                 try
                 {
                     var customerEmail = user.Email;
@@ -585,6 +627,7 @@ namespace DoAnCoSo.Controllers
                     {
                         _context.CartItems.RemoveRange(cartItemsToRemove);
                         await _context.SaveChangesAsync();
+
                     }
                 }
 
@@ -694,6 +737,12 @@ namespace DoAnCoSo.Controllers
                 decimal cartOverallTotalAfterRemove = allCartItemsAfterRemove.Sum(ci => (ci.Product?.PriceReduced.HasValue == true && ci.Product.PriceReduced > 0 ? ci.Product.PriceReduced.Value : ci.Product.Price) * ci.Quantity);
 
                 return Json(new { success = true, action = "removed", itemId = cartItem.Id, cartOverallTotal = cartOverallTotalAfterRemove.ToString("N0") + "đ" });
+            }
+
+            var available = await _inventory.GetAvailableAsync(cartItem.ProductId);
+            if (quantity > available)
+            {
+                return Json(new { success = false, message = $"Sản phẩm chỉ còn {available} cái trong kho." });
             }
 
             // Cập nhật số lượng

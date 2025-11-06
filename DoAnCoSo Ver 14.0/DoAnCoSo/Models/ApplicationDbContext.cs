@@ -39,6 +39,8 @@ namespace DoAnCoSo.Models
         public DbSet<OrderPromotion> OrderPromotions { get; set; }
         public DbSet<UserPromotion> UserPromotions { get; set; }
 
+        public DbSet<InventoryLog> InventoryLogs { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -134,10 +136,17 @@ namespace DoAnCoSo.Models
                 .HasForeignKey(ri => ri.ReviewId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ✅ Thêm phần unique constraint cho UserPromotion tại đây:
+            // Thêm phần unique constraint cho UserPromotion tại đây:
             modelBuilder.Entity<UserPromotion>()
                 .HasIndex(up => new { up.UserId, up.PromotionId })
                 .IsUnique();
+
+            modelBuilder.Entity<InventoryLog>()
+                .HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

@@ -127,6 +127,7 @@ namespace DoAnCoSo.Controllers
             // Lấy review kèm User (để hiển thị tên)
             var productReviews = await _context.Reviews
                 .Include(r => r.User)
+                .Include(r => r.Images)
                 .Where(r => r.TargetType == ReviewTargetType.Product && r.TargetId == id)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
@@ -151,30 +152,62 @@ namespace DoAnCoSo.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddReview(Review NewReview, IEnumerable<IFormFile> reviewImages)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReview(Review newReview, IEnumerable<IFormFile> reviewImages)
         {
+            // 1) Yêu cầu đăng nhập
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
-            }
 
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString))
+            // 2) Gán thông tin bắt buộc
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
                 TempData["ErrorMessage"] = "Không xác định được người dùng.";
-                return RedirectToAction("Details", new { id = NewReview.TargetId });
+                return RedirectToAction("Details", new { id = newReview.TargetId });
             }
 
-            NewReview.UserId = userIdString;
-            NewReview.TargetType = ReviewTargetType.Product;   // ✅ bắt buộc
-            NewReview.CreatedDate = DateTime.Now;
+            newReview.UserId = userId;
+            newReview.TargetType = ReviewTargetType.Product; // bạn đang review sản phẩm
+            newReview.CreatedDate = DateTime.Now;
 
-            _context.Reviews.Add(NewReview);
+            // 3) Khởi tạo collection ảnh nếu null
+            newReview.Images ??= new List<ReviewImage>();
+
+            // 4) Upload ảnh (nếu có)
+            if (reviewImages != null)
+            {
+                var uploadsDir = Path.Combine(_webHostEnvironment.WebRootPath, "images", "reviews");
+                if (!Directory.Exists(uploadsDir))
+                    Directory.CreateDirectory(uploadsDir);
+
+                foreach (var file in reviewImages.Where(f => f?.Length > 0))
+                {
+                    // (tuỳ ý) kiểm tra mime/size ở đây
+                    var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                    var filePath = Path.Combine(uploadsDir, fileName);
+
+                    using (var fs = new FileStream(filePath, FileMode.Create))
+                        await file.CopyToAsync(fs);
+
+                    // THAY ProductReviewImage -> ReviewImage
+                    newReview.Images.Add(new ReviewImage
+                    {
+                        ImageUrl = $"/images/reviews/{fileName}"
+                        // nếu model có các field khác (Caption, SortOrder...) thì set thêm
+                    });
+                }
+            }
+
+            // 5) Lưu DB: THAY _context.ProductReviews -> _context.Reviews
+            _context.Reviews.Add(newReview);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", new { id = NewReview.TargetId });
+            TempData["SuccessMessage"] = "Bình luận đã được gửi.";
+            return RedirectToAction("Details", new { id = newReview.TargetId });
         }
+
 
         public IActionResult Search(string searchTerm)
         {

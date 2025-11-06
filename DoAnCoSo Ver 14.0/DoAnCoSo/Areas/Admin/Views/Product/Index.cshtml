@@ -27,6 +27,7 @@
                         <th class="text-center">Tên sản phẩm</th>
                         <th class="text-center">Hình ảnh</th>
                         <th class="text-center">Giá</th>
+                        <th class="text-center">Tồn kho</th>
                         <th class="text-center">Mô tả</th>
                         <th class="text-center">Danh mục</th>
                         <th class="text-center">Hành động</th>
@@ -53,6 +54,19 @@
                                     <span>@product.Price.ToString("N0")đ</span>
                                 }
                             </td>
+
+                            <td class="text-center">
+                                @product.StockQuantity
+                                @if (product.StockQuantity <= product.LowStockThreshold)
+                                {
+                                    <span class="badge bg-danger ms-2">Sắp hết</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success ms-2">OK</span>
+                                }
+                            </td>
+
                             <td class="text-truncate" style="max-width: 220px;">@product.Description</td>
                             <td class="text-center">@product.Category?.Name</td>
                             <td>
