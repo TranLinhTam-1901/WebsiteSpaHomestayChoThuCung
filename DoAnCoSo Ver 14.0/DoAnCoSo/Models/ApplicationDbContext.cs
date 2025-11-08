@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace DoAnCoSo.Models
 {
@@ -32,8 +32,16 @@ namespace DoAnCoSo.Models
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<SystemState> SystemStates { get; set; }
+        public DbSet<ChatImage> ChatImages { get; set; }
 
         public DbSet<Promotion> Promotions { get; set; }
+
+        public DbSet<OrderPromotion> OrderPromotions { get; set; }
+        public DbSet<UserPromotion> UserPromotions { get; set; }
+
+        public DbSet<DoAnCoSo.Models.Blockchain.BlockchainRecord> BlockchainRecords { get; set; }
+
+        public DbSet<DeletedPets> DeletedPets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,9 +55,9 @@ namespace DoAnCoSo.Models
             // 🔹 Appointment - Pet
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Pet)
-                .WithMany(p => p.Appointments)
+                .WithMany()
                 .HasForeignKey(a => a.PetId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull); // hoặc DeleteBehavior.Cascade
 
             modelBuilder.Entity<PetServiceRecord>()
                 .HasKey(r => r.RecordId);
@@ -128,6 +136,11 @@ namespace DoAnCoSo.Models
                 .WithMany(r => r.Images)
                 .HasForeignKey(ri => ri.ReviewId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // ✅ Thêm phần unique constraint cho UserPromotion tại đây:
+            modelBuilder.Entity<UserPromotion>()
+                .HasIndex(up => new { up.UserId, up.PromotionId })
+                .IsUnique();
         }
     }
 }

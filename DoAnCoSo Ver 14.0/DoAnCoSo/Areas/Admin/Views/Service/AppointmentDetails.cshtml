@@ -5,6 +5,18 @@
 
 @{
     ViewData["Title"] = "Chi tiết lịch đặt";
+
+    TimeZoneInfo vietnamTimeZone = null;
+    bool timeZoneFound = false;
+    try
+    {
+        vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        timeZoneFound = true;
+    }
+    catch { }
+
+    var displayPetName = Model.Pet?.Name ?? Model.DeletedPet?.Name ?? "[Đã xóa]";
+    var displayPetType = Model.Pet?.Type ?? Model.DeletedPet?.Type ?? "-";
 }
 
 <div class="appointment-detail-wrapper py-5">
@@ -20,7 +32,7 @@
                 <dd class="col-sm-8">@Model.AppointmentId</dd>
 
                 <dt class="col-sm-4">Thú cưng:</dt>
-                <dd class="col-sm-8">@(Model.Pet?.Name ?? "N/A") (@(Model.Pet?.Type ?? "N/A"))</dd>
+                <dd class="col-sm-8">@displayPetName (@displayPetType)</dd>
 
                 <dt class="col-sm-4">Dịch vụ:</dt>
                 <dd class="col-sm-8">@(Model.Service?.Name ?? "N/A")</dd>
@@ -34,6 +46,10 @@
                     else if (Model.Status.GetDisplayName() == "Đã xác nhận")
                     {
                         <span class="badge status-confirmed">Đã xác nhận</span>
+                    }
+                    else if (Model.Status.GetDisplayName() == "Đã xóa")
+                    {
+                        <span class="badge status-deleted">Đã xóa</span>
                     }
                     else
                     {
@@ -51,34 +67,67 @@
                 @if (Model.ServiceId >= 1 && Model.ServiceId <= 3)
                 {
                     <dt class="col-sm-4">Ngày nhận phòng:</dt>
-                    <dd class="col-sm-8">@Model.StartDate.ToString("dd/MM/yyyy")</dd>
+                    <dd class="col-sm-8">
+                        @(Model.StartDate != default(DateTime)
+                                            ? Model.StartDate.ToString("dd/MM/yyyy")
+                                            : "N/A")
+                                                </dd>
 
                     <dt class="col-sm-4">Ngày trả phòng:</dt>
-                    <dd class="col-sm-8">@Model.EndDate.ToString("dd/MM/yyyy")</dd>
-                }
+                    <dd class="col-sm-8">
+                        @(Model.EndDate != default(DateTime)
+                                            ? Model.EndDate.ToString("dd/MM/yyyy")
+                                            : "N/A")
+                </dd>
+                                }
                 else
                 {
                     <dt class="col-sm-4">Ngày hẹn:</dt>
                     <dd class="col-sm-8">
-                        @if (Model.StartDate != default(DateTime))
-                        {
-                            @Model.StartDate.ToString("dd/MM/yyyy")  <!-- chỉ lấy ngày -->
+                        @{
+                            string dateDisplay = Model.AppointmentDate != default(DateTime)
+                            ? Model.AppointmentDate.ToString("dd/MM/yyyy")
+                            : "N/A";
+
+                            string timeDisplay = Model.AppointmentTime != TimeSpan.Zero
+                            ? Model.AppointmentTime.ToString(@"hh\:mm")
+                            : "N/A";
                         }
-                        else
+
+                        @if (dateDisplay == "N/A" && timeDisplay == "N/A")
                         {
                             @:N/A
                         }
-
-                        @if (Model.AppointmentTime != default(TimeSpan))
+                        else if (dateDisplay == "N/A")
                         {
-                            @: @Model.AppointmentTime.ToString(@"hh\:mm") <!-- chỉ lấy giờ user nhập -->
+                            @timeDisplay
+                        }
+                        else if (timeDisplay == "N/A")
+                        {
+                            @dateDisplay
+                        }
+                        else
+                        {
+                            @($"{dateDisplay} {timeDisplay}")
                         }
                     </dd>
                 }
 
                 <dt class="col-sm-4">Thời điểm đặt lịch:</dt>
                 <dd class="col-sm-8">
-                    @(Model.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
+                    @if (Model.CreatedDate != default(DateTime) && timeZoneFound)
+                    {
+                        var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(Model.CreatedDate, vietnamTimeZone);
+                        @vietnamTime.ToString("dd/MM/yyyy HH:mm")
+                    }
+                    else if (Model.CreatedDate != default(DateTime))
+                    {
+                        @(Model.CreatedDate.ToString("dd/MM/yyyy HH:mm") + " UTC")
+                    }
+                    else
+                    {
+                        @:N/A
+                    }
                 </dd>
             </dl>
         </div>
@@ -154,14 +203,6 @@
         border-radius: 12px;
     }
 
-<<<<<<< HEAD
-    .status-pending {
-        background-color: #FFB6C1;
-        color: #000;
-    }
-
-=======
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
     .status-confirmed {
         background-color: #28a745;
         color: #fff;
@@ -172,14 +213,16 @@
         color: #fff;
     }
     /* đỏ */
-<<<<<<< HEAD
-=======
     .status-pending {
         background-color: #FFC107;
         color: #000;
     }
     /* vàng */
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
+    .status-deleted {
+        background-color: #6c757d;
+        color: #fff;
+    }
+    /* xám */
 
     .btn-detail {
         background-color: #FFB6C1;

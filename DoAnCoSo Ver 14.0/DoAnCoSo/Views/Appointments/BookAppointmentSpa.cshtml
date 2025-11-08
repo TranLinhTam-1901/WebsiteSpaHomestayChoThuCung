@@ -2,7 +2,8 @@
 @using DoAnCoSo.Models
 
 @{
-    ViewData["Title"] = "🧼 Đặt lịch Spa cho thú cưng 🐾";
+    bool isUpdate = Model.IsUpdate;
+    ViewData["Title"] = isUpdate ? "✏️ Cập nhật lịch Spa cho thú cưng 🐾" : "🧼 Đặt lịch Spa cho thú cưng 🐾";
     var spaServices = ViewBag.SpaServices as List<Service> ?? new List<Service>();
     var spaPricings = ViewBag.SpaPricings as List<SpaPricing> ?? new List<SpaPricing>();
     var userPets = Model.UserPets ?? new List<Pet>();
@@ -14,7 +15,8 @@
     <div class="booking-card mx-auto" style="max-width: 750px;">
         <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
 
-        <form asp-action="BookAppointmentSpa" method="post">
+        <form asp-action="@(Model.IsUpdate ? "UpdateAppointmentSpa" : "BookAppointmentSpa")" method="post">
+            <input type="hidden" asp-for="AppointmentId" />
             <!-- 1️⃣ Chủ nuôi -->
             <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
             <div class="mb-3">
@@ -27,14 +29,15 @@
             <div class="mb-3">
                 <label class="form-label">Thú cưng có sẵn</label>
                 <select id="existingPetSelect" class="form-select">
-                    @foreach (var pet in userPets)
+                    @foreach (var pet in (Model.UserPets ?? new List<Pet>()).OrderBy(p => p.Name))
                     {
                         <option value="@pet.PetId"
                                 data-name="@pet.Name"
                                 data-type="@pet.Type"
                                 data-breed="@pet.Breed"
                                 data-age="@pet.Age"
-                                data-weight="@pet.Weight">
+                                data-weight="@pet.Weight"
+                                selected="@(Model.ExistingPetId == pet.PetId ? "selected" : "")">
                             @pet.Name
                         </option>
                     }
@@ -81,11 +84,13 @@
                                 data-priceunder5="@(pricing?.PriceUnder5kg ?? 0)"
                                 data-price5to12="@(pricing?.Price5To12kg ?? 0)"
                                 data-price12to25="@(pricing?.Price12To25kg ?? 0)"
-                                data-priceover25="@(pricing?.PriceOver25kg ?? 0)">
+                                data-priceover25="@(pricing?.PriceOver25kg ?? 0)"
+                                selected="@(Model.ServiceId == service.ServiceId ? "selected" : "")">
                             @service.Name
                         </option>
                     }
                 </select>
+
             </div>
 
             <!-- 4️⃣ Giá -->
@@ -99,16 +104,12 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label asp-for="AppointmentDate" class="form-label">Ngày hẹn</label>
-<<<<<<< HEAD
-                    <input asp-for="AppointmentDate" type="date" class="form-control" required />
-=======
                     <input asp-for="AppointmentDate"
                            type="text"
                            id="appointmentPicker"
                            class="form-control"
                            placeholder="Chọn ngày hẹn..."
                            required />
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat
                 </div>
                 <div class="col-md-6">
                     <label asp-for="AppointmentTime" class="form-label">Giờ hẹn</label>
@@ -116,7 +117,10 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-pink w-100 mt-4">📅 Đặt lịch ngay</button>
+            <button type="submit" class="btn btn-pink w-100 mt-4">
+                @(isUpdate ? "💾 Cập nhật lịch" : "📅 Đặt lịch ngay")
+            </button>
+
         </form>
     </div>
 </div>
@@ -184,15 +188,39 @@
         // Sự kiện khi đổi dịch vụ
         serviceSelect.addEventListener("change", updatePrice);
 
-        // Khởi tạo mặc định khi vào trang
-        if (petSelect.options.length > 0) petSelect.selectedIndex = 0;
-        if (serviceSelect.options.length > 0) serviceSelect.selectedIndex = 0;
+        // Chọn thú cưng mặc định
+        if (!existingPetIdInput.value && petSelect.options.length > 0) {
+            petSelect.selectedIndex = 0;
+            existingPetIdInput.value = petSelect.value; // đồng bộ hidden input
+        }
+        // Nếu PetId có trong danh sách => chọn theo PetId
+        else if (existingPetIdInput.value) {
+            for (let i = 0; i < petSelect.options.length; i++) {
+                if (petSelect.options[i].value === existingPetIdInput.value) {
+                    petSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Chọn dịch vụ mặc định
+        let defaultServiceIndex = 0; // index dịch vụ mặc định = 0 (dịch vụ 1)
+        const selectedServiceId = "@(Model.ServiceId)";
+
+        // Nếu ServiceId có trong danh sách => chọn theo ServiceId
+        if (selectedServiceId) {
+            for (let i = 0; i < serviceSelect.options.length; i++) {
+                if (serviceSelect.options[i].value === selectedServiceId) {
+                    defaultServiceIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Nếu không có ServiceId hoặc ServiceId không hợp lệ => mặc định chọn dịch vụ 1 (index 0)
+        serviceSelect.selectedIndex = defaultServiceIndex;
 
         updatePetInfo(); // cập nhật thông tin thú cưng và giá ngay khi vào trang
-<<<<<<< HEAD
-    });
-</script>
-=======
 
                 // ------------------ AppointmentDate ------------------
         flatpickr("#appointmentPicker", {
@@ -206,4 +234,3 @@
         });
     });
 </script>
->>>>>>> feature/kiet/add_encrypt_and_RR_toChat

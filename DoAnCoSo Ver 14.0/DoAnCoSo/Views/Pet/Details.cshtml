@@ -29,18 +29,18 @@
 
         <!-- Thông tin cơ bản -->
         <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
-        <div class="row mb-3">
-            <div class="col-md-6"><strong>Tên thú cưng:</strong> @(string.IsNullOrWhiteSpace(Model.Name) ? "Chưa có" : Model.Name)</div>
-            <div class="col-md-6"><strong>Loại:</strong> @(string.IsNullOrWhiteSpace(Model.Type) ? "Chưa có" : Model.Type)</div>
-            <div class="col-md-6"><strong>Giống:</strong> @(string.IsNullOrWhiteSpace(Model.Breed) ? "Chưa có" : Model.Breed)</div>
-            <div class="col-md-6">
+        <div class="row">
+            <div class="col-md-6 mb-3"><strong>Tên thú cưng:</strong> @(string.IsNullOrWhiteSpace(Model.Name) ? "Chưa có" : Model.Name)</div>
+            <div class="col-md-6 mb-3"><strong>Loại:</strong> @(string.IsNullOrWhiteSpace(Model.Type) ? "Chưa có" : Model.Type)</div>
+            <div class="col-md-6 mb-3"><strong>Giống:</strong> @(string.IsNullOrWhiteSpace(Model.Breed) ? "Chưa có" : Model.Breed)</div>
+            <div class="col-md-6 mb-3">
                 <strong>Giới tính:</strong> @(
                 Model.Gender == "Male" ? "Đực" :
                 Model.Gender == "Female" ? "Cái" :
                 "Chưa có"
                                 )
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 mb-3">
                 <strong>Tuổi:</strong>
                 @(
                                 Model.Age.HasValue
@@ -48,14 +48,14 @@
                                 : "Chưa có"
                                 )
             </div>
-            <div class="col-md-6"><strong>Ngày sinh:</strong> @(Model.DateOfBirth.HasValue? Model.DateOfBirth.Value.ToString("dd/MM/yyyy") : "Chưa có")</div>
+            <div class="col-md-6 mb-3"><strong>Ngày sinh:</strong> @(Model.DateOfBirth.HasValue? Model.DateOfBirth.Value.ToString("dd/MM/yyyy") : "Chưa có")</div>
             <div class="col-md-6"><strong>Màu sắc:</strong> @(string.IsNullOrWhiteSpace(Model.Color) ? "Chưa có" : Model.Color)</div>
             <div class="col-md-6"><strong>Dấu hiệu nhận dạng:</strong> @(string.IsNullOrWhiteSpace(Model.DistinguishingMarks) ? "Chưa có" : Model.DistinguishingMarks)</div>
         </div>
 
         <!-- Thông tin thể chất -->
         <h5><span class="section-icon">⚖️</span> Thông tin thể chất</h5>
-        <div class="row mb-3">
+        <div class="row">
             <div class="col-md-6"><strong>Cân nặng:</strong> @(Model.Weight.HasValue? Model.Weight + " kg" : "Chưa có")</div>
             <div class="col-md-6"><strong>Chiều cao:</strong> @(Model.Height.HasValue? Model.Height + " cm" : "Chưa có")</div>
         </div>
@@ -63,10 +63,10 @@
         <!-- Thông tin sức khỏe -->
         <h5><span class="section-icon">🩺</span> Thông tin sức khỏe</h5>
         <p><strong>Hồ sơ tiêm phòng:</strong> @(string.IsNullOrWhiteSpace(Model.VaccinationRecords) ? "Chưa có" : Model.VaccinationRecords)</p>
-        <p><strong>Tiền sử bệnh:</strong> @(string.IsNullOrWhiteSpace(Model.MedicalHistory) ? "Chưa có" : Model.MedicalHistory)</p>
-        <p><strong>Dị ứng:</strong> @(string.IsNullOrWhiteSpace(Model.Allergies) ? "Chưa có" : Model.Allergies)</p>
-        <p><strong>Chế độ ăn:</strong> @(string.IsNullOrWhiteSpace(Model.DietPreferences) ? "Chưa có" : Model.DietPreferences)</p>
-        <p><strong>Ghi chú sức khỏe:</strong> @(string.IsNullOrWhiteSpace(Model.HealthNotes) ? "Chưa có" : Model.HealthNotes)</p>
+        <p><strong>Tiền sử bệnh:</strong> @(string.IsNullOrWhiteSpace(Model.MedicalHistory) ? "Không có" : Model.MedicalHistory)</p>
+        <p><strong>Dị ứng:</strong> @(string.IsNullOrWhiteSpace(Model.Allergies) ? "Không có" : Model.Allergies)</p>
+        <p><strong>Chế độ ăn:</strong> @(string.IsNullOrWhiteSpace(Model.DietPreferences) ? "Không có" : Model.DietPreferences)</p>
+        <p><strong>Ghi chú sức khỏe:</strong> @(string.IsNullOrWhiteSpace(Model.HealthNotes) ? "Không có" : Model.HealthNotes)</p>
 
         <!-- Phân tích AI (nếu có) -->
         @if (!string.IsNullOrWhiteSpace(Model.AI_AnalysisResult))
@@ -87,7 +87,7 @@
         <!-- Nút thao tác -->
         <div class="d-flex justify-content-between mt-4">
             <a asp-action="Index" class="btn btn-secondary">⬅️ Quay lại</a>
-            <a asp-action="Edit" asp-route-id="@Model.PetId" class="btn btn-warning">🛠️ Sửa</a>
+            <a asp-action="Update" asp-route-id="@Model.PetId" class="btn btn-warning">🛠️ Sửa</a>
         </div>
     </div>
 </div>

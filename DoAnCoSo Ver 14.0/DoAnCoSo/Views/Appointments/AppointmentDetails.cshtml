@@ -55,11 +55,11 @@
                         @if (Model.CreatedDate != default(DateTime) && timeZoneFound)
                         {
                             var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(Model.CreatedDate, vietnamTimeZone);
-                            @vietnamTime.ToString("dd/MM/yyyy HH:mm:ss")
+                            @vietnamTime.ToString("dd/MM/yyyy HH:mm")
                         }
                         else if (Model.CreatedDate != default(DateTime))
                         {
-                            @(Model.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss") + " UTC")
+                            @(Model.CreatedDate.ToString("dd/MM/yyyy HH:mm") + " UTC")
                         }
                         else
                         {
@@ -101,6 +101,24 @@
                     <tr><th>Kết quả AI</th><td>@(Model.Pet.AI_AnalysisResult ?? "N/A")</td></tr>
                 </table>
             }
+            else if (Model.DeletedPet != null)
+            {
+                var deletedPet = Model.DeletedPet;
+                <table class="table table-bordered table-striped">
+                    <tr><th>Tên thú cưng</th><td>@deletedPet.Name</td></tr>
+                    <tr><th>Loại</th><td>@deletedPet.Type</td></tr>
+                    <tr><th>Giống</th><td>@(deletedPet.Breed ?? "N/A")</td></tr>
+                    <tr><th>Giới tính</th><td>@(deletedPet.Gender ?? "N/A")</td></tr>
+                    <tr><th>Tuổi</th><td>@deletedPet.Age</td></tr>
+                    <tr><th>Cân nặng</th><td>@deletedPet.Weight</td></tr>
+                    <tr><th>Ghi chú</th><td>Đã bị xóa</td></tr>
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">
+                            Các thông tin khác không còn hiển thị vì thú cưng đã bị xóa.
+                        </td>
+                    </tr>
+                </table>
+            }
             else
             {
                 <p>Không có thông tin thú cưng</p>
@@ -139,6 +157,11 @@
                         }
                     </tbody>
                 </table>
+            }
+            else if (Model.DeletedPet != null)
+            {
+                @* Nếu pet đã bị xóa, hiển thị thông tin cơ bản, nhưng không có lịch sử dịch vụ *@
+                <p>Thú cưng đã bị xóa nên lịch sử dịch vụ không còn hiển thị.</p>
             }
             else
             {

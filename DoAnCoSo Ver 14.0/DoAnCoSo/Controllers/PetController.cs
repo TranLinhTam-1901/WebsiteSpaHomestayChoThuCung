@@ -1,12 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using DoAnCoSo.Models;
+using DoAnCoSo.Models.Blockchain;
+using DoAnCoSo.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DoAnCoSo.Models;
 
 namespace DoAnCoSo.Controllers
 {
@@ -15,11 +13,13 @@ namespace DoAnCoSo.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly BlockchainService _blockchainService;
 
-        public PetController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public PetController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, BlockchainService blockchainService)
         {
             _context = context;
             _userManager = userManager;
+            _blockchainService = blockchainService;
         }
 
         // 🐾 Danh sách thú cưng
@@ -53,14 +53,16 @@ namespace DoAnCoSo.Controllers
         [HttpGet]
         public IActionResult Add()
         {
-            var model = new Pet();
-            return View(model); // ✅ luôn truyền model rỗng xuống View
+            return View(new Pet()); // luôn truyền model rỗng
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(Pet pet, IFormFile? imageFile)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var performedBy = currentUser?.FullName ?? "Hệ thống";
+
             try
             {
                 var userId = _userManager.GetUserId(User);
@@ -70,16 +72,18 @@ namespace DoAnCoSo.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                // Upload ảnh
+                // Upload ảnh nếu có
                 if (imageFile != null && imageFile.Length > 0)
                 {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "pets");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/pets", fileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
                         await imageFile.CopyToAsync(stream);
-                    }
 
                     pet.ImageUrl = "/images/pets/" + fileName;
                 }
@@ -95,6 +99,22 @@ namespace DoAnCoSo.Controllers
                 _context.Pets.Add(pet);
                 await _context.SaveChangesAsync();
 
+                // Serialize dữ liệu an toàn
+                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    pet.PetId,
+                    pet.Name,
+                    pet.Type,
+                    pet.Breed,
+                    pet.Gender,
+                    pet.Age,
+                    pet.Weight,
+                    OwnerName = currentUser?.FullName ?? "Unknown",
+                    pet.ImageUrl
+                });
+
+                await _blockchainService.AddPetBlockAsync(pet.PetId, "ADD", jsonData, performedBy);
+
                 TempData["SuccessMessage"] = "🎉 Thêm hồ sơ thú cưng thành công!";
                 return RedirectToAction(nameof(Index));
             }
@@ -105,7 +125,7 @@ namespace DoAnCoSo.Controllers
             }
         }
 
-        // ✏️ Cập nhật
+        // ✏️ Cập nhật thú cưng
         [HttpGet]
         public async Task<IActionResult> Update(int id)
         {
@@ -128,6 +148,9 @@ namespace DoAnCoSo.Controllers
             var userId = _userManager.GetUserId(User);
             var existingPet = await _context.Pets.FirstOrDefaultAsync(p => p.PetId == id && p.UserId == userId);
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            var performedBy = currentUser?.FullName ?? "Hệ thống";
+
             if (existingPet == null)
             {
                 TempData["ErrorMessage"] = "❌ Bạn không có quyền chỉnh sửa hồ sơ này.";
@@ -136,30 +159,46 @@ namespace DoAnCoSo.Controllers
 
             try
             {
-                // Upload ảnh mới (nếu có)
+                // Upload ảnh mới nếu có
                 if (imageFile != null && imageFile.Length > 0)
                 {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "pets");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/pets", fileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
                         await imageFile.CopyToAsync(stream);
-                    }
 
                     pet.ImageUrl = "/images/pets/" + fileName;
                 }
                 else
                 {
-                    // Giữ lại ảnh cũ nếu không upload ảnh mới
-                    pet.ImageUrl = existingPet.ImageUrl;
+                    pet.ImageUrl = existingPet.ImageUrl; // giữ lại ảnh cũ
                 }
 
-                // Gán lại UserId
-                pet.UserId = userId;
+                pet.UserId = userId; // đảm bảo UserId không bị thay đổi
 
                 _context.Entry(existingPet).CurrentValues.SetValues(pet);
                 await _context.SaveChangesAsync();
+
+                // Serialize JSON an toàn
+                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    existingPet.PetId,
+                    existingPet.Name,
+                    existingPet.Type,
+                    existingPet.Breed,
+                    existingPet.Gender,
+                    existingPet.Age,
+                    existingPet.Weight,
+                    OwnerName = currentUser?.FullName ?? "Unknown",
+                    existingPet.ImageUrl
+                });
+
+                await _blockchainService.AddPetBlockAsync(pet.PetId, "UPDATE", jsonData, performedBy);
 
                 TempData["SuccessMessage"] = "✅ Cập nhật thông tin thành công!";
                 return RedirectToAction(nameof(Index));
@@ -175,8 +214,9 @@ namespace DoAnCoSo.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var userId = _userManager.GetUserId(User);
-            var pet = await _context.Pets.FirstOrDefaultAsync(p => p.PetId == id && p.UserId == userId);
+            var pet = await _context.Pets
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PetId == id);
 
             if (pet == null)
             {
@@ -189,31 +229,105 @@ namespace DoAnCoSo.Controllers
 
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(int PetId)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var performedBy = currentUser?.FullName ?? "Hệ thống";
             var userId = _userManager.GetUserId(User);
-            var pet = await _context.Pets.FirstOrDefaultAsync(p => p.PetId == id && p.UserId == userId);
+            bool isAdmin = User.IsInRole("Admin");
+
+            // Lấy pet kèm User
+            var pet = await _context.Pets
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PetId == PetId);
 
             if (pet == null)
             {
-                TempData["ErrorMessage"] = "❌ Không tìm thấy hồ sơ để xóa.";
+                TempData["ErrorMessage"] = "❌ Không tìm thấy hồ sơ thú cưng.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Kiểm tra quyền
+            if (!isAdmin && pet.UserId != userId)
+            {
+                TempData["ErrorMessage"] = "❌ Bạn không có quyền xóa hồ sơ này.";
                 return RedirectToAction(nameof(Index));
             }
 
             try
             {
-                // Nếu có ảnh -> xóa file vật lý
+                // 1. Tạo bản ghi DeletedPet
+                var deletedPet = new DeletedPets
+                {
+                    OriginalPetId = pet.PetId,
+                    Name = pet.Name,
+                    Type = pet.Type,
+                    Breed = pet.Breed,
+                    Gender = pet.Gender,
+                    Age = pet.Age,
+                    Weight = pet.Weight,
+                    UserId = pet.UserId,
+                    ImageUrl = pet.ImageUrl,
+                    DeletedAt = DateTime.Now,
+                    DeletedBy = performedBy
+                };
+                _context.DeletedPets.Add(deletedPet);
+                await _context.SaveChangesAsync(); // cần save để có Id
+
+                // 2. Cập nhật Appointment liên quan
+                var appointments = await _context.Appointments
+                    .Where(a => a.PetId == PetId)
+                    .ToListAsync();
+
+                foreach (var a in appointments)
+                {
+                    a.DeletedPetId = deletedPet.Id; // gán DeletedPetId
+                    a.Status = AppointmentStatus.Deleted; // đánh dấu đã xóa
+                }
+                await _context.SaveChangesAsync(); // lưu Appointment trước khi xóa Pet
+
+                // 3. Xóa ảnh vật lý (nếu có)
                 if (!string.IsNullOrEmpty(pet.ImageUrl))
                 {
-                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", pet.ImageUrl.TrimStart('/'));
-                    if (System.IO.File.Exists(fullPath))
-                        System.IO.File.Delete(fullPath);
+                    try
+                    {
+                        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", pet.ImageUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(fullPath))
+                            System.IO.File.Delete(fullPath);
+                    }
+                    catch (Exception fileEx)
+                    {
+                        Console.WriteLine("Lỗi xóa file ảnh: " + fileEx.Message);
+                    }
                 }
 
+                // 4. Xóa Pet khỏi bảng chính
                 _context.Pets.Remove(pet);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "🗑️ Xóa hồ sơ thú cưng thành công!";
+                // 5. Ghi log blockchain
+                try
+                {
+                    var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        deletedPet.OriginalPetId,
+                        deletedPet.Name,
+                        deletedPet.Type,
+                        deletedPet.Breed,
+                        deletedPet.Gender,
+                        deletedPet.Age,
+                        deletedPet.Weight,
+                        deletedPet.User.FullName
+                    });
+                    var operation = isAdmin ? "ADMIN_DELETE" : "DELETE";
+                    await _blockchainService.AddPetBlockAsync(deletedPet.OriginalPetId, operation, jsonData, performedBy);
+                }
+                catch (Exception bcEx)
+                {
+                    Console.WriteLine("Blockchain log lỗi (bỏ qua): " + bcEx.Message);
+                }
+
+                TempData["SuccessMessage"] = "🗑️ Hồ sơ thú cưng đã được đánh dấu xóa!";
             }
             catch (Exception ex)
             {
