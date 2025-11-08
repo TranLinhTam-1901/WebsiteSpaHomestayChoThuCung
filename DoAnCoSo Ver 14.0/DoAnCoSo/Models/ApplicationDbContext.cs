@@ -42,6 +42,8 @@ namespace DoAnCoSo.Models
         public DbSet<DoAnCoSo.Models.Blockchain.BlockchainRecord> BlockchainRecords { get; set; }
 
         public DbSet<DeletedPets> DeletedPets { get; set; }
+        public DbSet<InventoryLog> InventoryLogs { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -141,6 +143,17 @@ namespace DoAnCoSo.Models
             modelBuilder.Entity<UserPromotion>()
                 .HasIndex(up => new { up.UserId, up.PromotionId })
                 .IsUnique();
+            // Thêm phần unique constraint cho UserPromotion tại đây:
+            modelBuilder.Entity<UserPromotion>()
+                .HasIndex(up => new { up.UserId, up.PromotionId })
+                .IsUnique();
+
+            modelBuilder.Entity<InventoryLog>()
+                .HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

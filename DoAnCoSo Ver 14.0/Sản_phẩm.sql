@@ -529,6 +529,7 @@ VALUES
 ('1399a57a-aa10-416e-9e71-23cbb3f08a5f', 0, 23, 4, N'Khẩu phần phù hợp cho Golden, ăn hết ngay.', '2025-05-29 19:20:00'),
 ('1399a57a-aa10-416e-9e71-23cbb3f08a5f', 0, 25, 5, N'Rất hài lòng, sẽ mua lại lần nữa.', '2025-05-31 08:10:00');
 
+SELECT Id, UserName FROM AspNetUsers;
 -- Thú cưng --
 -- Lưu ý: Copy UserId ở trên xuống --
 SET DATEFORMAT DMY;
@@ -660,7 +661,7 @@ VALUES
  N'Đặt phòng homestay cho thú cưng 3 ngày sẽ được tặng thêm 1 ngày miễn phí.',
  N'Dịch vụ homestay cao cấp với không gian rộng rãi, sạch sẽ, an toàn và đầy đủ tiện nghi. Ưu đãi có hạn, nhanh tay đặt ngay.',
  N'sale_2.jpg',
- 0, 25, '2025-09-22', '2025-10-10',
+ 0, 25, '2025-09-22', '2025-11-03',
  N'HOMEPLUS', 1, 0,
  NULL, NULL, 1, 0),
 
@@ -668,7 +669,7 @@ VALUES
  N'Tiết kiệm khi đặt combo spa và homestay cùng lúc.',
  N'Kết hợp chăm sóc spa và nghỉ dưỡng homestay cho thú cưng, mang lại trải nghiệm trọn vẹn và tiết kiệm 15% chi phí.',
  N'sale_3.jpg',
- 0, 15, '2025-09-25', '2025-10-25',
+ 0, 15, '2025-09-25', '2025-11-03',
  N'COMBO15', 1, 0,
  NULL, NULL, 1, 0),
 
@@ -676,7 +677,7 @@ VALUES
  N'Đăng ký lần đầu sẽ nhận ngay quà tặng hấp dẫn.',
  N'Khách hàng lần đầu đặt dịch vụ tại spa & homestay thú cưng sẽ được tặng 1 suất spa mini miễn phí hoặc đồ chơi thú cưng.',
  N'sale_4.jpg',
- 0, 10, '2025-09-22', '2025-12-31',
+ 0, 10, '2025-09-22', '2025-11-03',
  N'NEWMEMBER', 1, 0,
  NULL, NULL, 1, 0),
 
@@ -684,7 +685,7 @@ VALUES
  N'Đưa 2 bé cưng đi spa cùng lúc sẽ nhận ngay ưu đãi giảm 30%.',
  N'Dành cho khách hàng có từ 2 thú cưng trở lên khi đặt dịch vụ spa, giúp tiết kiệm chi phí mà thú cưng vẫn được chăm sóc tận tình.',
  N'sale_5.jpg',
- 0, 30, '2025-09-22', '2025-10-15',
+ 0, 30, '2025-09-22', '2025-11-03',
  N'SPA2PET', 1, 0,
  NULL, NULL, 1, 0);
 

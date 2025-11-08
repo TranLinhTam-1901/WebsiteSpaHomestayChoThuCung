@@ -73,11 +73,16 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IProductRepository, EFProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, EFCategoryRepository>();
 
+// Đăng ký CustomUserIdProvider cho SignalR
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddSignalR();
 
 builder.Services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
+// Đăng ký InventoryService     
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+
+// Đăng ký CustomUserIdProvider cho SignalR
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
 // Bind EmailSettings từ appsettings.json

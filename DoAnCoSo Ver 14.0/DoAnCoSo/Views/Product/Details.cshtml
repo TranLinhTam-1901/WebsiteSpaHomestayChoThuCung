@@ -33,6 +33,11 @@
         <div class="col-md-6">
             <h1 class="h2 mb-3">@Model.Product.Name</h1>
 
+            @if (TempData["ErrorMessage"] is string stockMsg)
+            {
+                <div class="alert alert-danger" role="alert">@stockMsg</div>
+            }
+
             <!-- Giá -->
             <div class="mb-3">
                 @if (Model.Product.PriceReduced != null && Model.Product.PriceReduced > 0 && Model.Product.PriceReduced < Model.Product.Price)
@@ -96,27 +101,71 @@
                         }
                     </div>
                 }
+                @{
+                    var stock = Model.Product?.StockQuantity ?? 0;
+
+                    // Số lượng cho UI (không cho chọn quá 5/lần)
+                    var maxUiQty = Math.Min(5, Math.Max(0, stock));
+
+                    // Nhãn hiển thị thân thiện
+                    string stockLabel = stock switch
+                    {
+                        0 => "Hết hàng",
+                        <= 5 => $"Còn {stock}",
+                        _ => "Còn hàng"
+                    };
+                }
 
                 <div class="mb-4 d-flex align-items-center">
                     <label class="me-2">Số lượng</label>
-                    <select class="form-select w-auto" id="quantitySelect">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            <option>@i</option>
-                        }
-                    </select>
+
+                    @if (maxUiQty > 0)
+                    {
+                        <select class="form-select w-auto" id="quantitySelect" data-available="@stock">
+                            @for (int i = 1; i <= maxUiQty; i++)
+                            {
+                                <option>@i</option>
+                            }
+                        </select>
+                        <small class="ms-2 text-muted">@stockLabel</small>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Hết hàng</span>
+                    }
                 </div>
 
+              
                 <!-- Nút hành động -->
                 <div class="d-flex gap-2">
                     <a href="#" onclick="buyNow()" class="btn btn-primary flex-grow-1 py-2">Mua Ngay</a>
-                    <form asp-controller="ShoppingCart" asp-action="AddToCart" method="post" class="flex-grow-1">
+
+                    <form id="addToCartForm"
+                          asp-controller="ShoppingCart"
+                          asp-action="AddToCart"
+                          method="post"
+                          class="flex-grow-1">
+                        @Html.AntiForgeryToken()
+
                         <input type="hidden" name="productId" value="@Model.Product.Id" />
+                        <input type="hidden" id="hiddenQuantity" name="quantity" value="1" />
+                        <input type="hidden" id="hiddenFlavor" name="flavor" value="" />
+
                         <button type="submit" class="btn btn-outline-dark w-100">
                             <i class="bi-cart-fill me-1"></i> Thêm vào giỏ
                         </button>
                     </form>
                 </div>
+
+                @if (maxUiQty == 0)
+                {
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            document.querySelectorAll('.product-detail-actions-container a.btn, .product-detail-actions-container button.btn')
+                                .forEach(function (btn) { btn.disabled = true; btn.classList.add('disabled'); });
+                        });
+                    </script>
+                }
             </div>
 
             <!-- Hotline -->
@@ -244,7 +293,7 @@
     .product-thumbnail {
         border: 2px solid #FFB6C1;
         cursor: pointer;
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        transition: transform .2s ease, border-color .2s ease;
     }
 
         .product-thumbnail:hover {
@@ -278,7 +327,7 @@
         margin: 4px 6px 0 0;
         border-radius: 20px;
         cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
+        transition: background-color .3s ease, transform .2s ease;
     }
 
         .flavor-option-label:hover {
@@ -317,7 +366,7 @@
         font-size: 1.5rem;
         color: #FF6185 !important;
         cursor: pointer;
-        transition: transform 0.2s ease, color 0.2s ease;
+        transition: transform .2s ease, color .2s ease;
     }
 
     /* Review box */
@@ -333,13 +382,11 @@
             color: #FF6185;
         }
 
-        .review-box .fa-star,
-        .review-box .fa-star-half-alt {
+        .review-box .fa-star, .review-box .fa-star-half-alt {
             color: #FF6185;
         }
 
-            .review-box .fa-star:not(.fas),
-            .review-box .far.fa-star {
+            .review-box .fa-star:not(.fas), .review-box .far.fa-star {
                 color: #ccc;
             }
 
@@ -355,127 +402,111 @@
 </style>
 
 <script>
-       document.addEventListener('DOMContentLoaded', function() {
-        // Cập nhật giá trị ẩn ngay khi tải trang nếu có lựa chọn mặc định
+    document.addEventListener('DOMContentLoaded', function() {
+        // Đồng bộ hidden inputs ngay khi load
         updateHiddenInputs();
 
-        // Gắn sự kiện change cho dropdown số lượng
+        // Sự kiện change cho dropdown số lượng
         var quantitySelect = document.getElementById('quantitySelect');
         if (quantitySelect) {
             quantitySelect.addEventListener('change', updateHiddenInputs);
         }
 
-        // Gắn sự kiện change cho các radio button hương vị
+        // Sự kiện change cho radio flavor
         var flavorRadios = document.querySelectorAll('input[name="flavor"]');
         flavorRadios.forEach(function(radio) {
             radio.addEventListener('change', updateHiddenInputs);
         });
 
-        // Gắn sự kiện submit cho form, đảm bảo input ẩn được cập nhật cuối cùng
+        // Bắt submit AddToCart: chặn vượt tồn
         var addToCartForm = document.getElementById('addToCartForm');
         if (addToCartForm) {
             addToCartForm.addEventListener('submit', function(event) {
-                updateHiddenInputs(); // Đảm bảo giá trị mới nhất được cập nhật trước khi submit
-                // Không cần event.preventDefault() nếu bạn muốn form submit bình thường
+                updateHiddenInputs();
+
+                var qty = parseInt(document.getElementById('hiddenQuantity').value || '1');
+                var available = parseInt((document.getElementById('quantitySelect')?.dataset?.available) || '0');
+
+                if (qty > available) {
+                    event.preventDefault();
+                    alert('Số lượng bạn chọn vượt quá tồn kho (' + available + '). Vui lòng giảm số lượng.');
+                }
             });
         }
     });
 
-    // Hàm này cập nhật các input ẩn trong form "Thêm vào giỏ hàng"
+    // Cập nhật hidden inputs cho AddToCart
     function updateHiddenInputs() {
-        var quantitySelect = document.getElementById('quantitySelect');
-        if (quantitySelect) {
-            document.getElementById('hiddenQuantity').value = quantitySelect.value;
+        var qSel = document.getElementById('quantitySelect');
+        if (qSel) {
+            document.getElementById('hiddenQuantity').value = qSel.value;
         }
 
         var selectedFlavorRadio = document.querySelector('input[name="flavor"]:checked');
-        if (selectedFlavorRadio) {
-            document.getElementById('hiddenFlavor').value = selectedFlavorRadio.value;
-        } else {
-            // Nếu không có hương vị nào được chọn (hoặc không có phần hương vị), gán chuỗi rỗng
-            document.getElementById('hiddenFlavor').value = '';
-        }
+        document.getElementById('hiddenFlavor').value = selectedFlavorRadio ? selectedFlavorRadio.value : '';
     }
 
-    // Hàm buyNow() sẽ chuyển hướng đến trang Checkout (GET)
+    // Mua ngay (có chặn client vượt tồn, server vẫn check lại)
     function buyNow() {
         var productId = "@Model.Product.Id";
-        var quantity = document.getElementById('quantitySelect').value;
+        var qSel = document.getElementById('quantitySelect');
+        var quantity = qSel ? qSel.value : 1;
+        var available = parseInt((qSel?.dataset?.available) || '0');
+
+        if (parseInt(quantity) > available) {
+            alert('Số lượng bạn chọn vượt quá tồn kho (' + available + '). Vui lòng giảm số lượng.');
+            return;
+        }
 
         var selectedFlavorRadio = document.querySelector('input[name="flavor"]:checked');
-        var flavor = selectedFlavorRadio ? selectedFlavorRadio.value : ''; // Lấy hương vị đã chọn, nếu có
+        var flavor = selectedFlavorRadio ? selectedFlavorRadio.value : '';
 
-        // Chuyển hướng đến action Checkout với cờ IsBuyNow
-        // Sử dụng encodeURIComponent để xử lý các ký tự đặc biệt trong hương vị
         window.location.href = `/ShoppingCart/Checkout?isBuyNow=true&buyNowProductId=${productId}&buyNowQuantity=${quantity}&buyNowFlavor=${encodeURIComponent(flavor)}`;
     }
 
-    // Mã JavaScript mới cho chức năng đổi ảnh chính khi click thumbnail
+    // Đổi ảnh chính khi click thumbnail
     document.addEventListener('DOMContentLoaded', function() {
-        // Lấy thẻ <img> hiển thị ảnh chính bằng ID
         var mainImage = document.getElementById('mainProductImage');
-
-        // Lấy tất cả các thẻ <img> là ảnh thumbnail
-        // Chúng ta giả định tất cả các ảnh thumbnail có class 'img-thumbnail'
         var thumbnails = document.querySelectorAll('.img-thumbnail');
-
-        // Duyệt qua từng ảnh thumbnail và thêm bộ lắng nghe sự kiện click
         thumbnails.forEach(function(thumbnail) {
             thumbnail.addEventListener('click', function() {
-                // Lấy đường dẫn nguồn ảnh của thumbnail vừa click
-                var newMainImageSrc = this.src; // 'this' trỏ đến thẻ <img> thumbnail
-
-
-                mainImage.src = newMainImageSrc;
-
-
+                mainImage.src = this.src;
             });
         });
     });
 
-    // Phần bình luận và đánh giá hiển thị ngôi sao
+    // Rating hiển thị sao
     document.addEventListener('DOMContentLoaded', function () {
         const stars = document.querySelectorAll('.rating-input .star');
         const ratingValueInput = document.getElementById('ratingValue');
         let currentRating = parseInt(ratingValueInput.value) || 0;
 
-        // Cập nhật hiển thị sao
         function updateStarAppearance(rating) {
             stars.forEach(star => {
                 const value = parseInt(star.dataset.value);
                 if (value <= rating) {
-                    star.classList.remove('far');
-                    star.classList.add('fas');
+                    star.classList.remove('far'); star.classList.add('fas');
                 } else {
-                    star.classList.remove('fas');
-                    star.classList.add('far');
+                    star.classList.remove('fas'); star.classList.add('far');
                 }
             });
         }
 
-        // Khởi tạo hiển thị
         updateStarAppearance(currentRating);
 
-        // Thêm sự kiện cho từng ngôi sao
         stars.forEach(star => {
-            // Hover vào
             star.addEventListener('mouseover', () => {
                 const hoverRating = parseInt(star.dataset.value);
                 updateStarAppearance(hoverRating);
             });
-
-            // Hover ra
             star.addEventListener('mouseout', () => {
-                updateStarAppearance(currentRating); // Trở về trạng thái đã chọn
+                updateStarAppearance(currentRating);
             });
-
-            // Click
             star.addEventListener('click', () => {
                 const clickedRating = parseInt(star.dataset.value);
                 currentRating = clickedRating;
-                ratingValueInput.value = clickedRating; // Cập nhật input ẩn
+                ratingValueInput.value = clickedRating;
                 updateStarAppearance(currentRating);
-                // Có thể trigger validation input here if needed
             });
         });
     });
