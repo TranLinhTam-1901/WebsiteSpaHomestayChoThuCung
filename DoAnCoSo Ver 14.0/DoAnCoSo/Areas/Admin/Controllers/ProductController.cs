@@ -228,23 +228,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             return "/images/" + fileName;
         }
-
         #endregion
-
-        
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AdjustStock(int productId, int delta, string? reason,
-            [FromServices] DoAnCoSo.Services.IInventoryService inventory)
-        {
-            var prod = await _context.Products.FindAsync(productId);
-            if (prod == null) return NotFound();
-
-            await inventory.AdjustStockAsync(productId, delta, reason ?? "Manual");
-            TempData["SuccessMessage"] = "Đã cập nhật tồn kho.";
-            return RedirectToAction(nameof(Update), new { id = productId });
-        }
-       
-
     }
 }

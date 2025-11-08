@@ -1,0 +1,84 @@
+﻿@model IEnumerable<DoAnCoSo.Models.InventoryLog>
+@{
+    ViewData["Title"] = "📜 Lịch sử giao dịch kho";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4 text-center text-primary">📜 Lịch sử giao dịch kho</h2>
+
+    <div class="mb-3 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">⬅️ Quay lại bảng tồn kho</a>
+    </div>
+
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-light">
+            <tr class="text-center">
+                <th>#</th>
+                <th>Sản phẩm</th>
+                <th>Thay đổi (SL)</th>
+                <th>Lý do</th>
+                <th>Tham chiếu</th>
+                <th>Người thao tác</th>
+                <th>Thời gian</th>
+                <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted">Chưa có giao dịch kho nào.</td>
+                </tr>
+            }
+            else
+            {
+                int i = 1;
+                foreach (var log in Model)
+                {
+                    <tr class="@(log.QuantityChange < 0 ? "table-danger" : "table-success")">
+                        <td class="text-center">@i</td>
+                        <td>@log.Product?.Name</td>
+                        <td class="text-center fw-bold">@log.QuantityChange</td>
+                        <td class="text-center">@log.Reason</td>
+                        <td class="text-center">@log.ReferenceId</td>
+                        @{
+                            var map = ViewBag.UserMap as IDictionary<string, string>;
+                            string actor = "-";
+                            if (!string.IsNullOrEmpty(log.PerformedByUserId))
+                            {
+                                if (map != null && map.ContainsKey(log.PerformedByUserId))
+                                {
+                                    actor = map[log.PerformedByUserId]; // FullName hoặc Email/UserName
+                                }
+                                else
+                                {
+                                    actor = log.PerformedByUserId; // fallback: hiện raw Id nếu chưa cache tên
+                                }
+                            }
+                        }
+                        <td class="text-center" title="@log.PerformedByUserId">@actor</td>
+
+                        <td class="text-center">@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-center note-cell" title="@log.Note">@log.Note</td>
+                    </tr>
+                    i++;
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Auto-hide message -->
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(a => a.remove());
+    }, 3000);
+</script>
+<style>
+    .note-cell {
+        max-width: 260px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

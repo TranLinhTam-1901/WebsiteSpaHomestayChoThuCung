@@ -19,7 +19,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         {
             _context = context;
             _userManager = userManager;
-            _userManager = userManager;
             _inventory = inventory;
         }
 
@@ -61,7 +60,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             return View(order);
         }
 
-        // 2. Xác nhận đơn hàng
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Confirm(int id)
@@ -73,40 +71,45 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (order.Status == OrderStatusEnum.ChoXacNhan)
-            {
-                // Cập nhật trạng thái đơn hàng
-                order.Status = OrderStatusEnum.DaXacNhan;
-
-                // Nếu là COD → xem như đã thanh toán khi admin xác nhận
-                if (order.PaymentMethod == "COD")
-                {
-                    order.bankStatus = BankStatusEnum.DaThanhToan;
-                }
-
-                // Nếu là Banking thì không cần đổi vì đã thanh toán tự động trước đó
-                _context.Update(order);
-                await _context.SaveChangesAsync();
-
-                try
-                {
-                    await _inventory.DeductForOrderAsync(order.Id,
-                    byUserId: _userManager.GetUserId(User));
-                    TempData["SuccessMessage"] = "✅ Đơn hàng đã xác nhận và đã trừ kho.";
-                }
-                catch (Exception ex)
-                {
-                  
-                    TempData["ErrorMessage"] = "Xác nhận thất bại do tồn kho: " + ex.Message;
-                }
-            }
-            else
+            if (order.Status != OrderStatusEnum.ChoXacNhan)
             {
                 TempData["ErrorMessage"] = "Đơn hàng không ở trạng thái 'Chờ xác nhận' để xác nhận.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                // NGUYÊN TỬ: Unreserve → Trừ kho → Tăng Sold → Set DaXacNhan
+                await _inventory.ConfirmOrderAtomicallyAsync(id, _userManager.GetUserId(User));
+
+                // TẠM THỜI: coi BankTransfer như COD (đã thanh toán khi Admin confirm)
+                if (IsManualPaidMethod(order.PaymentMethod))
+                {
+                    order.bankStatus = BankStatusEnum.DaThanhToan;
+                    _context.Update(order);              // chỉ update bankStatus
+                    await _context.SaveChangesAsync();
+                }
+
+                TempData["SuccessMessage"] = "✅ Đơn hàng đã xác nhận, đã trừ kho và ghi nhận đã thanh toán.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Xác nhận thất bại: " + ex.Message;
             }
 
             return RedirectToAction(nameof(Index));
         }
+
+        // Sau này chuyển sang auto-banking, bạn chỉ cần sửa logic trong hàm này
+        private static bool IsManualPaidMethod(string? method)
+        {
+            if (string.IsNullOrWhiteSpace(method)) return false;
+
+            return method.Equals("COD", StringComparison.OrdinalIgnoreCase)
+                || method.Equals("BankTransfer", StringComparison.OrdinalIgnoreCase);
+            // TODO (future): khi có webhook banking, bỏ "BankTransfer" khỏi đây.
+        }
+
 
         // 3. Hủy đơn hàng (dành cho Admin)
         [HttpPost]
@@ -114,57 +117,22 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         public async Task<IActionResult> Cancel(int id)
         {
             var order = await _context.Orders.FindAsync(id);
-
             if (order == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy đơn hàng này.";
                 return RedirectToAction(nameof(Index));
             }
-            else if (order.Status == OrderStatusEnum.DaXacNhan || order.bankStatus == BankStatusEnum.DaThanhToan)
+
+            try
             {
-                // ✅ Đơn đã xác nhận → hoàn kho thật
-                try
-                {
-                    await _inventory.RestockForOrderAsync(order.Id,
-                        byUserId: _userManager.GetUserId(User));
-                }
-                catch (Exception ex)
-                {
-                    TempData["ErrorMessage"] = "Không thể hoàn kho: " + ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
-
-                order.Status = OrderStatusEnum.DaHuy;
-                _context.Update(order);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Đơn hàng đã hủy và đã hoàn kho.";
+                // Service tự quyết: nếu đã trừ kho → hoàn kho; nếu chưa → chỉ unreserve; rồi set DaHuy
+                await _inventory.CancelOrderAtomicallyAsync(id, _userManager.GetUserId(User));
+                TempData["SuccessMessage"] = "✅ Đơn hàng đã hủy đúng quy tắc.";
             }
-            else if (order.Status == OrderStatusEnum.ChoXacNhan)
+            catch (Exception ex)
             {
-                // ✅ Đơn chưa xác nhận → chỉ bỏ giữ hàng tạm
-                try
-                {
-                    await _inventory.UnreserveForOrderAsync(order.Id,
-                        byUserId: _userManager.GetUserId(User));
-                }
-                catch (Exception ex)
-                {
-                    TempData["ErrorMessage"] = "Không thể bỏ giữ hàng tạm: " + ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
-
-                order.Status = OrderStatusEnum.DaHuy;
-                _context.Update(order);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Đơn hàng đã hủy và đã bỏ giữ hàng tạm.";
+                TempData["ErrorMessage"] = "Hủy thất bại: " + ex.Message;
             }
-            else
-            {
-                TempData["ErrorMessage"] = "Trạng thái đơn hàng không hợp lệ để hủy.";
-            }
-
 
             return RedirectToAction(nameof(Index));
         }

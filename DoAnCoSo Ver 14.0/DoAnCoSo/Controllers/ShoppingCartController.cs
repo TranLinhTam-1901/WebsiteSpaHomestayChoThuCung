@@ -145,7 +145,14 @@ namespace DoAnCoSo.Controllers
             {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
             }
-
+            // ✅ chặn sớm theo tồn khả dụng (đã trừ Reserved)
+            var available = await _inventory.GetAvailableAsync(productId);
+            if (quantity <= 0) quantity = 1;
+            if (quantity > available)
+            {
+                TempData["ErrorMessage"] = $"Sản phẩm chỉ còn {available} cái trong kho.";
+                return RedirectToAction("Details", "Product", new { id = productId });
+            }
             var product = await GetProductFromDatabase(productId);
             if (product == null)
             {
@@ -214,9 +221,10 @@ namespace DoAnCoSo.Controllers
                     return RedirectToAction("AllProducts", "Product");
                 }
 
-                if (product.StockQuantity < buyNowQuantity.Value)
+                var available = await _inventory.GetAvailableAsync(product.Id); // ✅
+                if (buyNowQuantity.Value > available)
                 {
-                    TempData["ErrorMessage"] = $"Sản phẩm '{product.Name}' chỉ còn {product.StockQuantity} cái trong kho.";
+                    TempData["ErrorMessage"] = $"Sản phẩm '{product.Name}' chỉ còn {available} cái trong kho.";
                     return RedirectToAction("Details", "Product", new { id = product.Id });
                 }
             }

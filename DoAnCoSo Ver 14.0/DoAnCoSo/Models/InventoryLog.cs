@@ -19,6 +19,9 @@ namespace DoAnCoSo.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public string? PerformedByUserId { get; set; } 
+        public string? PerformedByUserId { get; set; }
+
+        [MaxLength(200)]
+        public string? Note { get; set; }
     }
 }

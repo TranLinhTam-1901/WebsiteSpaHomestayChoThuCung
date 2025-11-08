@@ -129,6 +129,17 @@
                             </button>
                         </form>
                     }
+                    else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                    {
+                        <!-- Nút hủy sau khi đã xác nhận (hoàn kho) -->
+                        <form asp-action="Cancel" asp-route-id="@order.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Hủy đơn đã xác nhận và hoàn kho?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning">
+                                ↩️ Hủy (hoàn kho)
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
         }
