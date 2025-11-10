@@ -6,7 +6,10 @@
     ViewData["Title"] = isUpdate ? "✏️ Cập nhật lịch Spa cho thú cưng 🐾" : "🧼 Đặt lịch Spa cho thú cưng 🐾";
     var spaServices = ViewBag.SpaServices as List<Service> ?? new List<Service>();
     var spaPricings = ViewBag.SpaPricings as List<SpaPricing> ?? new List<SpaPricing>();
-    var userPets = Model.UserPets ?? new List<Pet>();
+    var users = (ViewBag.Users as List<ApplicationUser>)?.OrderBy(u => u.FullName).ToList() ?? new List<ApplicationUser>();
+    var selectedUserId = !string.IsNullOrEmpty(Model.UserId)
+                         ? Model.UserId
+                         : (users.FirstOrDefault()?.Id ?? "");
 }
 
 <link rel="stylesheet" href="~/css/booking.css" />
@@ -15,13 +18,28 @@
     <div class="booking-card mx-auto" style="max-width: 750px;">
         <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
 
-        <form asp-action="@(Model.IsUpdate ? "UpdateAppointmentSpa" : "BookAppointmentSpa")" method="post">
+        <form asp-action="@(Model.IsUpdate ? "UpdateAppointmentSpa" : "AppointmentSpa")" method="post">
             <input type="hidden" asp-for="AppointmentId" />
-            <!-- 1️⃣ Chủ nuôi -->
+
+            <!-- 0️⃣ Chọn khách hàng (admin) -->
+            <h5><span class="section-icon">👥</span>Chọn khách hàng</h5>
+            <div class="mb-3">
+                <label for="userSelect" class="form-label">Khách hàng</label>
+                <select id="userSelect" name="UserId" class="form-select" required>
+                    @foreach (var u in users)
+                    {
+                        <option value="@u.Id" selected="@(u.Id == selectedUserId ? "selected" : "")">
+                            @u.FullName
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <!-- 1️⃣ Thông tin chủ nuôi -->
             <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
             <div class="mb-3">
                 <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
-                <input asp-for="OwnerPhoneNumber" class="form-control" required />
+                <input asp-for="OwnerPhoneNumber" class="form-control"/>
             </div>
 
             <!-- 2️⃣ Thú cưng -->
@@ -90,7 +108,6 @@
                         </option>
                     }
                 </select>
-
             </div>
 
             <!-- 4️⃣ Giá -->
@@ -104,12 +121,7 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label asp-for="AppointmentDate" class="form-label">Ngày hẹn</label>
-                    <input asp-for="AppointmentDate"
-                           type="text"
-                           id="appointmentPicker"
-                           class="form-control"
-                           placeholder="Chọn ngày hẹn..."
-                           required />
+                    <input asp-for="AppointmentDate" type="text" id="appointmentPicker" class="form-control" placeholder="Chọn ngày hẹn..." required />
                 </div>
                 <div class="col-md-6">
                     <label asp-for="AppointmentTime" class="form-label">Giờ hẹn</label>
@@ -127,6 +139,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const userSelect = document.getElementById("userSelect");
         const petSelect = document.getElementById("existingPetSelect");
         const serviceSelect = document.getElementById("serviceSelect");
         const priceInput = document.getElementById("calculatedPrice");
@@ -137,11 +150,28 @@
         const petAgeInput = document.getElementById("PetAge");
         const petWeightInput = document.getElementById("PetWeight");
         const existingPetIdInput = document.getElementById("ExistingPetId");
+        const ownerPhoneInput = document.getElementById("OwnerPhoneNumber");
+        const appointmentPicker = document.getElementById("appointmentPicker");
 
         function parseWeight(weightStr) {
             if (!weightStr) return 0;
             const cleaned = weightStr.replace(",", ".").replace(/[^\d.]/g, "");
             return parseFloat(cleaned) || 0;
+        }
+
+        function updatePrice() {
+            const selectedPet = petSelect.selectedOptions[0];
+            const selectedService = serviceSelect.selectedOptions[0];
+            if (!selectedPet || !selectedService) { priceInput.value = "0 VNĐ"; return; }
+
+            const weight = parseWeight(selectedPet.dataset.weight);
+            let price = 0;
+            if (weight < 5) price = parseFloat(selectedService.dataset.priceunder5) || 0;
+            else if (weight <= 12) price = parseFloat(selectedService.dataset.price5to12) || 0;
+            else if (weight <= 25) price = parseFloat(selectedService.dataset.price12to25) || 0;
+            else price = parseFloat(selectedService.dataset.priceover25) || 0;
+
+            priceInput.value = price.toLocaleString("vi-VN") + " VNĐ";
         }
 
         function updatePetInfo() {
@@ -155,74 +185,86 @@
             petWeightInput.value = selectedPet.dataset.weight || "";
             existingPetIdInput.value = selectedPet.value;
 
-            updatePrice(); // cập nhật giá ngay khi đổi pet
+            updatePrice();
         }
 
-        function updatePrice() {
-            const selectedService = serviceSelect.selectedOptions[0];
-            const selectedPet = petSelect.selectedOptions[0];
-            if (!selectedService || !selectedPet) {
-                priceInput.value = "0 VNĐ";
-                return;
-            }
+        // Load pet và số điện thoại khi đổi khách hàng
+        userSelect.addEventListener("change", function () {
+            const userId = userSelect.value;
+            fetch(`/Admin/Service/GetUserPetsAndPhone?userId=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    ownerPhoneInput.value = data.phone || "";
+                    petSelect.innerHTML = "";
+                    data.pets.sort((a, b) => a.name.localeCompare(b.name)).forEach(p => {
+                        const option = document.createElement("option");
+                        option.value = p.petId;
+                        option.dataset.name = p.name;
+                        option.dataset.type = p.type;
+                        option.dataset.breed = p.breed;
+                        option.dataset.age = p.age;
+                        option.dataset.weight = p.weight;
+                        option.textContent = p.name;
+                        petSelect.appendChild(option);
+                    });
+                    if (petSelect.options.length > 0) {
+                        petSelect.selectedIndex = 0;
+                        updatePetInfo();
+                    }
+                });
+        });
 
-            const weight = parseWeight(selectedPet.dataset.weight);
-            let price = 0;
-
-            if (weight < 5) {
-                price = parseFloat(selectedService.dataset.priceunder5) || 0;
-            } else if (weight <= 12) {
-                price = parseFloat(selectedService.dataset.price5to12) || 0;
-            } else if (weight <= 25) {
-                price = parseFloat(selectedService.dataset.price12to25) || 0;
-            } else {
-                price = parseFloat(selectedService.dataset.priceover25) || 0;
-            }
-
-            priceInput.value = price.toLocaleString("vi-VN") + " VNĐ";
-        }
-
-        // Sự kiện khi đổi thú cưng
         petSelect.addEventListener("change", updatePetInfo);
-
-        // Sự kiện khi đổi dịch vụ
         serviceSelect.addEventListener("change", updatePrice);
 
-        // Chọn thú cưng mặc định
-        if (!existingPetIdInput.value && petSelect.options.length > 0) {
-            petSelect.selectedIndex = 0;
-            existingPetIdInput.value = petSelect.value; // đồng bộ hidden input
-        }
-        // Nếu PetId có trong danh sách => chọn theo PetId
-        else if (existingPetIdInput.value) {
-            for (let i = 0; i < petSelect.options.length; i++) {
-                if (petSelect.options[i].value === existingPetIdInput.value) {
-                    petSelect.selectedIndex = i;
-                    break;
+        // ✅ Load mặc định khi mở trang
+        if (userSelect.options.length > 0) {
+            // Nếu update, chọn user từ Model.UserId, không chọn 0
+            if (@(Model.IsUpdate.ToString().ToLower())) {
+                for (let i = 0; i < userSelect.options.length; i++) {
+                    if (userSelect.options[i].value === "@Model.UserId") {
+                        userSelect.selectedIndex = i;
+                        break;
+                    }
                 }
+                // Load lại pets theo userId
+                const event = new Event("change");
+                userSelect.dispatchEvent(event);
+
+                // Chọn pet hiện tại theo Model.ExistingPetId sau khi pets được load
+                setTimeout(() => {
+                    for (let i = 0; i < petSelect.options.length; i++) {
+                        if (petSelect.options[i].value === "@Model.ExistingPetId") {
+                            petSelect.selectedIndex = i;
+                            updatePetInfo();
+                            break;
+                        }
+                    }
+                }, 50); // delay để pets được fetch từ server
+            } else {
+                // Form Add
+                userSelect.selectedIndex = 0;
+                userSelect.dispatchEvent(new Event("change"));
             }
         }
 
-        // Chọn dịch vụ mặc định
-        let defaultServiceIndex = 0; // index dịch vụ mặc định = 0 (dịch vụ 1)
-        const selectedServiceId = "@(Model.ServiceId)";
-
-        // Nếu ServiceId có trong danh sách => chọn theo ServiceId
-        if (selectedServiceId) {
-            for (let i = 0; i < serviceSelect.options.length; i++) {
-                if (serviceSelect.options[i].value === selectedServiceId) {
-                    defaultServiceIndex = i;
-                    break;
+        if (serviceSelect.options.length > 0) {
+            // Chọn service hiện tại nếu Update, ngược lại chọn đầu tiên
+            if (@(Model.IsUpdate.ToString().ToLower())) {
+                for (let i = 0; i < serviceSelect.options.length; i++) {
+                    if (serviceSelect.options[i].value === "@Model.ServiceId") {
+                        serviceSelect.selectedIndex = i;
+                        updatePrice();
+                        break;
+                    }
                 }
+            } else {
+                serviceSelect.selectedIndex = 0;
+                updatePrice();
             }
         }
 
-        // Nếu không có ServiceId hoặc ServiceId không hợp lệ => mặc định chọn dịch vụ 1 (index 0)
-        serviceSelect.selectedIndex = defaultServiceIndex;
-
-        updatePetInfo(); // cập nhật thông tin thú cưng và giá ngay khi vào trang
-
-                // ------------------ AppointmentDate ------------------
+        // Flatpickr ngày mặc định hôm nay
         flatpickr("#appointmentPicker", {
             dateFormat: "d/m/Y",
             altInput: true,

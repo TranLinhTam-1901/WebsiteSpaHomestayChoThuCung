@@ -4,6 +4,7 @@ using DoAnCoSo.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DoAnCoSo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251108074356_UpdateDeletedPets")]
+    partial class UpdateDeletedPets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,9 +124,6 @@ namespace DoAnCoSo.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("DeletedPetId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -131,10 +131,7 @@ namespace DoAnCoSo.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PetId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PetId1")
+                    b.Property<int>("PetId")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceId")
@@ -155,11 +152,7 @@ namespace DoAnCoSo.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.HasIndex("DeletedPetId");
-
                     b.HasIndex("PetId");
-
-                    b.HasIndex("PetId1");
 
                     b.HasIndex("ServiceId");
 
@@ -1215,18 +1208,11 @@ namespace DoAnCoSo.Migrations
                         .WithMany("Appointments")
                         .HasForeignKey("ApplicationUserId");
 
-                    b.HasOne("DoAnCoSo.Models.DeletedPets", "DeletedPet")
-                        .WithMany()
-                        .HasForeignKey("DeletedPetId");
-
                     b.HasOne("DoAnCoSo.Models.Pet", "Pet")
-                        .WithMany()
-                        .HasForeignKey("PetId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("DoAnCoSo.Models.Pet", null)
                         .WithMany("Appointments")
-                        .HasForeignKey("PetId1");
+                        .HasForeignKey("PetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("DoAnCoSo.Models.Service", "Service")
                         .WithMany("Appointments")
@@ -1239,8 +1225,6 @@ namespace DoAnCoSo.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("DeletedPet");
 
                     b.Navigation("Pet");
 

@@ -12,7 +12,7 @@ namespace DoAnCoSo.Models
         [ForeignKey("UserId")]
         public virtual ApplicationUser User { get; set; }
 
-        public int PetId { get; set; }
+        public int? PetId { get; set; }
         [ForeignKey("PetId")]
         public virtual Pet Pet { get; set; }
 
@@ -30,6 +30,11 @@ namespace DoAnCoSo.Models
         public AppointmentStatus Status { get; set; }
 
         public DateTime CreatedDate { get; set; }
+
         public string OwnerPhoneNumber { get; set; }
+
+        public int? DeletedPetId { get; set; }
+        [ForeignKey("DeletedPetId")]
+        public virtual DeletedPets DeletedPet { get; set; }
     }
 }

@@ -18,6 +18,7 @@ namespace DoAnCoSo.Controllers
         private readonly IInventoryService _inventory;
 
 
+
         public ShoppingCartController(IProductRepository productRepository,
                                       UserManager<ApplicationUser> userManager,
                                       ApplicationDbContext context,
@@ -93,7 +94,6 @@ namespace DoAnCoSo.Controllers
             {
                 return NotFound("Product not found");
             }
-
 
             var available = await _inventory.GetAvailableAsync(product.Id);
             var flavorKey = flavor ?? "";

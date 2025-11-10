@@ -5,6 +5,8 @@ namespace DoAnCoSo.ViewModels
 {
     public class HomestayBookingViewModel
     {
+        public int? AppointmentId { get; set; } // để biết đang sửa lịch nào
+
         [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
         [Display(Name = "Số điện thoại")]
         [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
@@ -47,5 +49,10 @@ namespace DoAnCoSo.ViewModels
 
         // Danh sách thú cưng của user để dropdown
         public List<Pet> UserPets { get; set; } = new List<Pet>();
+
+        public bool IsUpdate { get; set; } = false;
+
+        [Required]
+        public string UserId { get; set; }
     }
 }

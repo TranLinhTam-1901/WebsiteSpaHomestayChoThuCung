@@ -370,6 +370,11 @@
 
                     @if (SignInManager.IsSignedIn(User))
                     {
+                        <li class="nav-item">
+                            <a asp-area="" asp-controller="Promotion" asp-action="MyPromotions" class="nav-link" title="Mã khuyến mãi của tôi">
+                                MÃ KHUYẾN MÃI CỦA TÔI
+                            </a>
+                        </li>
 
                         <li class="nav-item ">
                             <a asp-area="" asp-controller="Appointments" asp-action="CustomerAppointmentHistory" class="nav-link" title="Lịch sử đặt lịch">
@@ -383,13 +388,6 @@
                                 LỊCH SỬ ĐẶT HÀNG
                             </a>
                         </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Promotion" asp-action="MyPromotions">
-                                MÃ KHUYẾN MÃI CỦA TÔI
-                            </a>
-                        </li>
-
                     }
 
                     <li class="nav-item booking-calendar-item ">

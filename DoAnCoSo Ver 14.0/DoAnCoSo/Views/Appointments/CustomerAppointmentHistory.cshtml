@@ -66,6 +66,11 @@
         border-radius: 12px;
     }
 
+    .status-deleted {
+        background-color: #6c757d; /* xám */
+        color: #fff;
+    }
+
     .btn-detail {
         background-color: #FFB6C1;
         color: #000;
@@ -79,6 +84,40 @@
 
         .btn-detail:hover {
             background-color: #FF6185;
+            color: #fff;
+        }
+
+    /* Nút Sửa lịch hẹn */
+    .btn-edit {
+        border: 2px solid green; /* vàng */
+        background-color: transparent;
+        color: green;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-edit:hover {
+            background-color: green; /* nền vàng khi hover */
+            color: #fff;
+        }
+
+    /* Nút Hủy lịch hẹn */
+    .btn-delete {
+        border: 2px solid red; /* đỏ */
+        background-color: transparent;
+        color: red;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-delete:hover {
+            background-color: red; /* nền đỏ khi hover */
             color: #fff;
         }
 
@@ -119,11 +158,14 @@
     {
         @foreach (var item in Model)
         {
+            var displayPetName = item.Pet?.Name ?? item.DeletedPet?.Name ?? "[Đã xóa]";
+            var displayPetType = item.Pet?.Type ?? item.DeletedPet?.Type ?? "-";
+
             <div class="appointment-card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <strong>@item.Pet.Name</strong> <small class="text-muted">(@item.Pet.Type)</small><br />
-                        <span>Dịch vụ: <strong>@item.Service.Name</strong></span>
+                        <strong>@displayPetName</strong> <small class="text-muted">(@displayPetType)</small><br />
+                        <span>Dịch vụ: <strong>@item.Service?.Name</strong></span>
                     </div>
                     <div>
                         @if (item.Status.GetDisplayName() == "Chờ xác nhận")
@@ -137,6 +179,10 @@
                         else if (item.Status.GetDisplayName() == "Đã hủy")
                         {
                             <span class="badge bg-danger">Đã hủy</span>
+                        }
+                        else if (item.Status.GetDisplayName() == "Đã xóa")
+                        {
+                            <span class="badge status-deleted">Đã xóa</span>
                         }
                         else
                         {
@@ -192,10 +238,51 @@
                 </div>
 
                 <div class="card-footer text-end">
-                    <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn-detail">
+                    <!-- Xem chi tiết -->
+                    <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn-detail me-2">
                         <i class="fas fa-info-circle me-1"></i> Xem chi tiết
                     </a>
+
+                    @{
+                        // Kiểm tra có thể Sửa/Hủy
+                        bool canEditOrCancel = false;
+                        if (item.ServiceId <= 3) // Homestay
+                        {
+                            canEditOrCancel = item.Status == AppointmentStatus.Pending &&
+                            (item.StartDate - DateTime.Today).TotalDays >= 2; // vd: trước 2 ngày
+                        }
+                        else // Spa
+                        {
+                            canEditOrCancel = item.Status == AppointmentStatus.Pending &&
+                            (item.AppointmentDate - DateTime.Today).TotalDays >= 1;
+                        }
+                    }
+
+                    @if (canEditOrCancel)
+                    {
+                        <!-- Sửa -->
+                        @if (item.ServiceId <= 3)  // Homestay
+                        {
+                            <a asp-action="UpdateAppointmentHomestay" asp-route-id="@item.AppointmentId" class="btn-edit me-2">
+                                <i class="fas fa-edit me-1"></i> Sửa
+                            </a>
+                        }
+                        else  // Spa
+                        {
+                            <a asp-action="UpdateAppointmentSpa" asp-route-id="@item.AppointmentId" class="btn-edit me-2">
+                                <i class="fas fa-edit me-1"></i> Sửa
+                            </a>
+                        }
+
+                        <!-- Hủy (dùng chung) -->
+                        <a asp-action="AppointmentCancel"
+                           asp-route-id="@item.AppointmentId"
+                           class="btn-delete">
+                            <i class="fas fa-times me-1"></i> Hủy
+                        </a>
+                    }
                 </div>
+
             </div>
         }
     }
