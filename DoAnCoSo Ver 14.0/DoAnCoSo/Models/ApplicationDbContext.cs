@@ -39,6 +39,9 @@ namespace DoAnCoSo.Models
         public DbSet<OrderPromotion> OrderPromotions { get; set; }
         public DbSet<UserPromotion> UserPromotions { get; set; }
 
+        public DbSet<DoAnCoSo.Models.Blockchain.BlockchainRecord> BlockchainRecords { get; set; }
+
+        public DbSet<DeletedPets> DeletedPets { get; set; }
         public DbSet<InventoryLog> InventoryLogs { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
 
@@ -56,9 +59,9 @@ namespace DoAnCoSo.Models
             // 🔹 Appointment - Pet
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Pet)
-                .WithMany(p => p.Appointments)
+                .WithMany()
                 .HasForeignKey(a => a.PetId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull); // hoặc DeleteBehavior.Cascade
 
             modelBuilder.Entity<PetServiceRecord>()
                 .HasKey(r => r.RecordId);
@@ -138,6 +141,10 @@ namespace DoAnCoSo.Models
                 .HasForeignKey(ri => ri.ReviewId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // ✅ Thêm phần unique constraint cho UserPromotion tại đây:
+            modelBuilder.Entity<UserPromotion>()
+                .HasIndex(up => new { up.UserId, up.PromotionId })
+                .IsUnique();
             // Thêm phần unique constraint cho UserPromotion tại đây:
             modelBuilder.Entity<UserPromotion>()
                 .HasIndex(up => new { up.UserId, up.PromotionId })

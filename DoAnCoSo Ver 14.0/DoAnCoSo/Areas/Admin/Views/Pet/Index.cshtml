@@ -60,6 +60,11 @@
                                             <a asp-action="Details" asp-route-id="@pet.PetId" class="btn-detail btn-sm">
                                                 <i class="fas fa-info-circle"></i> Chi tiết
                                             </a>
+                                            <a asp-controller="Blockchain" asp-action="ViewByPet"
+                                               asp-route-petId="@pet.PetId"
+                                               class="btn-blockchain btn-sm">
+                                                <i class="fas fa-link"></i> Blockchain
+                                            </a>
                                             <a asp-action="Update" asp-route-id="@pet.PetId" class="btn-edit btn-sm">
                                                 <i class="fas fa-edit"></i> Sửa
                                             </a>
@@ -226,4 +231,20 @@
         color: #777;
         padding: 20px 0;
     }
+
+    .btn-blockchain {
+        background-color: #8B5CF6; /* tím tươi nổi bật */
+        color: #fff;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-blockchain:hover {
+            background-color: #5B21B6;
+            color: #fff;
+        }
 </style>

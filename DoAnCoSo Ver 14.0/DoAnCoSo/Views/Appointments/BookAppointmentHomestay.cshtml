@@ -2,7 +2,8 @@
 @using DoAnCoSo.Models
 
 @{
-    ViewData["Title"] = "🏨 Đặt lịch Homestay cho thú cưng 🐶🐱";
+    bool isUpdate = Model.IsUpdate;
+    ViewData["Title"] = isUpdate ? "✏️ Cập nhật lịch Homestay cho thú cưng 🐾" : "🏨 Đặt lịch Homestay cho thú cưng 🐶🐱";
     var userPets = ViewBag.UserPets as List<Pet> ?? new List<Pet>();
     var services = ViewBag.HomestayServices as List<Service> ?? new List<Service>();
 }
@@ -13,7 +14,8 @@
     <div class="booking-card mx-auto" style="max-width: 750px;">
         <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
 
-        <form asp-action="BookAppointmentHomestay" method="post">
+        <form asp-action="@(isUpdate ? "UpdateAppointmentHomestay" : "BookAppointmentHomestay")" method="post">
+            <input type="hidden" asp-for="AppointmentId" />
             <!-- 1️⃣ Chủ nuôi -->
             <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
             <div class="mb-3">
@@ -26,14 +28,15 @@
             <div class="mb-3">
                 <label class="form-label">Thú cưng có sẵn</label>
                 <select id="existingPetSelect" class="form-select">
-                    @foreach (var pet in userPets)
+                    @foreach (var pet in userPets.OrderBy(p => p.Name))
                     {
                         <option value="@pet.PetId"
                                 data-name="@pet.Name"
                                 data-type="@pet.Type"
                                 data-breed="@pet.Breed"
                                 data-age="@pet.Age"
-                                data-weight="@pet.Weight">
+                                data-weight="@pet.Weight"
+                                selected="@(Model.ExistingPetId == pet.PetId ? "selected" : "")">
                             @pet.Name
                         </option>
                     }
@@ -60,13 +63,13 @@
                 <div class="col-md-3">
                     <label asp-for="PetWeight" class="form-label">Cân nặng</label>
                     <div class="input-group">
-                        <input asp-for="PetWeight" class="form-control" readonly />
+                        <input asp-for="PetWeight" class="form-control" id="PetWeight" readonly />
                         <span class="input-group-text">kg</span>
                     </div>
                 </div>
             </div>
 
-            <input type="hidden" name="existingPetId" id="existingPetId" />
+            <input type="hidden" asp-for="ExistingPetId" id="ExistingPetId" />
 
             <!-- 3️⃣ Loại phòng -->
             <h5><span class="section-icon">🛏️</span>Chọn loại phòng Homestay</h5>
@@ -100,7 +103,9 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-pink w-100 mt-4">📦 Đặt lịch ngay</button>
+            <button type="submit" class="btn btn-pink w-100 mt-4">
+                @(isUpdate ? "💾 Cập nhật lịch" : "📦 Đặt lịch ngay")
+            </button>
         </form>
     </div>
 </div>
@@ -134,40 +139,49 @@
         });
 
         // ------------------ Chọn thú cưng ------------------
-        const petSelect = document.getElementById("existingPetSelect");
-        const existingPetIdInput = document.getElementById("existingPetId");
+    const petSelect = document.getElementById("existingPetSelect");
+        const existingPetIdInput = document.getElementById("ExistingPetId");
         const petName = document.getElementById("PetName");
         const petType = document.getElementById("PetType");
         const petBreed = document.getElementById("PetBreed");
         const petAge = document.getElementById("PetAge");
         const petWeight = document.getElementById("PetWeight");
 
-        function fillPetInfo(opt) {
-            if (!opt || !opt.value) {
-                petName.value = "";
-                petType.value = "";
-                petBreed.value = "";
-                petAge.value = "";
-                petWeight.value = "";
-                existingPetIdInput.value = "";
-            } else {
-                petName.value = opt.dataset.name || "";
-                petType.value = opt.dataset.type || "";
-                petBreed.value = opt.dataset.breed || "";
-                petAge.value = opt.dataset.age || "";
-                petWeight.value = opt.dataset.weight || "";
-                existingPetIdInput.value = opt.value;
-            }
+        function parseWeight(weightStr) {
+            if (!weightStr) return 0;
+            const cleaned = weightStr.replace(",", ".").replace(/[^\d.]/g, "");
+            return parseFloat(cleaned) || 0;
+        }
+
+        function updatePetInfo() {
+            const selectedPet = petSelect.selectedOptions[0];
+            if (!selectedPet) return;
+
+            petName.value = selectedPet.dataset.name || "";
+            petType.value = selectedPet.dataset.type || "";
+            petBreed.value = selectedPet.dataset.breed || "";
+            petAge.value = selectedPet.dataset.age || "";
+            petWeight.value = parseWeight(selectedPet.dataset.weight);
+            existingPetIdInput.value = selectedPet.value;
         }
 
         if (petSelect) {
-            petSelect.addEventListener("change", function () {
-                fillPetInfo(this.selectedOptions[0]);
-            });
+            petSelect.addEventListener("change", updatePetInfo);
 
-            if (petSelect.options.length > 0) {
-                petSelect.selectedIndex = 0; // mặc định chọn pet đầu tiên
-                fillPetInfo(petSelect.selectedOptions[0]);
+            // Khi vào trang, nếu có pet => chọn pet đầu tiên
+            if (!existingPetIdInput.value && petSelect.options.length > 0) {
+                petSelect.selectedIndex = 0;
+                updatePetInfo();
+            }
+            // Nếu ExistingPetId có sẵn, chọn pet tương ứng
+            else if (existingPetIdInput.value) {
+                for (let i = 0; i < petSelect.options.length; i++) {
+                    if (petSelect.options[i].value === existingPetIdInput.value) {
+                        petSelect.selectedIndex = i;
+                        updatePetInfo();
+                        break;
+                    }
+                }
             }
         }
     });

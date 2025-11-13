@@ -92,6 +92,9 @@ builder.Services.Configure<EmailSettings>(
 // Đăng ký EmailService
 builder.Services.AddScoped<EmailService>();
 
+// ✅ Đăng ký BlockchainService
+builder.Services.AddScoped<BlockchainService>();
+
 var app = builder.Build();
 
 app.UseRequestLocalization(); // Sử dụng Middleware cấu hình Culture

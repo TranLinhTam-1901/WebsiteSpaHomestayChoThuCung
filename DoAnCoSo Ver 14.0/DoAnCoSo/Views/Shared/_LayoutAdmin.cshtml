@@ -346,33 +346,38 @@
                             <div class="container">
                                 <ul class="level0">
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Categories" asp-action="" title="Quản lý danh mục sản phẩm">
-                                            Quản lý danh mục sản phẩm
+                                        <a class="hmega" asp-area="Admin" asp-controller="Categories" asp-action="" title="QL Danh mục sản phẩm">
+                                            QL Danh mục sản phẩm
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Product" asp-action="" title="Quản lý sản phẩm">
-                                            Quản lý sản phẩm
+                                        <a class="hmega" asp-area="Admin" asp-controller="Product" asp-action="" title="QL Sản phẩm">
+                                            QL Sản phẩm
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Pet" asp-action="Index" title="Quản lý thú cưng">
-                                            Quản lý thú cưng
+                                        <a class="hmega" asp-area="Admin" asp-controller="Pet" asp-action="Index" title="QL Hồ sơ thú cưng">
+                                            QL Hồ sơ thú cưng
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="User" asp-action="UserList" title="Quản lý tài khoản">
-                                            Quản lý tài khoản
+                                        <a class="hmega" asp-area="Admin" asp-controller="Blockchain" asp-action="Index" title="QL Blockchain">
+                                            QL Blockchain
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Order" asp-action="Index" title="Quản lý Đơn hàng">
-                                            Quản lý Đơn hàng
+                                        <a class="hmega" asp-area="Admin" asp-controller="User" asp-action="UserList" title="QL Tài khoản">
+                                            QL Tài khoản
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Revenue" asp-action="Index" title="Quản lý doanh thu">
-                                            Quản lý doanh thu
+                                        <a class="hmega" asp-area="Admin" asp-controller="Order" asp-action="Index" title="QL Đơn hàng">
+                                            QL Đơn hàng
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Revenue" asp-action="Index" title="QL Doanh thu">
+                                            QL Doanh thu
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
@@ -435,7 +440,7 @@
                                     <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i>
                                     <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
                                     <p class="card-text text-muted">Nơi nghỉ ngơi thoải mái cho thú cưng của bạn.</p>
-                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments", new { area = "" })"
+                                    <a asp-area="Admin" asp-controller="Service" asp-action="AppointmentHomestay"
                                        class="btn btn-homestay-theme mt-3">
                                         Chọn Homestay
                                     </a>
@@ -449,7 +454,7 @@
                                     <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i>
                                     <h5 class="card-title mt-3">Đặt lịch Spa</h5>
                                     <p class="card-text text-muted">Chăm sóc và làm đẹp cho thú cưng yêu.</p>
-                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments", new { area = "" })"
+                                    <a asp-area="Admin" asp-controller="Service" asp-action="AppointmentSpa"
                                        class="btn btn-spa-theme mt-3">
                                         Chọn Spa
                                     </a>
