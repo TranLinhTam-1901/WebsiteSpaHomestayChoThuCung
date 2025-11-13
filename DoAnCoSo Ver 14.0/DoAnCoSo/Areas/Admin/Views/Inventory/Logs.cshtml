@@ -1,0 +1,177 @@
+﻿@model IEnumerable<DoAnCoSo.Models.InventoryLog>
+@{
+    ViewData["Title"] = "📜 Lịch sử giao dịch kho";
+    var optionLabel = (string)(ViewBag.OptionLabel ?? "Tùy chọn");
+}
+
+<div class="container py-4">
+    <h2 class="mb-4 text-center text-primary">📜 Lịch sử giao dịch kho</h2>
+
+    <div class="mb-3 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">⬅️ Quay lại bảng tồn kho</a>
+    </div>
+  <div class="inventory-card shadow-lg rounded-4 overflow-hidden">
+   <div class="table-responsive">
+            <table class="table-inventory align-middle mb-0">
+        <thead class="table-pink">
+            <tr class="text-center">
+                <th>#</th>
+                <th>Sản phẩm</th>
+                <th>Thay đổi (SL)</th>
+                <th>Lý do</th>
+                <th>Tham chiếu</th>
+                <th>Người thao tác</th>
+                <th>Thời gian</th>
+                <th>Ghi chú</th>
+                <th>@optionLabel</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted">Chưa có giao dịch kho nào.</td>
+                </tr>
+            }
+            else
+            {
+                int i = 1;
+                foreach (var log in Model)
+                {
+                    <tr class="@(log.QuantityChange < 0 ? "table-danger" : "table-success")">
+                        <td class="text-center">@i</td>
+                        <td>@log.Product?.Name</td>
+                        <td class="text-center fw-bold">@log.QuantityChange</td>
+                        <td class="text-center">@log.Reason</td>
+                        <td class="text-center">@log.ReferenceId</td>
+                        @{
+                            var map = ViewBag.UserMap as IDictionary<string, string>;
+                            string actor = "-";
+                            if (!string.IsNullOrEmpty(log.PerformedByUserId))
+                            {
+                                if (map != null && map.ContainsKey(log.PerformedByUserId))
+                                {
+                                    actor = map[log.PerformedByUserId]; // FullName hoặc Email/UserName
+                                }
+                                else
+                                {
+                                    actor = log.PerformedByUserId; // fallback: hiện raw Id nếu chưa cache tên
+                                }
+                            }
+                        }
+                        <td class="text-center" title="@log.PerformedByUserId">@actor</td>
+
+                        <td class="text-center">@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-center note-cell" title="@log.Note">@log.Note</td>
+                        <td class="text-center">@(!string.IsNullOrWhiteSpace(log.Variant?.Name) ? log.Variant!.Name : "—")</td>
+                    </tr>
+                    i++;
+                }
+            }
+        </tbody>
+    </table>
+</div>
+</div>
+</div>
+<!-- Auto-hide message -->
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(a => a.remove());
+    }, 3000);
+</script>
+<style>
+    :root {
+        --brand: #FF6185;
+        --brand-soft: #FFB6C1;
+        --bg-soft: #FFF0F5;
+    }
+
+    body {
+        background-color: var(--bg-soft);
+    }
+
+    /* Card khung trắng */
+    .inventory-card {
+        border: 1px solid var(--brand-soft);
+        background: #fff;
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    /* ===== BẢNG HỒNG ĐỒNG BỘ ===== */
+    .table-inventory {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #000;
+    }
+
+        /* Header hồng, chữ đen */
+        .table-inventory thead.table-pink {
+            background: linear-gradient(90deg, var(--brand), var(--brand-soft)) !important;
+            border-bottom: 2px solid rgba(0,0,0,.08);
+        }
+
+            .table-inventory thead.table-pink th {
+                background: transparent !important;
+                color: #000 !important;
+                font-weight: 700;
+                text-align: center;
+                padding: .9rem .8rem;
+                border: none !important;
+            }
+
+        .table-inventory thead th + th {
+            border-left: 1px solid rgba(0,0,0,.12) !important;
+        }
+
+        /* Thân bảng – zic-zac & hover */
+        .table-inventory tbody tr:nth-child(odd) > * {
+            background: #fff !important;
+        }
+
+        .table-inventory tbody tr:nth-child(even) > * {
+            background: #fff4f7 !important;
+        }
+
+        .table-inventory tbody tr:hover > * {
+            background: #ffe9f0 !important;
+        }
+
+        .table-inventory td {
+            padding: .7rem .7rem;
+            vertical-align: middle;
+            border: 0;
+            border-bottom: 1px solid rgba(0,0,0,.06) !important;
+        }
+
+        .table-inventory tbody tr:last-child > * {
+            border-bottom: none !important;
+        }
+
+        .table-inventory td + td {
+            border-left: none !important;
+        }
+
+    /* Ghi chú cắt bớt */
+    .note-cell {
+        max-width: 260px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Nhập / xuất: nền nhẹ để vẫn phân biệt */
+    .row-import > * {
+        background-color: #e9f8ef !important; /* xanh rất nhạt */
+    }
+
+    .row-export > * {
+        background-color: #ffe9ec !important; /* đỏ/hồng rất nhạt */
+    }
+
+    .row-import:hover > *,
+    .row-export:hover > * {
+        filter: brightness(0.97);
+    }
+</style>

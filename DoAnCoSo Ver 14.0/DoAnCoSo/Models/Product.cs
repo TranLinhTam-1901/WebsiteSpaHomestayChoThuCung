@@ -29,7 +29,7 @@ namespace DoAnCoSo.Models
         public Category? Category { get; set; }
 
         // Hương vị (lưu dạng chuỗi)
-        public string Flavors { get; set; } = string.Empty;
+        public string? Flavors { get; set; }
 
         [NotMapped]
         public List<string> FlavorsList
@@ -72,5 +72,15 @@ namespace DoAnCoSo.Models
                 return 0;
             }
         }
+
+        public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+
+        // ==== NEW: Trạng thái bán/ẩn sản phẩm (xóa mềm) ====
+        public bool IsActive { get; set; } = true;    // còn kinh doanh
+        public bool IsDeleted { get; set; } = false;  // đã ẩn/xóa mềm
+
+        public DateTime? DeletedAt { get; set; }
+        public string? DeletedBy { get; set; }
+        public string? DeletedReason { get; set; }
     }
 }

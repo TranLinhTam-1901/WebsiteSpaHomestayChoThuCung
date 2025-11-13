@@ -17,6 +17,8 @@ namespace DoAnCoSo.ViewModels
 
         public List<int> SelectedCartItemIds { get; set; } = new List<int>();
 
+        public int? BuyNowVariantId { get; set; }
+
         public decimal CartTotal { get; set; }
         public CheckoutViewModel()
         {
@@ -26,4 +28,5 @@ namespace DoAnCoSo.ViewModels
             SelectedCartItemIds = new List<int>();
         }
     }
+        
 }

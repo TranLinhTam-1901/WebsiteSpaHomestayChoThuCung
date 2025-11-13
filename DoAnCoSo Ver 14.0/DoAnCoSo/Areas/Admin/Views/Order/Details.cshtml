@@ -6,6 +6,27 @@
     ViewData["Title"] = "Chi tiết đơn hàng (Admin)";
 }
 
+@functions {
+    string ShowOption(DoAnCoSo.Models.OrderDetail d)
+    {
+        if (d.VariantId.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(d.VariantName))
+                return d.VariantName;
+
+            var name = d.Product?.Variants?
+                .FirstOrDefault(v => v.Id == d.VariantId.Value)?.Name;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            return $"Variant #{d.VariantId.Value}";
+        }
+        if (!string.IsNullOrWhiteSpace(d.SelectedFlavor))
+            return d.SelectedFlavor;
+
+        return "Không có";
+    }
+}
 <div class="order-detail-wrapper py-5">
     <h2 class="section-title">📑 Chi tiết đơn hàng</h2>
 
@@ -102,7 +123,7 @@
                         {
                             <tr>
                                 <td>@item.Product.Name</td>
-                                <td>@(string.IsNullOrEmpty(item.SelectedFlavor) ? "N/A" : item.SelectedFlavor)</td>
+                                <td>@ShowOption(item)</td>
                                 <td>@item.Quantity</td>
                                 <td>@item.Price.ToString("N0") VNĐ</td>
                                 <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td>

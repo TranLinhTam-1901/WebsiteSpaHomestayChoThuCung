@@ -18,7 +18,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         {
             _context = context;
             _userManager = userManager;
-            _userManager = userManager;
             _inventory = inventory;
         }
 
@@ -29,7 +28,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             var orders = await _context.Orders
                 .Include(o => o.User) 
             .Include(o => o.OrderDetails)
-            .ThenInclude(od => od.Product) 
+            .ThenInclude(od => od.Product)
+             .ThenInclude(p => p.Variants)
             .Include(o => o.OrderPromotions)
             .ThenInclude(op => op.Promotion) 
         .OrderByDescending(o => o.OrderDate)
@@ -46,12 +46,14 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
 
             var order = await _context.Orders
-                                      .Include(o => o.User)
-                                      .Include(o => o.OrderDetails)
-                                          .ThenInclude(od => od.Product)
-                                       .Include(o => o.OrderPromotions)             
-                                           .ThenInclude(op => op.Promotion)
-                                      .FirstOrDefaultAsync(m => m.Id == id);
+            .Include(o => o.User)
+            .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product)
+                 .ThenInclude(p => p.Variants)
+            .Include(o => o.OrderPromotions)             
+                .ThenInclude(op => op.Promotion)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
             if (order == null)
             {
                 return NotFound();
@@ -60,52 +62,72 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             return View(order);
         }
 
-        // 2. Xác nhận đơn hàng
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Confirm(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
+            // Lấy order để kiểm tra nhanh trước khi gọi service (tránh exception không cần thiết)
+            var order = await _context.Orders
+                .AsTracking()
+                .FirstOrDefaultAsync(o => o.Id == id);
+
             if (order == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy đơn hàng.";
                 return RedirectToAction(nameof(Index));
             }
 
-            if (order.Status == OrderStatusEnum.ChoXacNhan)
+            if (order.Status != OrderStatusEnum.ChoXacNhan)
             {
-                // Cập nhật trạng thái đơn hàng
-                order.Status = OrderStatusEnum.DaXacNhan;
+                TempData["ErrorMessage"] = "Đơn hàng không ở trạng thái 'Chờ xác nhận'.";
+                return RedirectToAction(nameof(Index));
+            }
 
-                // Nếu là COD → xem như đã thanh toán khi admin xác nhận
-                if (order.PaymentMethod == "COD")
+            try
+            {
+                // 1) Gọi service: service TỰ lo toàn bộ kho + set DaXacNhan trong 1 transaction
+                await _inventory.ConfirmOrderAtomicallyAsync(id, _userManager.GetUserId(User));
+
+                // 2) Đồng bộ thực thể về trạng thái mới nhất sau khi service commit
+                await _context.Entry(order).ReloadAsync();
+
+                // 3) Nếu là thanh toán thủ công (COD/Chuyển khoản thủ công) thì cập nhật bankStatus
+                if (IsManualPaidMethod(order.PaymentMethod))
                 {
                     order.bankStatus = BankStatusEnum.DaThanhToan;
+                    // order đang được tracking, chỉ cần SaveChanges
+                    await _context.SaveChangesAsync();
                 }
 
-                // Nếu là Banking thì không cần đổi vì đã thanh toán tự động trước đó
-                _context.Update(order);
-                await _context.SaveChangesAsync();
-
-                try
-                {
-                    await _inventory.DeductForOrderAsync(order.Id,
-                    byUserId: _userManager.GetUserId(User));
-                    TempData["SuccessMessage"] = "✅ Đơn hàng đã xác nhận và đã trừ kho.";
-                }
-                catch (Exception ex)
-                {
-                  
-                    TempData["ErrorMessage"] = "Xác nhận thất bại do tồn kho: " + ex.Message;
-                }
+                TempData["SuccessMessage"] = "✅ Xác nhận đơn hàng thành công.";
             }
-            else
+            catch (InvalidOperationException ex)
             {
-                TempData["ErrorMessage"] = "Đơn hàng không ở trạng thái 'Chờ xác nhận' để xác nhận.";
+                // Ví dụ: "Order is not pending." hoặc thiếu tồn kho...
+                TempData["ErrorMessage"] = "❌ Xác nhận thất bại: " + ex.Message;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                TempData["ErrorMessage"] = "❌ Xung đột dữ liệu, vui lòng thử lại.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "❌ Lỗi không xác định: " + ex.Message;
             }
 
             return RedirectToAction(nameof(Index));
         }
+
+        // Sau này chuyển sang auto-banking, bạn chỉ cần sửa logic trong hàm này
+        private static bool IsManualPaidMethod(string? method)
+        {
+            if (string.IsNullOrWhiteSpace(method)) return false;
+
+            return method.Equals("COD", StringComparison.OrdinalIgnoreCase)
+                || method.Equals("BankTransfer", StringComparison.OrdinalIgnoreCase);
+            // TODO (future): khi có webhook banking, bỏ "BankTransfer" khỏi đây.
+        }
+
 
         // 3. Hủy đơn hàng (dành cho Admin)
         [HttpPost]
@@ -113,57 +135,22 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         public async Task<IActionResult> Cancel(int id)
         {
             var order = await _context.Orders.FindAsync(id);
-
             if (order == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy đơn hàng này.";
                 return RedirectToAction(nameof(Index));
             }
-            else if (order.Status == OrderStatusEnum.DaXacNhan || order.bankStatus == BankStatusEnum.DaThanhToan)
+
+            try
             {
-                // ✅ Đơn đã xác nhận → hoàn kho thật
-                try
-                {
-                    await _inventory.RestockForOrderAsync(order.Id,
-                        byUserId: _userManager.GetUserId(User));
-                }
-                catch (Exception ex)
-                {
-                    TempData["ErrorMessage"] = "Không thể hoàn kho: " + ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
-
-                order.Status = OrderStatusEnum.DaHuy;
-                _context.Update(order);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Đơn hàng đã hủy và đã hoàn kho.";
+                // Service tự quyết: nếu đã trừ kho → hoàn kho; nếu chưa → chỉ unreserve; rồi set DaHuy
+                await _inventory.CancelOrderAtomicallyAsync(id, _userManager.GetUserId(User));
+                TempData["SuccessMessage"] = "✅ Đơn hàng đã hủy đúng quy tắc.";
             }
-            else if (order.Status == OrderStatusEnum.ChoXacNhan)
+            catch (Exception ex)
             {
-                // ✅ Đơn chưa xác nhận → chỉ bỏ giữ hàng tạm
-                try
-                {
-                    await _inventory.UnreserveForOrderAsync(order.Id,
-                        byUserId: _userManager.GetUserId(User));
-                }
-                catch (Exception ex)
-                {
-                    TempData["ErrorMessage"] = "Không thể bỏ giữ hàng tạm: " + ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
-
-                order.Status = OrderStatusEnum.DaHuy;
-                _context.Update(order);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Đơn hàng đã hủy và đã bỏ giữ hàng tạm.";
+                TempData["ErrorMessage"] = "Hủy thất bại: " + ex.Message;
             }
-            else
-            {
-                TempData["ErrorMessage"] = "Trạng thái đơn hàng không hợp lệ để hủy.";
-            }
-
 
             return RedirectToAction(nameof(Index));
         }

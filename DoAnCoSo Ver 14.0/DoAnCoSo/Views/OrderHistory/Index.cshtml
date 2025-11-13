@@ -3,6 +3,179 @@
 @{
     ViewData["Title"] = "🐾 Lịch sử đặt hàng";
 }
+@functions {
+    // Trả về tên phân loại (Flavor/Variant) đúng quy tắc
+    string ShowOption(DoAnCoSo.Models.OrderDetail d)
+    {
+        if (d.VariantId.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(d.VariantName))
+                return d.VariantName;
+
+            // Fallback: tra theo Product.Variants (đã Include ở controller)
+            var name = d.Product?.Variants?
+                .FirstOrDefault(v => v.Id == d.VariantId.Value)?.Name;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            return $"Variant #{d.VariantId.Value}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(d.SelectedFlavor))
+            return d.SelectedFlavor;
+
+        return "Không có";
+    }
+}
+
+<div class="order-wrapper py-5">
+    <h2 class="section-title">🐾 Lịch sử đặt hàng của bạn</h2>
+
+    @* @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="no-orders">Bạn chưa có đơn hàng nào. Hãy thử đặt dịch vụ Spa hay Homestay cho thú cưng của bạn nhé! 🐶🐱</p>
+    }
+    else
+    {
+        @foreach (var order in Model)
+        {
+            <div class="order-card mb-4">
+                <!-- Header -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="fas fa-receipt me-1"></i> Mã đơn:</strong> @order.Id <br />
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i> @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </small>
+                    </div>
+                    <div>
+                        @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                        {
+                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                        }
+                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                        {
+                            <span class="badge bg-success">Đã xác nhận</span>
+                        }
+                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
+                        {
+                            <span class="badge bg-danger">Đã hủy</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@order.Status.ToString()</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body">
+                    <p><strong><i class="fas fa-user me-1"></i> Người nhận:</strong> @order.CustomerName</p>
+
+                    @if (order.OrderPromotions != null && order.OrderPromotions.Any())
+                    {
+                        var promo = order.OrderPromotions.FirstOrDefault()?.Promotion;
+                        var discount = order.OrderPromotions.Sum(op => op.DiscountApplied);
+
+                        <p>
+                            <strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong>
+                            <span class="text-muted text-decoration-line-through">
+                                @((order.TotalPrice + discount).ToString("N0")) đ
+                            </span>
+                            <span class="text-danger fw-bold ms-2">@order.TotalPrice.ToString("N0") đ</span>
+                        </p>
+
+                        <p class="text-success mb-1">
+                            <i class="fas fa-tag me-1"></i>
+                            Mã áp dụng: <strong>@promo?.Code</strong>
+                            <span>(@(promo?.IsPercent == true ? $"{promo.Discount}%" : $"{promo?.Discount.ToString("N0")}đ"))</span>
+                        </p>
+                        <p class="text-muted fst-italic">Đã giảm: @discount.ToString("N0")đ</p>
+                    }
+                    else
+                    {
+                        <p>
+                            <strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong>
+                            <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") đ</span>
+                        </p>
+                    }
+
+                    <div class="mt-3">
+                        <strong><i class="fas fa-paw me-1"></i> Chi tiết dịch vụ / sản phẩm:</strong>
+                        <small class="text-muted ms-1">(Giá tại thời điểm đặt hàng)</small>
+
+                        @if (order.OrderDetails != null && order.OrderDetails.Any())
+                        {
+                            <ul class="list-group list-group-flush mt-2">
+                                @foreach (var item in order.OrderDetails)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="fw-semibold">@item.Product.Name</span>
+                                            <span class="text-muted">(Phân loại: @ShowOption(item))</span>
+                                            <br />
+                                            <small>Số lượng: @item.Quantity</small>
+                                        </div>
+
+                                        <div class="text-end">
+                                            @if (item.DiscountedPrice < item.OriginalPrice)
+                                            {
+                                                <!-- 🟩 Có giảm giá -->
+                                                <span class="text-muted text-decoration-line-through d-block" style="font-size: 0.9rem;">
+                                                    @item.OriginalPrice.ToString("N0") đ
+                                                </span>
+                                                <span class="text-danger fw-bold d-block">
+                                                    @item.DiscountedPrice.ToString("N0") đ
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <!-- Không giảm -->
+                                                <span class="fw-semibold">@item.Price.ToString("N0") đ</span>
+                                            }
+
+                                            <small class="text-muted d-block">
+                                                Thành tiền: <strong>@((item.DiscountedPrice * item.Quantity).ToString("N0")) đ</strong>
+                                            </small>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted mt-2">Không có chi tiết đơn hàng.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="card-footer text-end">
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail me-2">
+                        <i class="fas fa-info-circle me-1"></i> Xem chi tiết
+                    </a>
+                    @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                    {
+                        <form asp-action="CancelOrder" asp-route-id="@order.Id" method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                            <button type="submit" class="btn-cancel">Hủy đơn</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
 <style>
     .order-wrapper {
         max-width: 960px;
@@ -130,155 +303,3 @@
         }
     }
 </style>
-
-<div class="order-wrapper py-5">
-    <h2 class="section-title">🐾 Lịch sử đặt hàng của bạn</h2>
-
-    @* @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger text-center">@TempData["ErrorMessage"]</div>
-    }
-
-    @if (!Model.Any())
-    {
-        <p class="no-orders">Bạn chưa có đơn hàng nào. Hãy thử đặt dịch vụ Spa hay Homestay cho thú cưng của bạn nhé! 🐶🐱</p>
-    }
-    else
-    {
-        @foreach (var order in Model)
-        {
-            <div class="order-card mb-4">
-                <!-- Header -->
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong><i class="fas fa-receipt me-1"></i> Mã đơn:</strong> @order.Id <br />
-                        <small class="text-muted">
-                            <i class="fas fa-calendar-alt me-1"></i> @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                        </small>
-                    </div>
-                    <div>
-                        @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
-                        {
-                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
-                        }
-                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
-                        {
-                            <span class="badge bg-success">Đã xác nhận</span>
-                        }
-                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
-                        {
-                            <span class="badge bg-danger">Đã hủy</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">@order.Status.ToString()</span>
-                        }
-                    </div>
-                </div>
-
-                <!-- Body -->
-                <div class="card-body">
-                    <p><strong><i class="fas fa-user me-1"></i> Người nhận:</strong> @order.CustomerName</p>
-
-                    @if (order.OrderPromotions != null && order.OrderPromotions.Any())
-                    {
-                        var promo = order.OrderPromotions.FirstOrDefault()?.Promotion;
-                        var discount = order.OrderPromotions.Sum(op => op.DiscountApplied);
-
-                        <p>
-                            <strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong>
-                            <span class="text-muted text-decoration-line-through">
-                                @((order.TotalPrice + discount).ToString("N0")) đ
-                            </span>
-                            <span class="text-danger fw-bold ms-2">@order.TotalPrice.ToString("N0") đ</span>
-                        </p>
-
-                        <p class="text-success mb-1">
-                            <i class="fas fa-tag me-1"></i>
-                            Mã áp dụng: <strong>@promo?.Code</strong>
-                            <span>(@(promo?.IsPercent == true ? $"{promo.Discount}%" : $"{promo?.Discount.ToString("N0")}đ"))</span>
-                        </p>
-                        <p class="text-muted fst-italic">Đã giảm: @discount.ToString("N0")đ</p>
-                    }
-                    else
-                    {
-                        <p>
-                            <strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong>
-                            <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") đ</span>
-                        </p>
-                    }
-
-                    <div class="mt-3">
-                        <strong><i class="fas fa-paw me-1"></i> Chi tiết dịch vụ / sản phẩm:</strong>
-                        <small class="text-muted ms-1">(Giá tại thời điểm đặt hàng)</small>
-
-                        @if (order.OrderDetails != null && order.OrderDetails.Any())
-                        {
-                            <ul class="list-group list-group-flush mt-2">
-                                @foreach (var item in order.OrderDetails)
-                                {
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="fw-semibold">@item.Product.Name</span>
-                                            @if (!string.IsNullOrEmpty(item.SelectedFlavor))
-                                            {
-                                                <span class="text-muted">(Phân loại: @item.SelectedFlavor)</span>
-                                            }
-                                            <br />
-                                            <small>Số lượng: @item.Quantity</small>
-                                        </div>
-
-                                        <div class="text-end">
-                                            @if (item.DiscountedPrice < item.OriginalPrice)
-                                            {
-                                                <!-- 🟩 Có giảm giá -->
-                                                <span class="text-muted text-decoration-line-through d-block" style="font-size: 0.9rem;">
-                                                    @item.OriginalPrice.ToString("N0") đ
-                                                </span>
-                                                <span class="text-danger fw-bold d-block">
-                                                    @item.DiscountedPrice.ToString("N0") đ
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <!-- Không giảm -->
-                                                <span class="fw-semibold">@item.Price.ToString("N0") đ</span>
-                                            }
-
-                                            <small class="text-muted d-block">
-                                                Thành tiền: <strong>@((item.DiscountedPrice * item.Quantity).ToString("N0")) đ</strong>
-                                            </small>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                        else
-                        {
-                            <p class="text-muted mt-2">Không có chi tiết đơn hàng.</p>
-                        }
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="card-footer text-end">
-                    <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail me-2">
-                        <i class="fas fa-info-circle me-1"></i> Xem chi tiết
-                    </a>
-                    @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
-                    {
-                        <form asp-action="CancelOrder" asp-route-id="@order.Id" method="post"
-                              class="d-inline"
-                              onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
-                            <button type="submit" class="btn-cancel">Hủy đơn</button>
-                        </form>
-                    }
-                </div>
-            </div>
-        }
-    }
-</div>

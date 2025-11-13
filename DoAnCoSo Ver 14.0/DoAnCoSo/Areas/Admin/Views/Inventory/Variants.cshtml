@@ -1,0 +1,201 @@
+﻿@model DoAnCoSo.ViewModels.InventoryVariantListViewModel
+@{
+    ViewData["Title"] = $"Biến thể - {Model.ProductName}";
+   
+     var holds = ViewBag.Holds as IDictionary<int,int> ?? new Dictionary<int,int>();
+   
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">📦 Biến thể sản phẩm: <strong>@Model.ProductName</strong></h3>
+
+    <div class="mb-3">
+        <a asp-action="Index" class="btn btn-outline-secondary">⬅️ Quay lại bảng tồn kho</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+<div class="inventory-card shadow-lg rounded-4 overflow-hidden">
+   <div class="table-responsive">
+    <table class="table-inventory align-middle mb-0">
+        <thead class="table-pink">
+            <tr class="text-center">
+                <th>#</th>
+                <th>Tên biến thể</th>
+                <th>Tồn</th>                      
+                <th>Giữ tạm</th>                               
+                <th>Đã bán</th>
+                <th>Ngưỡng cảnh báo</th>
+                <th>Nhập</th>
+                <th>Xuất</th>
+            </tr>
+        </thead>
+        <tbody>
+           
+            @for (int idx = 0; idx < Model.Variants.Count; idx++)
+            {
+                var v = Model.Variants[idx];
+                var holdOrder = v.ReservedQuantity;
+
+                <tr>
+                    <td class="text-center">@(idx + 1)</td>
+                    <td>@v.VariantName</td>
+                    <td class="text-center fw-bold">@v.StockQuantity</td>
+
+                    <td class="text-center text-info">@holdOrder</td>                 
+                    
+
+                    <td class="text-center text-success">@v.SoldQuantity</td>
+                    <td class="text-center">@v.LowStockThreshold</td>
+
+                    <td class="text-center  action-cell">
+                        <form asp-action="ImportVariant" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="variantId" value="@v.VariantId" />
+                            <input type="number" name="quantity" min="1" style="width:90px" placeholder="SL" />
+                            <input type="text" name="note" style="width:200px" placeholder="Ghi chú" class="ms-1" />
+                            <button type="submit" class="btn btn-sm btn-success ms-1">Nhập</button>
+                        </form>
+                    </td>
+
+                    <td class="text-center  action-cell">
+                        <form asp-action="ExportVariant" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="variantId" value="@v.VariantId" />
+                            <input type="number" name="quantity" min="1" style="width:90px" placeholder="SL" />
+                            <input type="text" name="note" style="width:200px" placeholder="Ghi chú" class="ms-1" />
+                            <button type="submit" class="btn btn-sm btn-danger ms-1">Xuất</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+</div>
+</div>
+    <style>
+        :root {
+            --brand: #FF6185;
+            --brand-soft: #FFB6C1;
+            --bg-soft: #FFF0F5;
+        }
+
+        body {
+            background-color: var(--bg-soft);
+        }
+
+        /* Card khung trắng có border */
+        .inventory-card {
+            border: 1px solid var(--brand-soft);
+            background: #fff;
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        /* ====== BẢNG HỒNG CHUNG ====== */
+        .table-inventory {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            color: #000;
+        }
+
+            /* Header: dải hồng đậm, chữ đen */
+            .table-inventory thead.table-pink {
+                background: linear-gradient(90deg, var(--brand), var(--brand-soft)) !important;
+                border-bottom: 2px solid rgba(0,0,0,.08);
+            }
+
+                .table-inventory thead.table-pink th {
+                    background: transparent !important;
+                    color: #000 !important;
+                    font-weight: 700;
+                    text-align: center;
+                    padding: .9rem .8rem;
+                    border: none !important;
+                }
+
+            .table-inventory thead th + th {
+                border-left: 1px solid rgba(0,0,0,.12) !important;
+            }
+
+            /* Body: zic-zac hồng nhạt, chỉ kẻ ngang */
+            .table-inventory tbody tr:nth-child(odd) > * {
+                background: #fff !important;
+            }
+
+            .table-inventory tbody tr:nth-child(even) > * {
+                background: #fff4f7 !important;
+            }
+
+            .table-inventory tbody tr:hover > * {
+                background: #ffe9f0 !important;
+            }
+
+            .table-inventory td {
+                padding: .9rem .8rem;
+                text-align: center;
+                vertical-align: middle;
+                border: 0;
+                border-bottom: 1px solid rgba(0,0,0,.06) !important;
+            }
+
+            .table-inventory tbody tr:last-child > * {
+                border-bottom: none !important;
+            }
+
+            .table-inventory td + td {
+                border-left: none !important;
+            }
+
+            .table-inventory .fw-semibold {
+                color: var(--brand);
+                font-weight: 600;
+            }
+
+        /* Ô Nhập / Xuất gọn gàng */
+        .action-cell .qty {
+            width: 80px;
+        }
+
+        .action-cell .note {
+            width: 220px;
+        }
+
+        .action-cell .form-control {
+            border-color: var(--brand-soft);
+        }
+
+            .action-cell .form-control:focus {
+                border-color: var(--brand);
+                box-shadow: 0 0 0 .2rem rgba(255,97,133,.15);
+            }
+
+        /* Responsive nhẹ */
+        @@media (max-width: 992px) {
+            .action-cell .note {
+                width: 180px;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .action-cell .qty {
+                width: 72px;
+            }
+
+            .action-cell .note {
+                width: 160px;
+            }
+
+            .action-cell form {
+                width: 100%;
+            }
+        }
+    </style>

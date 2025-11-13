@@ -4,6 +4,32 @@
     ViewData["Title"] = "📦 Quản lý đơn hàng";
 }
 
+@functions {
+    // Trả về tên "Vị" hợp lệ cho 1 OrderDetail
+    string ShowOption(DoAnCoSo.Models.OrderDetail d)
+    {
+        // Ưu tiên biến thể (nếu có)
+        if (d.VariantId.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(d.VariantName))
+                return d.VariantName;
+
+            // Fallback: tra theo Product.Variants (đã Include ở controller)
+            var name = d.Product?.Variants?
+                .FirstOrDefault(v => v.Id == d.VariantId.Value)?.Name;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            return $"Variant #{d.VariantId.Value}";
+        }
+
+        // Không có biến thể -> dùng SelectedFlavor
+        if (!string.IsNullOrWhiteSpace(d.SelectedFlavor))
+            return d.SelectedFlavor;
+
+        return "Không có";
+    }
+}
 <div class="order-wrapper py-5">
     <h2 class="section-title">📦 Quản lý đơn hàng</h2>
 
@@ -90,10 +116,7 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="fw-semibold">@item.Product.Name</span>
-                                        @if (!string.IsNullOrEmpty(item.SelectedFlavor))
-                                        {
-                                            <span class="text-muted">(Vị: @item.SelectedFlavor)</span>
-                                        }
+                                        <span class="text-muted">(Vị: @ShowOption(item))</span>
                                         <br />
                                         <small>Số lượng: @item.Quantity</small>
                                     </div>
@@ -126,6 +149,17 @@
                               onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?');">
                             <button type="submit" class="btn-cancel">
                                 <i class="fas fa-times-circle"></i> Hủy đơn
+                            </button>
+                        </form>
+                    }
+                    else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                    {
+                        <!-- Nút hủy sau khi đã xác nhận (hoàn kho) -->
+                        <form asp-action="Cancel" asp-route-id="@order.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Hủy đơn đã xác nhận và hoàn kho?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning">
+                                ↩️ Hủy (hoàn kho)
                             </button>
                         </form>
                     }
