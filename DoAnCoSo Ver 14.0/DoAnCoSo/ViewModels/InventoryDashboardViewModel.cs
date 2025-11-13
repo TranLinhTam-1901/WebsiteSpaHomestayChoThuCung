@@ -8,6 +8,7 @@
         public int SoldQuantity { get; set; }
         public int ReservedQuantity { get; set; }
         public int LowStockThreshold { get; set; }
-        public bool IsLowStock => StockQuantity <= LowStockThreshold;
+        public bool IsLowStock => (StockQuantity - ReservedQuantity) <= LowStockThreshold;
+        public int VariantCount { get; set; }
     }
 }

@@ -2,6 +2,11 @@
 @using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Thêm sản phẩm";
+    // ✅ CHANGED: lấy lại trạng thái từ ViewBag khi quay về do lỗi
+    var hasVariants = (bool?)ViewBag.HasVariants == true;
+    var vNames = (IEnumerable<string>)(ViewBag.VariantNames ?? new List<string>());
+    var vStocks = (IEnumerable<int>)(ViewBag.VariantStocks ?? new List<int>());
+    var vThresholds = (IEnumerable<int>)(ViewBag.VariantThresholds ?? new List<int>());
 }
 
 <div class="container py-5 d-flex justify-content-center">
@@ -12,6 +17,11 @@
 
         <div class="card-body p-4">
             <form asp-action="Add" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <!-- ✅ CHANGED: show all server-side validation errors -->
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -26,25 +36,49 @@
                             <span asp-validation-for="Price" class="text-danger small"></span>
                         </div>
 
-
                         <div class="mb-3">
                             <label asp-for="PriceReduced" class="form-label fw-semibold"></label>
                             <input asp-for="PriceReduced" class="form-control border-pink" placeholder="Nhập giá giảm..." />
                             <span asp-validation-for="PriceReduced" class="text-danger small"></span>
                         </div>
 
-                        <!-- Tồn kho ban đầu -->
-                        <div class="mb-3">
+                        <!-- Toggle: Có biến thể? -->
+                        <div class="mb-3 form-check">
+                            <!-- ❌ KHÔNG dùng hidden HasVariants để khỏi đè giá trị -->
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   id="hasVariants"
+                                   name="HasVariants"
+                                   value="true"
+                                   @(hasVariants ? "checked" : "") />   <!-- ✅ CHANGED -->
+                            <label class="form-check-label" for="hasVariants">
+                                Sản phẩm có biến thể (hương vị/size...)
+                            </label>
+                        </div>
+
+                        <!-- Tồn kho tổng (chỉ hiện khi KHÔNG có biến thể) -->
+                        <div class="mb-3" id="blockStockTotal">
+                            <input type="hidden" id="stockHiddenWhenVariant" name="StockQuantity" value="0" disabled />
                             <label asp-for="StockQuantity" class="form-label fw-semibold">Tồn kho ban đầu</label>
                             <input asp-for="StockQuantity" type="number" min="0" class="form-control border-pink" placeholder="VD: 10" />
                             <span asp-validation-for="StockQuantity" class="text-danger small"></span>
                         </div>
 
-                        <!-- Ngưỡng cảnh báo -->
                         <div class="mb-3">
                             <label asp-for="LowStockThreshold" class="form-label fw-semibold">Ngưỡng cảnh báo sắp hết</label>
                             <input asp-for="LowStockThreshold" type="number" min="0" class="form-control border-pink" placeholder="VD: 5" />
                             <span asp-validation-for="LowStockThreshold" class="text-danger small"></span>
+                        </div>
+
+                        <!-- NEW: Trạng thái sản phẩm -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Trạng thái</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" asp-for="IsActive" />  <!-- cần property IsActive trên Product -->
+                                <label class="form-check-label" for="IsActive">
+                                    @(@Model?.IsActive != false ? "Đang bán" : "Tạm dừng")
+                                </label>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -66,28 +100,33 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="additionalImagesInput" class="form-label fw-semibold">Ảnh sản phẩm khác (Upload nhiều file)</label>
+                            <label for="additionalImagesInput" class="form-label fw-semibold">Ảnh sản phẩm khác (upload nhiều file)</label>
                             <input type="file" id="additionalImagesInput" name="images" class="form-control border-pink" multiple />
                         </div>
                     </div>
                 </div>
 
-                <div class="mb-3">
+                <!-- BẢNG BIẾN THỂ -->
+                <div id="blockVariants" class="mb-3" style="display:none;">
+                    <label class="form-label fw-semibold">Biến thể & tồn ban đầu</label>
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:35%">Tên biến thể (VD: Bò / Cá / Gà…)</th>
+                                <th style="width:20%">Tồn ban đầu</th>
+                                <th style="width:20%">Ngưỡng cảnh báo</th>
+                                <th style="width:10%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="variantRows"></tbody>
+                    </table>
+                    <button type="button" class="btn btn-outline-pink" id="btnAddVariant">+ Thêm biến thể</button>
+                </div>
+
+                <div class="mb-3 mt-3">
                     <label asp-for="Description" class="form-label fw-semibold"></label>
                     <textarea asp-for="Description" class="form-control border-pink" rows="3" placeholder="Nhập mô tả..."></textarea>
                     <span asp-validation-for="Description" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Hương vị</label>
-                    <div class="row">
-                        @for (int i = 0; i < 3; i++)
-                        {
-                            <div class="col-md-4 mb-2">
-                                <input type="text" name="flavorsList[@i]" class="form-control border-pink" placeholder="Nhập hương vị..." />
-                            </div>
-                        }
-                    </div>
                 </div>
 
                 <div class="text-center pt-3">
@@ -103,6 +142,82 @@
     </div>
 </div>
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<!-- JS -->
+<script>
+    const hasVariants = document.getElementById('hasVariants');
+    const blockStockTotal = document.getElementById('blockStockTotal');
+    const stockInput = blockStockTotal.querySelector('input[name="StockQuantity"]');
+    const stockHidden = document.getElementById('stockHiddenWhenVariant');
+
+    const blockVariants = document.getElementById('blockVariants');
+    const variantRows = document.getElementById('variantRows');
+    const btnAddVariant = document.getElementById('btnAddVariant');
+
+    function addVariantRow(name = '', stock = 0, threshold = 0) {
+        const idx = variantRows.children.length;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input name="VariantNames[${idx}]" class="form-control border-pink" placeholder="VD: Bò" value="${name}" /></td>
+            <td><input name="VariantStocks[${idx}]" type="number" min="0" class="form-control border-pink" value="${stock}" /></td>
+            <td><input name="VariantThresholds[${idx}]" type="number" min="0" class="form-control border-pink" value="${threshold}" /></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); renumberRows();">Xóa</button>
+            </td>`;
+        variantRows.appendChild(tr);
+    }
+
+    function renumberRows() {
+        [...variantRows.children].forEach((tr, i) => {
+            const inputs = tr.querySelectorAll('input');
+            inputs[0].name = `VariantNames[${i}]`;
+            inputs[1].name = `VariantStocks[${i}]`;
+            inputs[2].name = `VariantThresholds[${i}]`;
+        });
+    }
+
+    function toggleVariantUI() {
+        const useVariant = hasVariants.checked;
+        blockStockTotal.style.display = useVariant ? 'none' : 'block';
+        blockVariants.style.display   = useVariant ? 'block' : 'none';
+
+        if (useVariant) {
+            stockInput.setAttribute('disabled', 'disabled'); // disabled => không post
+            stockHidden.removeAttribute('disabled');         // hidden => post 0
+            if (variantRows.children.length === 0) {
+                addVariantRow();
+                addVariantRow();
+            }
+        } else {
+            stockInput.removeAttribute('disabled');
+            stockHidden.setAttribute('disabled', 'disabled');
+        }
+    }
+
+    hasVariants.addEventListener('change', toggleVariantUI);
+
+    // ✅ CHANGED: nạp lại các dòng đã post khi ModelState lỗi
+    const postedNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vNames));
+    const postedStocks = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vStocks));
+    const postedThresholds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vThresholds));
+    const postedHasVariants = @((hasVariants ? "true" : "false"));
+
+    if (postedHasVariants === "true" && Array.isArray(postedNames) && postedNames.length > 0) {
+        variantRows.innerHTML = "";
+        for (let i = 0; i < postedNames.length; i++) {
+            addVariantRow(postedNames[i] || "", postedStocks[i] || 0, postedThresholds[i] || 0);
+        }
+    }
+
+    // Bật/tắt UI đúng trạng thái ngay khi vào trang
+    toggleVariantUI();
+
+    btnAddVariant?.addEventListener('click', () => addVariantRow());
+</script>
+
 <style>
     :root {
         --pink-main: #FF6185;
@@ -110,8 +225,8 @@
     }
 
     .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: black;
+        background: linear-gradient(90deg,var(--pink-main),var(--pink-accent));
+        color: #000;
     }
 
     .btn-gradient-pink {
@@ -119,24 +234,24 @@
         color: #000;
         font-weight: bold;
         border: none;
-        transition: 0.25s;
+        transition: .25s;
     }
 
         .btn-gradient-pink:hover {
-            background-color: #FF6185;
+            background: #FF6185;
             color: #fff;
         }
 
     .btn-outline-pink {
         border: 1.5px solid var(--pink-main);
         color: var(--pink-main);
-        background-color: #fff;
-        transition: 0.25s;
+        background: #fff;
+        transition: .25s;
         font-weight: 500;
     }
 
         .btn-outline-pink:hover {
-            background-color: var(--pink-main);
+            background: var(--pink-main);
             color: #fff;
         }
 
@@ -146,7 +261,7 @@
 
         .border-pink:focus {
             border-color: var(--pink-accent);
-            box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+            box-shadow: 0 0 0 .2rem rgba(255,107,107,.25);
         }
 
     .card {
@@ -155,9 +270,5 @@
 
     textarea {
         resize: none;
-    }
-
-    .col-md-4 {
-        height: auto;
     }
 </style>

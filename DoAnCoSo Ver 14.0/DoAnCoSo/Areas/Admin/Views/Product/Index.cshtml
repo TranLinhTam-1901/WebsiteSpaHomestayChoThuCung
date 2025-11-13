@@ -7,15 +7,29 @@
     int currentPage = string.IsNullOrEmpty(Context.Request.Query["page"]) ? 1 : int.Parse(Context.Request.Query["page"]);
     int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
     var products = Model.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    // nhận flag xem danh sách đã ẩn từ Controller
+    bool showDeleted = ViewBag.ShowDeleted == true;
 }
 
 <div class="container admin-product-page py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-pink mb-0"><i class="bi bi-box-seam me-2"></i>Quản lý sản phẩm</h2>
+
         <a asp-area="Admin" asp-controller="Product" asp-action="Add"
            class="btn btn-pink-gradient shadow-sm rounded-pill px-4 py-2">
             <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm
         </a>
+
+        <!-- CHANGED: nút bật/tắt xem danh sách đã ẩn -->
+            <a class="btn btn-outline-secondary rounded-pill px-4 py-2"  
+               href="@Url.Action("Index", new { showDeleted = !showDeleted })"> 
+                @if (!showDeleted) 
+                { <text>Hiện sản phẩm đã ẩn</text> } 
+                else
+                { <text>Ẩn danh sách đã ẩn</text> }
+            </a>
+
     </div>
 
     <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
@@ -30,13 +44,14 @@
                         <th class="text-center">Tồn kho</th>
                         <th class="text-center">Mô tả</th>
                         <th class="text-center">Danh mục</th>
+                        <th class="text-center">Trạng thái</th>
                         <th class="text-center">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var product in products)
                     {
-                        <tr>
+                        <tr data-row-id="@product.Id">
                             <td class="text-center text-muted">@product.Id</td>
                             <td class="fw-semibold">@product.Name</td>
                             <td class="text-center">
@@ -69,19 +84,56 @@
 
                             <td class="text-truncate" style="max-width: 220px;">@product.Description</td>
                             <td class="text-center">@product.Category?.Name</td>
-                            <td>
-                                <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id"
-                                   class="btn-action btn-view btn-sm me-1">
-                                    <i class="bi bi-eye"></i> Xem
-                                </a>
-                                <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id"
+
+                            <!-- CHANGED: cột trạng thái bán -->
+                            <td class="text-center status-cell">
+                                @if (product.IsDeleted)
+                                {
+                                    <span class="badge bg-secondary status-badge">Ngừng bán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success status-badge">Đang bán</span>
+                                }
+                            </td>
+
+
+                            <td>                               
+                                @* <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id"
                                    class="btn-action btn-edit btn-sm me-1">
                                     <i class="bi bi-pencil"></i> Sửa
                                 </a>
                                 <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id"
-                                   class="btn-action btn-delete btn-sm">
+                                   class="btn-action btn-delete btn-sm me-1 ">
                                     <i class="bi bi-trash"></i> Xóa
+                                </a> *@
+                                <a asp-area="Admin" asp-controller="Product" asp-action="Details" asp-route-id="@product.Id"
+                                   class="btn-action btn-delete btn-sm">
+                                    <i class="bi bi-trash"></i>Xem chi tiết 
                                 </a>
+
+                                 @if (!product.IsDeleted)
+                                    {
+                                        <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id"
+                                           class="btn-action btn-edit btn-sm">
+                                            <i class="bi bi-pencil"></i> Sửa
+                                        </a>
+
+                                        <!-- CHANGED: nút Ẩn (soft delete) dẫn sang trang xác nhận Delete -->
+                                    <button type="button"
+                                            class="btn-action btn-delete btn-sm js-hide"
+                                            data-id="@product.Id"
+                                            data-name="@product.Name">
+                                        <i class="bi bi-eye-slash"></i> Ẩn
+                                    </button>
+                                    }
+                                    else
+                                    {
+                                    <button type="button" class="btn-action btn-edit btn-sm js-unhide d-inline"
+                                           data-id="@product.Id" data-name="@product.Name">
+                                           <i class="bi bi-arrow-counterclockwise"></i> Phục hồi                                       
+                                    </button>
+                                    }                             
                             </td>
                         </tr>
                     }
@@ -108,6 +160,28 @@
     </div>
 </div>
 
+<div class="modal fade" id="hideModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ẩn sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn ẩn <b id="hideName"></b> (ID: <span id="hideIdText"></span>) không?
+                <small class="text-muted d-block mt-2">Sản phẩm sẽ không xuất hiện với khách hàng, và trạng thái sẽ chuyển sang <b>Tạm dừng</b>.</small>
+            </div>
+            <div class="modal-footer">
+                <form id="hideForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="hideId" name="id" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="submit" class="btn btn-danger">Ẩn sản phẩm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <style>
     :root {
         --pink-main: #FF6185;
@@ -226,3 +300,166 @@
             color: #fff;
         }
 </style>
+@section Scripts {
+    <script>
+        (() => {
+          const SHOW_DELETED = @Html.Raw((ViewBag.ShowDeleted == true ? "true" : "false"));
+
+          // Template URL (id=0 rồi thay 0 bằng id thật, hỗ trợ cả dạng /0 và ?id=0)
+          const UPDATE_TPL  = '@Url.Action("Update", "Product", new { area = "Admin", id = 0 })';
+          const DETAILS_TPL = '@Url.Action("Details", "Product", new { area = "Admin", id = 0 })';
+          const HIDE_URL    = '@Url.Action("Hide", "Product", new { area = "Admin" })';
+          const UNHIDE_URL  = '@Url.Action("Unhide", "Product", new { area = "Admin" })';
+
+          const replaceId = (tpl, id) =>
+            tpl.replace(/\/0(?=$)/, '/' + id)    // .../0  -> .../id
+               .replace(/=0(?=(&|$))/, '=' + id); // ?id=0 -> ?id=id
+
+          // ===== Modal Ẩn =====
+          const hideModalEl = document.getElementById('hideModal');
+          const hideNameEl  = document.getElementById('hideName');
+          const hideIdText  = document.getElementById('hideIdText');
+          const hideIdInput = document.getElementById('hideId');
+          const hideForm    = document.getElementById('hideForm');
+          const bsModal     = new bootstrap.Modal(hideModalEl);
+
+          const getToken = () =>
+            hideForm.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+          // ===== Event-delegation: mở modal Ẩn cho cả nút có sẵn & nút vừa render =====
+          document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.js-hide');
+            if (!btn) return;
+
+            const id   = btn.dataset.id;
+            const row  = document.querySelector(`tr[data-row-id="${id}"]`);
+            const name = btn.dataset.name || (row?.querySelector('td:nth-child(2)')?.textContent.trim() ?? ('#' + id));
+
+            hideNameEl.textContent   = name;
+            hideIdText.textContent   = id;
+            hideIdInput.value        = id;
+            hideForm.dataset.rowId   = id;
+            bsModal.show();
+          });
+
+          // ===== Submit Ẩn (AJAX) =====
+          hideForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id    = hideIdInput.value;
+            const token = getToken();
+
+            try {
+              const res  = await fetch(HIDE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id, __RequestVerificationToken: token })
+              });
+              const data = await res.json();
+
+              if (data?.success) {
+                const row = document.querySelector(`tr[data-row-id="${id}"]`);
+                if (row) {
+                  setStatus(row, 'hidden');
+                  if (SHOW_DELETED) {
+                    renderActions(row, 'hidden');     // đổi sang: Xem chi tiết + Phục hồi
+                  } else {
+                    row.remove();                     // trang không showDeleted → bỏ dòng
+                  }
+                }
+                bsModal.hide();
+              } else {
+                alert(data?.message || 'Ẩn thất bại.');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Có lỗi khi ẩn sản phẩm.');
+            }
+          });
+
+          // ===== Event-delegation: Phục hồi (AJAX) =====
+          document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.js-unhide');
+            if (!btn) return;
+
+            e.preventDefault();
+            const id    = btn.dataset.id;
+            const token = getToken();
+            if (!token) { alert('Thiếu anti-forgery token.'); return; }
+
+            try {
+              const res  = await fetch(UNHIDE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id, __RequestVerificationToken: token })
+              });
+              const data = await res.json();
+
+              if (data?.success) {
+                const row = document.querySelector(`tr[data-row-id="${id}"]`);
+                if (row) {
+                  setStatus(row, 'active');           // → Đang bán
+                  renderActions(row, 'active');       // 🔁 render lại đủ 3 nút: Xem chi tiết + Sửa + Ẩn
+                }
+              } else {
+                alert(data?.message || 'Phục hồi thất bại.');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Có lỗi khi phục hồi sản phẩm.');
+            }
+          });
+
+          // ===== Helpers =====
+          function setStatus(row, mode) {
+            const statusCell = row.querySelector('.status-cell');
+            if (!statusCell) return;
+            statusCell.innerHTML = (mode === 'active')
+              ? '<span class="badge bg-success status-badge">Đang bán</span>'
+              : '<span class="badge bg-secondary status-badge">Ngừng bán</span>';
+          }
+
+          function renderActions(row, mode) {
+            const id         = row.getAttribute('data-row-id');
+            const name       = row.querySelector('td:nth-child(2)')?.textContent.trim() ?? ('#' + id);
+            const actionsTd  = row.lastElementChild;
+            if (!actionsTd) return;
+
+            if (mode === 'active') {
+              actionsTd.innerHTML = `
+                <a href="${replaceId(DETAILS_TPL, id)}"
+                   class="btn-action btn-delete btn-sm">
+                   <i class="bi bi-trash"></i> Xem chi tiết
+                </a>
+                <a href="${replaceId(UPDATE_TPL, id)}"
+                   class="btn-action btn-edit btn-sm">
+                   <i class="bi bi-pencil"></i> Sửa
+                </a>
+                <button type="button"
+                        class="btn-action btn-delete btn-sm js-hide"
+                        data-id="${id}" data-name="${encodeHtml(name)}">
+                  <i class="bi bi-eye-slash"></i> Ẩn
+                </button>`;
+            } else { // hidden
+              actionsTd.innerHTML = `
+                <a href="${replaceId(DETAILS_TPL, id)}"
+                   class="btn-action btn-delete btn-sm">
+                   <i class="bi bi-trash"></i> Xem chi tiết
+                </a>
+                <button type="button"
+                        class="btn-action btn-edit btn-sm js-unhide"
+                        data-id="${id}">
+                  <i class="bi bi-arrow-counterclockwise"></i> Phục hồi
+                </button>`;
+            }
+          }
+
+          function encodeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({
+              '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'
+            }[c]));
+          }
+        })();
+    </script>
+}
+
+

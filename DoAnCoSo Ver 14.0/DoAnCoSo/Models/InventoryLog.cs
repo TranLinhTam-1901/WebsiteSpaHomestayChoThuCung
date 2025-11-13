@@ -23,5 +23,9 @@ namespace DoAnCoSo.Models
 
         [MaxLength(200)]
         public string? Note { get; set; }
+
+        public int? VariantId { get; set; } // nullable, để không phá logs cũ
+        public ProductVariant? Variant { get; set; }
+
     }
 }

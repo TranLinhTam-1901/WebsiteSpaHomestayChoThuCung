@@ -192,14 +192,14 @@
                                         @(((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price) * item.Quantity).ToString("N0"))đ
                                     </td>
                                     <td>
-                                        @if (!string.IsNullOrEmpty(item.SelectedFlavor))
-                                        {
-                                            <span>@item.SelectedFlavor</span>
+                                        @{
+                                            // Nếu có biến thể: hiển thị tên biến thể; nếu không có: hiển thị hương vị đã chọn
+                                            var flavorText =
+                                            item.VariantId != null
+                                            ? (string.IsNullOrWhiteSpace(item.SelectedVariantName) ? "—" : item.SelectedVariantName)
+                                            : (string.IsNullOrWhiteSpace(item.SelectedFlavor) ? "Mặc định" : item.SelectedFlavor);
                                         }
-                                        else
-                                        {
-                                            <span class="text-muted">Mặc định</span>
-                                        }
+                                        @flavorText
                                     </td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-danger btn-remove" data-id="@item.Id">

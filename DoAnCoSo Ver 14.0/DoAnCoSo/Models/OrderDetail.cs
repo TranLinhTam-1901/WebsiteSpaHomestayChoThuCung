@@ -14,5 +14,8 @@
         public decimal DiscountedPrice { get; set; }
 
         public string? SelectedFlavor { get; set; }
+        public int? VariantId { get; set; }     // FK tùy chọn tới ProductVariant
+        public string? VariantName { get; set; } // Snapshot tên biến thể tại thời điểm đặt
+
     }
 }

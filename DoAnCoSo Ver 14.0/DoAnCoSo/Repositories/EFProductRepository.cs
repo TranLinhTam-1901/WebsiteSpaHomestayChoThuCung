@@ -53,7 +53,8 @@ namespace DoAnCoSo.Repositories
         {
             return await _context.Products
                 .Include(p => p.Images)
-                .Include(p => p.Category) // ✅ thêm Include Category
+                .Include(p => p.Category)
+                .Include(p => p.Variants) 
                 .Include(p => p.Reviews)
                     .ThenInclude(r => r.User)
                 .Include(p => p.Reviews)

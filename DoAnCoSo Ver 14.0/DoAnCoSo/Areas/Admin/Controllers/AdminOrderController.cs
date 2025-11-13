@@ -29,7 +29,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             var orders = await _context.Orders
                 .Include(o => o.User) 
             .Include(o => o.OrderDetails)
-            .ThenInclude(od => od.Product) 
+            .ThenInclude(od => od.Product)
+             .ThenInclude(p => p.Variants)
             .Include(o => o.OrderPromotions)
             .ThenInclude(op => op.Promotion) 
         .OrderByDescending(o => o.OrderDate)
@@ -46,12 +47,14 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
 
             var order = await _context.Orders
-                                      .Include(o => o.User)
-                                      .Include(o => o.OrderDetails)
-                                          .ThenInclude(od => od.Product)
-                                       .Include(o => o.OrderPromotions)             
-                                           .ThenInclude(op => op.Promotion)
-                                      .FirstOrDefaultAsync(m => m.Id == id);
+            .Include(o => o.User)
+            .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product)
+                 .ThenInclude(p => p.Variants)
+            .Include(o => o.OrderPromotions)             
+                .ThenInclude(op => op.Promotion)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
             if (order == null)
             {
                 return NotFound();
@@ -64,7 +67,11 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Confirm(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
+            // Lấy order để kiểm tra nhanh trước khi gọi service (tránh exception không cần thiết)
+            var order = await _context.Orders
+                .AsTracking()
+                .FirstOrDefaultAsync(o => o.Id == id);
+
             if (order == null)
             {
                 TempData["ErrorMessage"] = "Không tìm thấy đơn hàng.";
@@ -73,28 +80,40 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             if (order.Status != OrderStatusEnum.ChoXacNhan)
             {
-                TempData["ErrorMessage"] = "Đơn hàng không ở trạng thái 'Chờ xác nhận' để xác nhận.";
+                TempData["ErrorMessage"] = "Đơn hàng không ở trạng thái 'Chờ xác nhận'.";
                 return RedirectToAction(nameof(Index));
             }
 
             try
             {
-                // NGUYÊN TỬ: Unreserve → Trừ kho → Tăng Sold → Set DaXacNhan
+                // 1) Gọi service: service TỰ lo toàn bộ kho + set DaXacNhan trong 1 transaction
                 await _inventory.ConfirmOrderAtomicallyAsync(id, _userManager.GetUserId(User));
 
-                // TẠM THỜI: coi BankTransfer như COD (đã thanh toán khi Admin confirm)
+                // 2) Đồng bộ thực thể về trạng thái mới nhất sau khi service commit
+                await _context.Entry(order).ReloadAsync();
+
+                // 3) Nếu là thanh toán thủ công (COD/Chuyển khoản thủ công) thì cập nhật bankStatus
                 if (IsManualPaidMethod(order.PaymentMethod))
                 {
                     order.bankStatus = BankStatusEnum.DaThanhToan;
-                    _context.Update(order);              // chỉ update bankStatus
+                    // order đang được tracking, chỉ cần SaveChanges
                     await _context.SaveChangesAsync();
                 }
 
-                TempData["SuccessMessage"] = "✅ Đơn hàng đã xác nhận, đã trừ kho và ghi nhận đã thanh toán.";
+                TempData["SuccessMessage"] = "✅ Xác nhận đơn hàng thành công.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Ví dụ: "Order is not pending." hoặc thiếu tồn kho...
+                TempData["ErrorMessage"] = "❌ Xác nhận thất bại: " + ex.Message;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                TempData["ErrorMessage"] = "❌ Xung đột dữ liệu, vui lòng thử lại.";
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Xác nhận thất bại: " + ex.Message;
+                TempData["ErrorMessage"] = "❌ Lỗi không xác định: " + ex.Message;
             }
 
             return RedirectToAction(nameof(Index));

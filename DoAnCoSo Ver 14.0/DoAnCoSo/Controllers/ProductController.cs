@@ -32,7 +32,12 @@ namespace DoAnCoSo.Controllers
 
         public IActionResult AllProducts(string? promoCode)
         {
-            var products = _context.Products.AsQueryable();
+            var products = _context.Products
+             .Where(p => p.IsActive && !p.IsDeleted)   // nếu chưa có IsDeleted thì bỏ điều kiện này
+             .AsQueryable();
+
+            products = products.Where(p => !p.IsDeleted && p.IsActive);
+
 
             // 🟢 Nếu có promoCode được truyền vào
             if (!string.IsNullOrEmpty(promoCode))
