@@ -36,5 +36,8 @@ namespace DoAnCoSo.Models
         public int? DeletedPetId { get; set; }
         [ForeignKey("DeletedPetId")]
         public virtual DeletedPets DeletedPet { get; set; }
+
+        [MaxLength(500)]
+        public string? Note { get; set; }
     }
 }

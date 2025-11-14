@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateDeletedPets : Migration
+    public partial class BlockchainVet : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,6 +35,7 @@ namespace DoAnCoSo.Migrations
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PublicKey = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PrivateKey = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -406,7 +407,11 @@ namespace DoAnCoSo.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
-                    Flavors = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Flavors = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StockQuantity = table.Column<int>(type: "int", nullable: false),
+                    LowStockThreshold = table.Column<int>(type: "int", nullable: false),
+                    SoldQuantity = table.Column<int>(type: "int", nullable: false),
+                    ReservedQuantity = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -617,7 +622,7 @@ namespace DoAnCoSo.Migrations
                     AppointmentId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    PetId = table.Column<int>(type: "int", nullable: false),
+                    PetId = table.Column<int>(type: "int", nullable: true),
                     ServiceId = table.Column<int>(type: "int", nullable: false),
                     AppointmentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     AppointmentTime = table.Column<TimeSpan>(type: "time", nullable: false),
@@ -626,7 +631,10 @@ namespace DoAnCoSo.Migrations
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     OwnerPhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    DeletedPetId = table.Column<int>(type: "int", nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    PetId1 = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -643,11 +651,21 @@ namespace DoAnCoSo.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "FK_Appointments_DeletedPets_DeletedPetId",
+                        column: x => x.DeletedPetId,
+                        principalTable: "DeletedPets",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_Appointments_Pets_PetId",
                         column: x => x.PetId,
                         principalTable: "Pets",
                         principalColumn: "PetId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Appointments_Pets_PetId1",
+                        column: x => x.PetId1,
+                        principalTable: "Pets",
+                        principalColumn: "PetId");
                     table.ForeignKey(
                         name: "FK_Appointments_Services_ServiceId",
                         column: x => x.ServiceId,
@@ -742,6 +760,30 @@ namespace DoAnCoSo.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "InventoryLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    QuantityChange = table.Column<int>(type: "int", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    ReferenceId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PerformedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InventoryLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InventoryLogs_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OrderDetails",
                 columns: table => new
                 {
@@ -751,6 +793,8 @@ namespace DoAnCoSo.Migrations
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    OriginalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DiscountedPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     SelectedFlavor = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -847,9 +891,19 @@ namespace DoAnCoSo.Migrations
                 column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Appointments_DeletedPetId",
+                table: "Appointments",
+                column: "DeletedPetId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Appointments_PetId",
                 table: "Appointments",
                 column: "PetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Appointments_PetId1",
+                table: "Appointments",
+                column: "PetId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Appointments_ServiceId",
@@ -954,6 +1008,11 @@ namespace DoAnCoSo.Migrations
                 name: "IX_Favorites_UserId",
                 table: "Favorites",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InventoryLogs_ProductId",
+                table: "InventoryLogs",
+                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invoices_OrderId",
@@ -1087,10 +1146,10 @@ namespace DoAnCoSo.Migrations
                 name: "ChatMessages");
 
             migrationBuilder.DropTable(
-                name: "DeletedPets");
+                name: "Favorites");
 
             migrationBuilder.DropTable(
-                name: "Favorites");
+                name: "InventoryLogs");
 
             migrationBuilder.DropTable(
                 name: "Invoices");
@@ -1124,6 +1183,9 @@ namespace DoAnCoSo.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserPromotions");
+
+            migrationBuilder.DropTable(
+                name: "DeletedPets");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

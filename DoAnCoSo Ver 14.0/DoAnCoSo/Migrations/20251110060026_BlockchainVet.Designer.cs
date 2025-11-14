@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DoAnCoSo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251103121729_Initial")]
-    partial class Initial
+    [Migration("20251110060026_BlockchainVet")]
+    partial class BlockchainVet
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -127,14 +127,24 @@ namespace DoAnCoSo.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DeletedPetId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("OwnerPhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PetId")
+                    b.Property<int?>("PetId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PetId1")
                         .HasColumnType("int");
 
                     b.Property<int>("ServiceId")
@@ -155,13 +165,64 @@ namespace DoAnCoSo.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
+                    b.HasIndex("DeletedPetId");
+
                     b.HasIndex("PetId");
+
+                    b.HasIndex("PetId1");
 
                     b.HasIndex("ServiceId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.Blockchain.BlockchainRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlockNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DataJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PerformedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreviousHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RecordType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReferenceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BlockchainRecords");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.CartItem", b =>
@@ -338,6 +399,93 @@ namespace DoAnCoSo.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.DeletedPets", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Breed")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OriginalPetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal?>("Weight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DeletedPets");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.InventoryLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PerformedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityChange")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("ReferenceId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("InventoryLogs");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Invoice", b =>
@@ -643,6 +791,9 @@ namespace DoAnCoSo.Migrations
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("LowStockThreshold")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -653,6 +804,15 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<decimal?>("PriceReduced")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ReservedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoldQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
 
                     b.Property<string>("Trademark")
                         .HasColumnType("nvarchar(max)");
@@ -1119,11 +1279,18 @@ namespace DoAnCoSo.Migrations
                         .WithMany("Appointments")
                         .HasForeignKey("ApplicationUserId");
 
+                    b.HasOne("DoAnCoSo.Models.DeletedPets", "DeletedPet")
+                        .WithMany()
+                        .HasForeignKey("DeletedPetId");
+
                     b.HasOne("DoAnCoSo.Models.Pet", "Pet")
-                        .WithMany("Appointments")
+                        .WithMany()
                         .HasForeignKey("PetId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DoAnCoSo.Models.Pet", null)
+                        .WithMany("Appointments")
+                        .HasForeignKey("PetId1");
 
                     b.HasOne("DoAnCoSo.Models.Service", "Service")
                         .WithMany("Appointments")
@@ -1136,6 +1303,8 @@ namespace DoAnCoSo.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("DeletedPet");
 
                     b.Navigation("Pet");
 
@@ -1215,6 +1384,28 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Admin");
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.DeletedPets", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.InventoryLog", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Invoice", b =>

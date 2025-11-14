@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "🎉 Xác nhận đặt lịch";
+    var serviceName = ViewBag.ServiceName ?? "dịch vụ";
 }
 
 <style>
@@ -52,7 +53,8 @@
         <div class="alert alert-success border-0">
             <h4 class="alert-heading">✅ Đặt lịch thành công!</h4>
             <p class="confirmation-message">
-                Cảm ơn bạn đã đặt lịch dịch vụ <strong>Homestay</strong> cho thú cưng của mình. Chúng tôi sẽ liên hệ với bạn để xác nhận chi tiết.
+                Cảm ơn bạn đã đặt lịch <strong>@serviceName</strong> cho thú cưng của mình.
+                Chúng tôi sẽ liên hệ với bạn để xác nhận chi tiết.
             </p>
             <hr>
             <p class="confirmation-message mb-0">
@@ -61,7 +63,9 @@
         </div>
 
         <div class="text-center mt-4">
-            <a asp-controller="Home" asp-action="Index" class="btn btn-confirm-back">🏠 Quay lại trang chủ</a>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-confirm-back">
+                🏠 Quay lại trang chủ
+            </a>
         </div>
     </div>
 </div>

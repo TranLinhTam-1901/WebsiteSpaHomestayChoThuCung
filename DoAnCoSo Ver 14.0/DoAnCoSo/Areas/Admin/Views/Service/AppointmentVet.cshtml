@@ -3,9 +3,12 @@
 
 @{
     bool isUpdate = Model.IsUpdate;
-    ViewData["Title"] = isUpdate ? "✏️ Cập nhật lịch khám thú y 🐾" : "🩺 Đặt lịch khám thú y cho thú cưng 🐶🐱";
+    ViewData["Title"] = isUpdate ? "✏️ Cập nhật lịch khám thú y cho thú cưng 🩺" : "🩺 Đặt lịch khám thú y cho thú cưng 🐶🐱";
     var vetServices = ViewBag.VetServices as List<Service> ?? new List<Service>();
-    var userPets = Model.UserPets ?? new List<Pet>();
+    var users = (ViewBag.Users as List<ApplicationUser>)?.OrderBy(u => u.FullName).ToList() ?? new List<ApplicationUser>();
+    var selectedUserId = !string.IsNullOrEmpty(Model.UserId)
+                         ? Model.UserId
+                         : (users.FirstOrDefault()?.Id ?? "");
 }
 
 <link rel="stylesheet" href="~/css/booking.css" />
@@ -14,34 +17,34 @@
     <div class="booking-card mx-auto" style="max-width: 750px;">
         <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
 
-        <form asp-action="@(isUpdate ? "UpdateAppointmentVet" : "BookAppointmentVet")" method="post">
+        <form asp-action="@(Model.IsUpdate ? "UpdateAppointmentVet" : "AppointmentVet")" method="post">
             <input type="hidden" asp-for="AppointmentId" />
+
+            <!-- 0️⃣ Chọn khách hàng (admin) -->
+            <h5><span class="section-icon">👥</span>Chọn khách hàng</h5>
+            <div class="mb-3">
+                <label for="userSelect" class="form-label">Khách hàng</label>
+                <select id="userSelect" name="UserId" class="form-select" required>
+                    @foreach (var u in users.OrderBy(u => u.FullName))
+                    {
+                        <option value="@u.Id" selected="@(u.Id == selectedUserId ? "selected" : "")">@u.FullName</option>
+                    }
+                </select>
+            </div>
 
             <!-- 1️⃣ Thông tin chủ nuôi -->
             <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
             <div class="mb-3">
                 <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
-                <input asp-for="OwnerPhoneNumber" class="form-control" required />
+                <input asp-for="OwnerPhoneNumber" class="form-control" />
+                <span asp-validation-for="OwnerPhoneNumber" class="text-danger"></span>
             </div>
 
             <!-- 2️⃣ Thú cưng -->
             <h5><span class="section-icon">🐾</span>Chọn thú cưng</h5>
             <div class="mb-3">
                 <label class="form-label">Thú cưng có sẵn</label>
-                <select id="existingPetSelect" class="form-select">
-                    @foreach (var pet in userPets.OrderBy(p => p.Name))
-                    {
-                        <option value="@pet.PetId"
-                                data-name="@pet.Name"
-                                data-type="@pet.Type"
-                                data-breed="@pet.Breed"
-                                data-age="@pet.Age"
-                                data-weight="@pet.Weight"
-                                selected="@(Model.ExistingPetId == pet.PetId ? "selected" : "")">
-                            @pet.Name
-                        </option>
-                    }
-                </select>
+                <select id="existingPetSelect" class="form-select"></select>
             </div>
 
             <div class="row g-3 mb-3">
@@ -72,32 +75,35 @@
 
             <input type="hidden" asp-for="ExistingPetId" id="ExistingPetId" />
 
-            <!-- 3️⃣ Chọn dịch vụ -->
+            <!-- 3️⃣ Dịch vụ -->
             <h5><span class="section-icon">💉</span>Chọn dịch vụ thú y</h5>
             <div class="mb-3">
-                <label asp-for="ServiceId" class="form-label"></label>
+                <label asp-for="ServiceId" class="form-label">Dịch vụ</label>
                 <select asp-for="ServiceId" class="form-select" id="serviceSelect" required>
                     @foreach (var service in vetServices)
                     {
-                        <option value="@service.ServiceId"
-                                data-price="@service.Price"
+                        <option value="@service.ServiceId" data-price="@service.Price"
                                 selected="@(Model.ServiceId == service.ServiceId ? "selected" : "")">
                             @service.Name
                         </option>
                     }
                 </select>
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
 
             <!-- 4️⃣ Giá -->
             <h5><span class="section-icon">💰</span>Giá dịch vụ</h5>
             <div class="mb-3">
-                <input type="text" class="form-control fw-bold text-danger" id="calculatedPrice" readonly />
+                <input type="text" class="form-control fw-bold text-danger" id="calculatedPrice"
+                       value="@(Model.SelectedServicePrice.HasValue? Model.SelectedServicePrice.Value.ToString("N0") + " VNĐ" : "0 VNĐ")"
+                       readonly />
             </div>
 
             <!-- 5️⃣ Ghi chú -->
             <h5><span class="section-icon">📝</span>Ghi chú</h5>
             <div class="mb-3">
-                <textarea asp-for="Note" class="form-control" rows="3" placeholder="Nhập triệu chứng hoặc yêu cầu đặc biệt..."></textarea>
+                <textarea asp-for="Note" class="form-control" rows="3"
+                          placeholder="Nhập triệu chứng hoặc yêu cầu đặc biệt..."></textarea>
             </div>
 
             <!-- 6️⃣ Thời gian -->
@@ -105,7 +111,7 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label asp-for="AppointmentDate" class="form-label">Ngày hẹn</label>
-                    <input asp-for="AppointmentDate" type="text" id="appointmentPicker" class="form-control" placeholder="Chọn ngày hẹn..." required />
+                    <input asp-for="AppointmentDate" type="text" id="appointmentPicker" class="form-control" required />
                 </div>
                 <div class="col-md-6">
                     <label asp-for="AppointmentTime" class="form-label">Giờ hẹn</label>
@@ -114,7 +120,7 @@
             </div>
 
             <button type="submit" class="btn btn-pink w-100 mt-4">
-                @(isUpdate ? "💾 Cập nhật lịch" : "📅 Đặt lịch ngay")
+                @(isUpdate ? "💾 Cập nhật lịch" : "📅 Đặt lịch khám ngay")
             </button>
         </form>
     </div>
@@ -122,6 +128,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const userSelect = document.getElementById("userSelect");
         const petSelect = document.getElementById("existingPetSelect");
         const serviceSelect = document.getElementById("serviceSelect");
         const priceInput = document.getElementById("calculatedPrice");
@@ -132,43 +139,56 @@
         const petAgeInput = document.getElementById("PetAge");
         const petWeightInput = document.getElementById("PetWeight");
         const existingPetIdInput = document.getElementById("ExistingPetId");
+        const ownerPhoneInput = document.getElementById("OwnerPhoneNumber");
 
+        // 🔹 Load pets + số điện thoại khi chọn khách hàng
+        async function loadUserPets(userId, selectedPetId = null) {
+            const res = await fetch(`/Admin/Service/GetUserPetsAndPhone?userId=${userId}`);
+            const data = await res.json();
+
+            ownerPhoneInput.value = data.phone || "";
+            petSelect.innerHTML = "";
+
+            data.pets.sort((a, b) => a.name.localeCompare(b.name)).forEach(p => {
+                const option = document.createElement("option");
+                option.value = p.petId;
+                option.dataset.name = p.name;
+                option.dataset.type = p.type;
+                option.dataset.breed = p.breed;
+                option.dataset.age = p.age;
+                option.dataset.weight = p.weight;
+                option.textContent = p.name;
+                petSelect.appendChild(option);
+            });
+
+            if (petSelect.options.length > 0) {
+                if (selectedPetId) {
+                    for (let i = 0; i < petSelect.options.length; i++) {
+                        if (petSelect.options[i].value === selectedPetId) {
+                            petSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                } else {
+                    petSelect.selectedIndex = 0;
+                }
+                updatePetInfo();
+            }
+        }
+
+        // 🔹 Cập nhật thông tin pet khi chọn
         function updatePetInfo() {
-            const selectedPet = petSelect.selectedOptions[0];
-            if (!selectedPet) return;
+            const selected = petSelect.selectedOptions[0];
+            if (!selected) return;
 
-            petNameInput.value = selectedPet.dataset.name || "";
-            petTypeInput.value = selectedPet.dataset.type || "";
-            petBreedInput.value = selectedPet.dataset.breed || "";
-            petAgeInput.value = selectedPet.dataset.age || "";
-            petWeightInput.value = selectedPet.dataset.weight || "";
-            existingPetIdInput.value = selectedPet.value;
+            petNameInput.value = selected.dataset.name || "";
+            petTypeInput.value = selected.dataset.type || "";
+            petBreedInput.value = selected.dataset.breed || "";
+            petAgeInput.value = selected.dataset.age || "";
+            petWeightInput.value = selected.dataset.weight || "";
+            existingPetIdInput.value = selected.value;
 
             updatePrice();
-        }
-
-        function updatePrice() {
-            const selectedService = serviceSelect.selectedOptions[0];
-            if (!selectedService) {
-                priceInput.value = "0 VNĐ";
-                return;
-            }
-
-            const price = parseFloat(selectedService.dataset.price) || 0;
-            priceInput.value = price.toLocaleString("vi-VN") + " VNĐ";
-        }
-
-        // Chọn thú cưng mặc định
-        if (existingPetIdInput.value) {
-            for (let i = 0; i < petSelect.options.length; i++) {
-                if (petSelect.options[i].value === existingPetIdInput.value) {
-                    petSelect.selectedIndex = i;
-                    break;
-                }
-            }
-        } else if (petSelect.options.length > 0) {
-            petSelect.selectedIndex = 0;
-            existingPetIdInput.value = petSelect.value;
         }
 
         // Chọn dịch vụ mặc định
@@ -184,11 +204,26 @@
         }
         serviceSelect.selectedIndex = defaultServiceIndex;
 
-        updatePetInfo(); // cập nhật pet info + giá ngay khi vào trang
+        // 🔹 Cập nhật giá dịch vụ
+        function updatePrice() {
+            const selectedService = serviceSelect.selectedOptions[0];
+            const price = selectedService?.dataset.price || 0;
+            priceInput.value = parseFloat(price).toLocaleString("vi-VN") + " VNĐ";
+        }
 
+        // 🔹 Event listeners
+        userSelect.addEventListener("change", () => loadUserPets(userSelect.value));
         petSelect.addEventListener("change", updatePetInfo);
         serviceSelect.addEventListener("change", updatePrice);
 
+        // 🔹 Load mặc định khi mở trang
+        if (userSelect.options.length > 0) {
+            const selectedUser = userSelect.options[0].value; // chọn option đầu tiên
+            userSelect.value = selectedUser;
+            loadUserPets(selectedUser, "@Model.ExistingPetId");
+        }
+
+        // 🔹 Flatpickr
         flatpickr("#appointmentPicker", {
             dateFormat: "d/m/Y",
             altInput: true,
@@ -200,3 +235,4 @@
         });
     });
 </script>
+

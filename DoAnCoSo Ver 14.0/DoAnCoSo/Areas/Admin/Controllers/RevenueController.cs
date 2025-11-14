@@ -92,42 +92,45 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 startDate = new DateTime(DateTime.Now.Year, 1, 1);
 
             var query = _context.Orders
-            .Where(o => o.OrderDate >= startDate
-                && o.OrderDate <= endDate
-                && o.Status == OrderStatusEnum.DaXacNhan
-                && o.bankStatus == BankStatusEnum.DaThanhToan);
-
+                .Where(o => o.OrderDate >= startDate
+                    && o.OrderDate <= endDate
+                    && o.Status == OrderStatusEnum.DaXacNhan
+                    && o.bankStatus == BankStatusEnum.DaThanhToan);
 
             var data = new List<object>();
 
             if (range == "week")
             {
-                // ⚡ Lấy toàn bộ đơn tuần này
                 var orders = await query.ToListAsync();
 
-                // Danh sách 7 ngày trong tuần (Thứ 2 -> Chủ nhật)
-                var days = Enum.GetValues(typeof(DayOfWeek))
-                               .Cast<DayOfWeek>()
-                               .ToList();
+                // Danh sách 7 ngày trong tuần (Chủ nhật -> Thứ 6)
+                var days = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().ToList();
+
+                // Map tiếng Anh sang tiếng Việt
+                var dayMapVi = new Dictionary<DayOfWeek, string>
+        {
+            { DayOfWeek.Sunday, "Chủ nhật" },
+            { DayOfWeek.Monday, "Thứ 2" },
+            { DayOfWeek.Tuesday, "Thứ 3" },
+            { DayOfWeek.Wednesday, "Thứ 4" },
+            { DayOfWeek.Thursday, "Thứ 5" },
+            { DayOfWeek.Friday, "Thứ 6" },
+            { DayOfWeek.Saturday, "Thứ 7" }
+        };
 
                 data = days.Select(d => new
                 {
-                    Label = d.ToString(), // Monday, Tuesday,...
-                    Revenue = orders
-                        .Where(o => o.OrderDate.DayOfWeek == d)
-                        .Sum(o => o.TotalPrice)
+                    Label = dayMapVi[d],
+                    Revenue = orders.Where(o => o.OrderDate.DayOfWeek == d)
+                                    .Sum(o => o.TotalPrice)
                 }).ToList<object>();
             }
             else if (range == "month")
             {
                 var monthlyData = await query
-                 .GroupBy(o => o.OrderDate.Day)
-                 .Select(g => new
-                 {
-                     Day = g.Key,
-                     Revenue = g.Sum(o => o.TotalPrice)
-                 })
-                 .ToListAsync();
+                    .GroupBy(o => o.OrderDate.Day)
+                    .Select(g => new { Day = g.Key, Revenue = g.Sum(o => o.TotalPrice) })
+                    .ToListAsync();
 
                 int totalDays = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
 
@@ -136,28 +139,23 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     {
                         Label = "Ngày " + day,
                         Revenue = monthlyData.FirstOrDefault(x => x.Day == day)?.Revenue ?? 0
-                    })
-                    .ToList<object>();
+                    }).ToList<object>();
             }
             else // year
             {
                 var monthly = await query
-                .GroupBy(o => o.OrderDate.Month)
-                .Select(g => new
-                {
-                    Month = g.Key,
-                    Revenue = g.Sum(o => o.TotalPrice)
-                })
-                .ToListAsync();
+                    .GroupBy(o => o.OrderDate.Month)
+                    .Select(g => new { Month = g.Key, Revenue = g.Sum(o => o.TotalPrice) })
+                    .ToListAsync();
 
                 data = Enumerable.Range(1, 12)
                     .Select(m => new
                     {
                         Label = "Tháng " + m,
                         Revenue = monthly.FirstOrDefault(x => x.Month == m)?.Revenue ?? 0
-                    })
-                    .ToList<object>();
+                    }).ToList<object>();
             }
+
             return Json(data);
         }
 

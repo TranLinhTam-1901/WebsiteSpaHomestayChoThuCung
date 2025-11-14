@@ -31,7 +31,7 @@
 <div class="order-wrapper py-5">
     <h2 class="section-title">🐾 Lịch sử đặt hàng của bạn</h2>
 
-    @* @if (TempData["SuccessMessage"] != null)
+    @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
     }
@@ -42,7 +42,7 @@
 
     @if (!Model.Any())
     {
-        <p class="no-orders">Bạn chưa có đơn hàng nào. Hãy thử đặt dịch vụ Spa hay Homestay cho thú cưng của bạn nhé! 🐶🐱</p>
+        <p class="no-orders">Bạn chưa có đơn hàng nào.</p>
     }
     else
     {

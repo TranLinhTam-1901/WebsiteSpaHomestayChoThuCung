@@ -35,9 +35,23 @@
                     {
                         foreach (var block in Model.Records)
                         {
+                            // Xử lý lấy tên pet
+                            string petName = "Không rõ";
+                            if (!string.IsNullOrEmpty(block.ReferenceId))
+                            {
+                                var parts = block.ReferenceId.Split('-');
+                                if (parts.Length > 0)
+                                {
+                                    var petIdKey = parts[0];
+                                    if (Model.PetsDict.ContainsKey(petIdKey))
+                                    {
+                                        petName = Model.PetsDict[petIdKey];
+                                    }
+                                }
+                            }
                             <tr>
                                 <td>@block.BlockNumber</td>
-                                <td>@(Model.PetsDict.ContainsKey(block.ReferenceId) ? Model.PetsDict[block.ReferenceId] : "Không rõ")</td>
+                                <td>@petName</td>
                                 <td>@block.RecordType</td> <!-- Spa / Homestay / Hồ sơ thú cưng -->
                                 <td>
                                     <span class="badge @((block.Operation == "ADD" || block.Operation == "ADMIN_ADD" || block.Operation == "ADMIN_CONFIRM") ? "bg-success" : (block.Operation == "UPDATE" || block.Operation == "ADMIN_UPDATE") ? "bg-warning text-dark" : "bg-danger")">

@@ -37,6 +37,9 @@ namespace DoAnCoSo.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -126,6 +129,10 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("OwnerPhoneNumber")
                         .IsRequired()
@@ -459,6 +466,42 @@ namespace DoAnCoSo.Migrations
                     b.ToTable("InventoryLogs");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.InventoryLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PerformedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityChange")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("ReferenceId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("InventoryLogs");
+                });
+
             modelBuilder.Entity("DoAnCoSo.Models.Invoice", b =>
                 {
                     b.Property<int>("InvoiceId")
@@ -544,8 +587,14 @@ namespace DoAnCoSo.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("DiscountedPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("OriginalPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -791,6 +840,15 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<decimal?>("PriceReduced")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ReservedQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoldQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
 
                     b.Property<string>("Trademark")
                         .HasColumnType("nvarchar(max)");
@@ -1433,6 +1491,17 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Variant");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.InventoryLog", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Invoice", b =>
