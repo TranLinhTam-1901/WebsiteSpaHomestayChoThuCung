@@ -43,6 +43,8 @@ namespace DoAnCoSo.Models
 
         public DbSet<DeletedPets> DeletedPets { get; set; }
         public DbSet<InventoryLog> InventoryLogs { get; set; }
+        public DbSet<ProductVariant> ProductVariants { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -153,6 +155,38 @@ namespace DoAnCoSo.Models
                 .WithMany()
                 .HasForeignKey(l => l.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductVariant>(b =>
+            {
+                b.HasKey(v => v.Id);
+                b.HasIndex(v => new { v.ProductId, v.Name }).IsUnique(); // Mỗi sản phẩm, tên biến thể không trùng
+                b.Property(v => v.Name).HasMaxLength(200).IsRequired();
+
+                b.HasOne(v => v.Product)
+                 .WithMany(p => p.Variants) // => nhớ thêm ICollection<ProductVariant> Variants trong Product nếu bạn muốn
+                 .HasForeignKey(v => v.ProductId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Log có thể tham chiếu variant
+            modelBuilder.Entity<InventoryLog>(b =>
+            {
+                b.HasIndex(l => l.VariantId);
+            });
+
+            // OrderDetail/CartItem: chỉ cần cột VariantId nullable, FK có thể cấu hình nếu muốn:
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne<ProductVariant>()
+                .WithMany()
+                .HasForeignKey(od => od.VariantId)
+                .OnDelete(DeleteBehavior.Restrict); // tránh xóa nhầm variant gây mất lịch sử
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne<ProductVariant>()
+                .WithMany()
+                .HasForeignKey(ci => ci.VariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
         }
     }
