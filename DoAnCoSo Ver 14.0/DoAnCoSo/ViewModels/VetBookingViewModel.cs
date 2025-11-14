@@ -5,6 +5,8 @@ namespace DoAnCoSo.ViewModels
 {
     public class VetBookingViewModel
     {
+        public int? AppointmentId { get; set; } // để biết đang sửa lịch nào
+
         [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
         [Display(Name = "Số điện thoại")]
         [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
@@ -26,6 +28,10 @@ namespace DoAnCoSo.ViewModels
 
         [Display(Name = "Tuổi thú cưng")]
         public int? PetAge { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng chọn cân nặng của thú cưng.")]
+        [Display(Name = "Chọn cân nặng của thú cưng")]
+        public decimal? PetWeight { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn dịch vụ thú y.")]
         [Display(Name = "Chọn dịch vụ thú y")]
@@ -49,7 +55,10 @@ namespace DoAnCoSo.ViewModels
 
         public List<Pet> UserPets { get; set; } = new List<Pet>();
         public List<Service> VetServices { get; set; } = new List<Service>();
-        
 
+        public bool IsUpdate { get; set; } = false;
+
+        [Required]
+        public string UserId { get; set; }
     }
 }

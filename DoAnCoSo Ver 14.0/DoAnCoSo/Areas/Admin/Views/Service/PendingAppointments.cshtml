@@ -100,15 +100,27 @@
                                         @{
                                             bool canEdit = false;
                                             string onclickAttr = "";
-                                            if (item.ServiceId <= 3) // Homestay
+                                            string actionName = "";
+
+                                            switch (item.Service.Category)
                                             {
-                                                canEdit = item.Status == AppointmentStatus.Pending &&
-                                                (item.StartDate - DateTime.Today).TotalDays >= 2;
-                                            }
-                                            else // Spa
-                                            {
-                                                canEdit = item.Status == AppointmentStatus.Pending &&
-                                                (item.AppointmentDate - DateTime.Today).TotalDays >= 1;
+                                                case ServiceCategory.Homestay:
+                                                    canEdit = item.Status == AppointmentStatus.Pending &&
+                                                    (item.StartDate - DateTime.Today).TotalDays >= 2;
+                                                    actionName = "UpdateAppointmentHomestay";
+                                                    break;
+
+                                                case ServiceCategory.Spa:
+                                                    canEdit = item.Status == AppointmentStatus.Pending &&
+                                                    (item.AppointmentDate - DateTime.Today).TotalDays >= 1;
+                                                    actionName = "UpdateAppointmentSpa";
+                                                    break;
+
+                                                case ServiceCategory.Vet:
+                                                    canEdit = item.Status == AppointmentStatus.Pending &&
+                                                    (item.AppointmentDate - DateTime.Today).TotalDays >= 1;
+                                                    actionName = "UpdateAppointmentVet";
+                                                    break;
                                             }
 
                                             var btnClass = canEdit ? "btn-update btn-sm" : "btn-update btn-sm disabled";
@@ -116,8 +128,6 @@
                                             {
                                                 onclickAttr = "return false;"; // ngăn click
                                             }
-
-                                            string actionName = item.ServiceId <= 3 ? "UpdateAppointmentHomestay" : "UpdateAppointmentSpa";
                                         }
 
                                         <a asp-action="@actionName" asp-route-id="@item.AppointmentId" class="@btnClass" onclick="@onclickAttr">

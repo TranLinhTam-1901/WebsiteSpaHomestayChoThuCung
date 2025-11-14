@@ -61,7 +61,7 @@ public class BlockchainService
     }
 
     // ✅ Ghi blockchain cho dịch vụ: Spa / Homestay / Vet
-    public async Task AddAppointmentBlockAsync(string appointmentId, string recordType, string operation, string jsonData, string? performedBy = null)
+    public async Task AddAppointmentBlockAsync(int petId, int appointmentId, string recordType, string operation, string jsonData, string? performedBy = null)
     {
         var block = new BlockchainRecord
         {
@@ -69,8 +69,8 @@ public class BlockchainService
             PreviousHash = await GetLatestHash() ?? "GENESIS",
             DataJson = jsonData,
             Operation = operation,
-            RecordType = recordType, // 👈 Spa / Homestay / Vet
-            ReferenceId = appointmentId,
+            RecordType = recordType, // Spa / Homestay / Vet
+            ReferenceId = $"{petId}-{appointmentId}", // ✅ vừa PetId vừa AppointmentId
             Timestamp = DateTime.Now,
             PerformedBy = performedBy ?? "Hệ thống"
         };

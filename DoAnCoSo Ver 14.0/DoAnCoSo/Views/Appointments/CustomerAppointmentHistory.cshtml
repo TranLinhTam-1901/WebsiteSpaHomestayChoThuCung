@@ -246,30 +246,42 @@
                     @{
                         // Kiểm tra có thể Sửa/Hủy
                         bool canEditOrCancel = false;
-                        if (item.ServiceId <= 3) // Homestay
+
+                        if (item.Service.Category == ServiceCategory.Homestay)
                         {
                             canEditOrCancel = item.Status == AppointmentStatus.Pending &&
-                            (item.StartDate - DateTime.Today).TotalDays >= 2; // vd: trước 2 ngày
+                            (item.StartDate - DateTime.Today).TotalDays >= 2; // trước 2 ngày
                         }
-                        else // Spa
+                        else if (item.Service.Category == ServiceCategory.Spa)
                         {
                             canEditOrCancel = item.Status == AppointmentStatus.Pending &&
-                            (item.AppointmentDate - DateTime.Today).TotalDays >= 1;
+                            (item.AppointmentDate - DateTime.Today).TotalDays >= 1; // trước 1 ngày
+                        }
+                        else if (item.Service.Category == ServiceCategory.Vet)
+                        {
+                            canEditOrCancel = item.Status == AppointmentStatus.Pending &&
+                            (item.AppointmentDate - DateTime.Today).TotalDays >= 1; // trước 1 ngày
                         }
                     }
 
                     @if (canEditOrCancel)
                     {
                         <!-- Sửa -->
-                        @if (item.ServiceId <= 3)  // Homestay
+                        @if (item.Service.Category == ServiceCategory.Homestay)
                         {
                             <a asp-action="UpdateAppointmentHomestay" asp-route-id="@item.AppointmentId" class="btn-edit me-2">
                                 <i class="fas fa-edit me-1"></i> Sửa
                             </a>
                         }
-                        else  // Spa
+                        else if (item.Service.Category == ServiceCategory.Spa)
                         {
                             <a asp-action="UpdateAppointmentSpa" asp-route-id="@item.AppointmentId" class="btn-edit me-2">
+                                <i class="fas fa-edit me-1"></i> Sửa
+                            </a>
+                        }
+                        else if (item.Service.Category == ServiceCategory.Vet)
+                        {
+                            <a asp-action="UpdateAppointmentVet" asp-route-id="@item.AppointmentId" class="btn-edit me-2">
                                 <i class="fas fa-edit me-1"></i> Sửa
                             </a>
                         }

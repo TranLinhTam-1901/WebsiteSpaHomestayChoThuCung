@@ -417,7 +417,7 @@
     @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
     <div class="modal fade booking-modal" id="bookingOptionsModal" tabindex="-1" aria-labelledby="bookingOptionsModalLabel" aria-hidden="true">
         @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="bookingOptionsModalLabel">Chọn dịch vụ bạn muốn đặt lịch</h5>
@@ -428,7 +428,7 @@
                     <p class="lead mb-4">Vui lòng chọn loại dịch vụ bạn muốn đặt:</p>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
                                     <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i>
@@ -442,7 +442,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
                                     <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i>
@@ -451,6 +451,20 @@
                                     <a asp-area="Admin" asp-controller="Service" asp-action="AppointmentSpa"
                                        class="btn btn-spa-theme mt-3">
                                         Chọn Spa
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-hospital-fill display-4 text-spa-theme"></i>
+                                    <h5 class="card-title mt-3">Đặt lịch Thú y</h5>
+                                    <p class="card-text text-muted">Khám chữa bệnh cho thú cưng.</p>
+                                    <a asp-area="Admin" asp-controller="Service" asp-action="AppointmentVet"
+                                       class="btn btn-spa-theme mt-3">
+                                        Chọn Thú y
                                     </a>
                                 </div>
                             </div>

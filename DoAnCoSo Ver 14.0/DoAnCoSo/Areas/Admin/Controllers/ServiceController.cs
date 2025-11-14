@@ -91,7 +91,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
                     string jsonData;
 
-                    if (appointment.Service.Category == ServiceCategory.Spa)
+                    if (appointment.Service.Category == ServiceCategory.Spa || appointment.Service.Category == ServiceCategory.Vet)
                     {
                         jsonData = System.Text.Json.JsonSerializer.Serialize(new
                         {
@@ -121,7 +121,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     }
 
                     await _blockchainService.AddAppointmentBlockAsync(
-                        appointment.PetId.ToString(),
+                        appointment.PetId.GetValueOrDefault(), 
+                        appointment.AppointmentId,
                         recordType,
                         "ADMIN_CONFIRM",
                         jsonData,
@@ -156,7 +157,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
                     string jsonData;
 
-                    if (appointment.Service.Category == ServiceCategory.Spa)
+                    if (appointment.Service.Category == ServiceCategory.Spa || appointment.Service.Category == ServiceCategory.Vet)
                     {
                         jsonData = System.Text.Json.JsonSerializer.Serialize(new
                         {
@@ -186,7 +187,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     }
 
                     await _blockchainService.AddAppointmentBlockAsync(
-                        appointment.PetId.ToString(),
+                        appointment.PetId.GetValueOrDefault(), 
+                        appointment.AppointmentId,
                         recordType,
                         "ADMIN_CANCEL",
                         jsonData,
@@ -331,7 +333,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 });
 
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.ToString(), // ✅ sửa đúng theo Spa/Homestay
+                    appointment.PetId.GetValueOrDefault(), 
+                    appointment.AppointmentId, // ✅ sửa đúng theo Spa/Homestay
                     "Spa",
                     "ADMIN_ADD",
                     jsonData,
@@ -476,7 +479,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 });
 
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.ToString(),
+                    appointment.PetId.GetValueOrDefault(), 
+                    appointment.AppointmentId,
                     "Spa",
                     "ADMIN_UPDATE",
                     jsonData,
@@ -638,7 +642,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 });
 
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.ToString(),  // ✅ sửa giống Spa
+                    appointment.PetId.GetValueOrDefault(), 
+                    appointment.AppointmentId,  // ✅ sửa giống Spa
                     "Homestay",
                     "ADMIN_ADD",
                     jsonData,
@@ -781,7 +786,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 });
 
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.ToString(),
+                    appointment.PetId.GetValueOrDefault(), 
+                    appointment.AppointmentId,
                     "Homestay",
                     "ADMIN_UPDATE",
                     jsonData,
@@ -790,6 +796,332 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
 
             TempData["SuccessMessage"] = "✅ Cập nhật lịch Homestay thành công!";
+            return RedirectToAction("PendingAppointments");
+        }
+
+        // =================== VET APPOINTMENT ===================
+        [HttpGet]
+        public async Task<IActionResult> AppointmentVet()
+        {
+            // Danh sách user (trừ Admin)
+            var users = await _context.Users.ToListAsync();
+            var userList = new List<ApplicationUser>();
+            foreach (var u in users)
+                if (!await _userManager.IsInRoleAsync(u, "Admin"))
+                    userList.Add(u);
+
+            ViewBag.Users = userList;
+
+            // Chọn user đầu tiên nếu có
+            var selectedUser = userList.FirstOrDefault();
+            var userPets = selectedUser != null
+                ? await _context.Pets.Where(p => p.UserId == selectedUser.Id).ToListAsync()
+                : new List<Pet>();
+            ViewBag.UserPets = userPets;
+
+            // Dịch vụ Thú y
+            ViewBag.VetServices = await _context.Services
+                .Where(s => s.Category == ServiceCategory.Vet)
+                .ToListAsync();
+
+            var model = new VetBookingViewModel
+            {
+                UserId = selectedUser?.Id,
+                OwnerPhoneNumber = selectedUser?.PhoneNumber,
+                AppointmentDate = DateTime.Now,
+                AppointmentTime = new TimeSpan(9, 0, 0),
+                UserPets = userPets
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AppointmentVet(VetBookingViewModel model)
+        {
+            // Kiểm tra user
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.UserId);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Không tìm thấy người dùng.");
+                return View(model);
+            }
+
+            model.OwnerPhoneNumber = user.PhoneNumber;
+
+            // Lấy thông tin admin hiện tại (người thao tác)
+            var currentUser = await _userManager.GetUserAsync(User);
+            var performedBy = currentUser?.FullName ?? "Hệ thống";
+
+            // Kiểm tra dịch vụ thú y
+            var selectedService = await _context.Services
+                .FirstOrDefaultAsync(s => s.ServiceId == model.ServiceId && s.Category == ServiceCategory.Vet);
+
+            if (selectedService == null)
+            {
+                ModelState.AddModelError("", "Chọn dịch vụ khám không hợp lệ.");
+                ViewBag.Users = await _context.Users
+                    .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+                    .ToListAsync();
+                ViewBag.VetServices = await _context.Services
+                    .Where(s => s.Category == ServiceCategory.Vet)
+                    .ToListAsync();
+                ViewBag.UserPets = await _context.Pets.Where(p => p.UserId == model.UserId).ToListAsync();
+                return View(model);
+            }
+
+            // Xử lý thú cưng
+            Pet pet;
+            if (model.ExistingPetId.HasValue)
+            {
+                pet = await _context.Pets.FirstOrDefaultAsync(p => p.PetId == model.ExistingPetId && p.UserId == user.Id);
+                if (pet == null)
+                {
+                    ModelState.AddModelError("", "Chọn thú cưng không hợp lệ.");
+                    ViewBag.Users = await _context.Users
+                        .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+                        .ToListAsync();
+                    ViewBag.VetServices = await _context.Services
+                        .Where(s => s.Category == ServiceCategory.Vet)
+                        .ToListAsync();
+                    ViewBag.UserPets = await _context.Pets.Where(p => p.UserId == model.UserId).ToListAsync();
+                    return View(model);
+                }
+
+                model.PetName = pet.Name;
+                model.PetType = pet.Type;
+                model.PetBreed = pet.Breed;
+                model.PetAge = pet.Age;
+                model.PetWeight = pet.Weight;
+            }
+            else
+            {
+                pet = new Pet
+                {
+                    Name = model.PetName,
+                    Type = model.PetType,
+                    Breed = model.PetBreed,
+                    Age = model.PetAge,
+                    Weight = model.PetWeight,
+                    UserId = user.Id
+                };
+                _context.Pets.Add(pet);
+                await _context.SaveChangesAsync();
+            }
+
+            // Tạo lịch hẹn
+            var appointment = new Appointment
+            {
+                AppointmentDate = model.AppointmentDate,
+                AppointmentTime = model.AppointmentTime,
+                Status = AppointmentStatus.Confirmed, // Admin tạo = xác nhận luôn
+                ServiceId = selectedService.ServiceId,
+                UserId = user.Id,
+                CreatedDate = DateTime.UtcNow,
+                OwnerPhoneNumber = model.OwnerPhoneNumber,
+                PetId = pet.PetId,
+                Note = model.Note
+            };
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            // Nạp lại các quan hệ (để ghi blockchain)
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
+
+            // --- Ghi vào Blockchain ---
+            if (_blockchainService != null)
+            {
+                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    appointment.AppointmentId,
+                    appointment.Status,
+                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
+                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
+                    PetName = appointment.Pet?.Name,
+                    PetType = appointment.Pet?.Type,
+                    ServiceName = appointment.Service?.Name,
+                    UserName = appointment.User?.FullName ?? performedBy,
+                    Note = appointment.Note ?? ""
+                });
+
+                await _blockchainService.AddAppointmentBlockAsync(
+                    appointment.PetId.GetValueOrDefault(),
+                    appointment.AppointmentId,
+                    "Vet",
+                    "ADMIN_ADD",
+                    jsonData,
+                    performedBy
+                );
+            }
+
+            TempData["SuccessMessage"] = "✅ Admin đã đặt lịch Thú y thành công!";
+            return RedirectToAction("AppointmentHistory");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> UpdateAppointmentVet(int id)
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Service)
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.AppointmentId == id);
+
+            if (appointment == null) return NotFound();
+
+            if ((appointment.AppointmentDate - DateTime.Now).TotalDays < 1)
+            {
+                TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 1 ngày.";
+                return RedirectToAction("PendingAppointments");
+            }
+
+            // Danh sách user (trừ admin)
+            var users = await _context.Users.ToListAsync();
+            var userList = new List<ApplicationUser>();
+            foreach (var u in users)
+                if (!await _userManager.IsInRoleAsync(u, "Admin"))
+                    userList.Add(u);
+
+            ViewBag.Users = userList;
+
+            // Pets của user
+            var userPets = await _context.Pets
+                .Where(p => p.UserId == appointment.UserId)
+                .ToListAsync();
+            ViewBag.UserPets = userPets;
+
+            // Dịch vụ Vet
+            var vetServices = await _context.Services
+                .Where(s => s.Category == ServiceCategory.Vet)
+                .ToListAsync();
+            ViewBag.VetServices = vetServices;
+
+            var model = new VetBookingViewModel
+            {
+                AppointmentId = appointment.AppointmentId,
+                UserId = appointment.UserId,
+                ExistingPetId = appointment.PetId,
+                PetName = appointment.Pet?.Name,
+                PetType = appointment.Pet?.Type,
+                PetBreed = appointment.Pet?.Breed,
+                PetAge = appointment.Pet?.Age,
+                PetWeight = appointment.Pet?.Weight,
+                ServiceId = appointment.ServiceId,
+                AppointmentDate = appointment.AppointmentDate,
+                AppointmentTime = appointment.AppointmentTime,
+                Note = appointment.Note,
+                OwnerPhoneNumber = appointment.OwnerPhoneNumber,
+                UserPets = userPets,
+                IsUpdate = true
+            };
+
+            return View("AppointmentVet", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateAppointmentVet(VetBookingViewModel model)
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Service)
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.AppointmentId == model.AppointmentId);
+
+            if (appointment == null) return NotFound();
+
+            if ((appointment.AppointmentDate - DateTime.Now).TotalDays < 1)
+            {
+                TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 1 ngày.";
+                return RedirectToAction("PendingAppointments");
+            }
+
+            // Xử lý Pet
+            Pet pet;
+            if (model.ExistingPetId.HasValue)
+            {
+                pet = await _context.Pets
+                    .FirstOrDefaultAsync(p => p.PetId == model.ExistingPetId.Value && p.UserId == model.UserId);
+
+                if (pet == null)
+                {
+                    ModelState.AddModelError("", "Chọn thú cưng không hợp lệ.");
+                    ViewBag.Users = await _context.Users
+                        .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+                        .ToListAsync();
+                    ViewBag.UserPets = await _context.Pets.Where(p => p.UserId == model.UserId).ToListAsync();
+                    ViewBag.VetServices = await _context.Services
+                        .Where(s => s.Category == ServiceCategory.Vet)
+                        .ToListAsync();
+                    return View("AppointmentVet", model);
+                }
+            }
+            else
+            {
+                // Tạo Pet mới
+                pet = new Pet
+                {
+                    Name = model.PetName,
+                    Type = model.PetType,
+                    Breed = model.PetBreed,
+                    Age = model.PetAge,
+                    Weight = model.PetWeight,
+                    UserId = model.UserId
+                };
+                _context.Pets.Add(pet);
+                await _context.SaveChangesAsync();
+            }
+
+            // Cập nhật appointment
+            appointment.PetId = pet.PetId;
+            appointment.ServiceId = model.ServiceId;
+            appointment.UserId = model.UserId;
+            appointment.AppointmentDate = model.AppointmentDate;
+            appointment.AppointmentTime = model.AppointmentTime;
+            appointment.OwnerPhoneNumber = model.OwnerPhoneNumber;
+            appointment.Note = model.Note;
+
+            await _context.SaveChangesAsync();
+
+            // Reload navigation
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
+
+            // Blockchain
+            if (_blockchainService != null)
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                var performedBy = currentUser?.FullName ?? "Hệ thống";
+
+                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    appointment.AppointmentId,
+                    appointment.Status,
+                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
+                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
+                    PetName = appointment.Pet?.Name ?? model.PetName,
+                    PetType = appointment.Pet?.Type ?? model.PetType,
+                    ServiceName = appointment.Service?.Name ?? "",
+                    UserName = appointment.User?.FullName ?? performedBy,
+                    Note = appointment.Note ?? ""
+                });
+
+                await _blockchainService.AddAppointmentBlockAsync(
+                    appointment.PetId.GetValueOrDefault(),
+                    appointment.AppointmentId,
+                    "Vet",
+                    "ADMIN_UPDATE",
+                    jsonData,
+                    performedBy
+                );
+            }
+
+            TempData["SuccessMessage"] = "✅ Cập nhật lịch Thú y thành công!";
             return RedirectToAction("PendingAppointments");
         }
     }

@@ -7,14 +7,14 @@
 <div class="order-wrapper py-5">
     <h2 class="section-title">📦 Quản lý đơn hàng</h2>
 
-    @if (TempData["SuccessMessage"] != null)
+    @* @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success">@TempData["SuccessMessage"]</div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-    }
+    } *@
 
     @if (!Model.Any())
     {

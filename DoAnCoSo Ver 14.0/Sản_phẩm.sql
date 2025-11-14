@@ -1,4 +1,4 @@
-﻿USE [DoAnCoSoVer26.0]
+﻿USE [DoAnCoSoVer27.0]
 -- 1️⃣ Homestay Services
 INSERT INTO Services (Category, Name, Description, Price)
 VALUES 
