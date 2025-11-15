@@ -1,6 +1,6 @@
 ﻿@model List<DoAnCoSo.Models.Product>
 @{
-    ViewData["Title"] = "Tất Cả Sản Phẩm";
+    ViewData["Title"] = "🏪 Tất Cả Sản Phẩm";
 }
 @if (ViewBag.AppliedPromo != null)
 {
@@ -10,8 +10,8 @@
         – Giảm @ViewBag.AppliedPromo.Discount@(ViewBag.AppliedPromo.IsPercent ? "%" : "đ")
     </div>
 }
-<div class="container all-product-page py-5">
-    <h2 class="section-title">💗 Tất cả sản phẩm 💗</h2>
+<div class="all-product-page py-5">
+    <h2 class="section-title">🏪 Tất cả sản phẩm</h2>
 
     @if (Model != null && Model.Count > 0)
     {
@@ -78,10 +78,16 @@
         background-color: #FFF0F5;
     }
 
+    .all-product-page {
+        max-width: 960px;
+        margin: auto;
+        padding: 15px;
+    }
+
     .section-title {
         font-size: 2rem;
         font-weight: bold;
-        color: var(--pink-dark);
+        color: #FF6185;
         text-align: center;
         margin-bottom: 40px;
         position: relative;

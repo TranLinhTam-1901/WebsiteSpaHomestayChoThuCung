@@ -4,23 +4,30 @@
     var promo = ViewBag.Promotion as DoAnCoSo.Models.Promotion;
 }
 
-<div class="container py-4">
-    <div class="card shadow-sm border-0 rounded-4 p-4">
-        <div class="card-header bg-gradient-pink text-center rounded-top-4 py-3">
-            <h2 class="fw-bold mb-0">🎟️ Chi tiết sử dụng mã: @promo.Code</h2>
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 850px;">
+        <!-- Header -->
+        <h2 class="booking-title text-center mb-4">💸 Chi tiết sử dụng mã: @promo.Code</h2>
+
+        <!-- Thông tin khuyến mãi -->
+        <h5><span class="section-icon">📌</span> Thông tin khuyến mãi</h5>
+        <div class="row mb-3">
+            <div class="col-md-6 mb-2"><strong>Tên khuyến mãi:</strong> @promo.Title</div>
+            <div class="col-md-6 mb-2"><strong>Số lượng phát hành:</strong> @(promo.MaxUsage ?? 0)</div>
+            <div class="col-md-6 mb-2"><strong>Đã sử dụng:</strong> @promo.OrderPromotions.Count()</div>
+            <div class="col-md-6 mb-2"><strong>Còn lại:</strong> @((promo.MaxUsage ?? 0) - promo.OrderPromotions.Count())</div>
         </div>
 
-        <div class="card-body mt-3">
-            <p><b>Tên khuyến mãi:</b> @promo.Title</p>
-            <p><b>Số lượng phát hành:</b> @(promo.MaxUsage ?? 0)</p>
-            <p><b>Đã sử dụng:</b> @promo.OrderPromotions.Count()</p>
-            <p><b>Còn lại:</b> @((promo.MaxUsage ?? 0) - promo.OrderPromotions.Count())</p>
+        <hr />
 
-            <hr />
-
-            @if (Model != null && Model.Any())
-            {
-                <table class="table table-hover text-center align-middle">
+        <!-- Người dùng đã sử dụng -->
+        <h5><span class="section-icon">👥</span> Người dùng đã sử dụng</h5>
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center mt-3">
                     <thead class="table-header">
                         <tr>
                             <th>Người dùng</th>
@@ -43,15 +50,16 @@
                         }
                     </tbody>
                 </table>
-            }
-            else
-            {
-                <div class="alert alert-info text-center">Chưa có ai sử dụng mã này.</div>
-            }
-
-            <div class="text-center">
-                <a asp-action="Index" class="btn btn-secondary mt-3">← Quay lại danh sách</a>
             </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center mt-3">Chưa có ai sử dụng mã này.</div>
+        }
+
+        <!-- Nút quay lại -->
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại danh sách</a>
         </div>
     </div>
 </div>
@@ -62,15 +70,22 @@
         --pink-accent: #FFB6C1;
     }
 
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: black;
+    .booking-card {
+        border-radius: 16px;
+        border: 2px solid var(--pink-accent);
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        padding: 2rem;
     }
 
-    .card {
-        border: 2px solid var(--pink-accent);
-        border-radius: 1rem;
-        background-color: #fff;
+    .booking-title {
+        color: var(--pink-main);
+        font-weight: bold;
+        font-size: 1.8rem;
+    }
+
+    .section-icon {
+        margin-right: 0.5rem;
     }
 
     .table-header {
@@ -79,14 +94,14 @@
         font-weight: 600;
     }
 
-    .btn-secondary {
-        background-color: #f8f9fa;
-        border: 1.5px solid var(--pink-main);
-        color: var(--pink-main);
+    .table-hover tbody tr:hover {
+        background-color: #fff0f5;
     }
 
-        .btn-secondary:hover {
-            background-color: var(--pink-main);
-            color: white;
-        }
+    .alert-info {
+        background-color: #fff0f5;
+        border-color: #ffb6c1;
+        color: #333;
+        border-radius: 0.6rem;
+    }
 </style>

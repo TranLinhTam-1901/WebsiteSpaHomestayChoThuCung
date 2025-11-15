@@ -1,270 +1,300 @@
 ﻿@model DoAnCoSo.Models.Product
 @using System.Globalization
-
 @using Microsoft.AspNetCore.Mvc.Rendering
+
 @{
-    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    ViewData["Title"] = "🌸 Chỉnh sửa sản phẩm";
     var hasVariants = Model.Variants != null && Model.Variants.Any();
 }
 
-<div class="container py-5 d-flex justify-content-center">
-    <div class="card shadow-lg border-0 rounded-4 w-75">
-        <div class="card-header bg-gradient-pink text-center rounded-top-4 py-3">
-            <h2 class="mb-0 fw-bold">✏️ Chỉnh sửa sản phẩm</h2>
-        </div>
+<link rel="stylesheet" href="~/css/booking.css" />
 
-        <div class="card-body p-4">
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">✏️ Chỉnh sửa sản phẩm</h2>
 
-            <!-- FORM CHÍNH: Thông tin + (Flavors || Variants) + Ảnh + Nút lưu -->
-            <form asp-action="Update" method="post" enctype="multipart/form-data">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="Id" />
+        <form asp-action="Update" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label fw-semibold">Tên sản phẩm</label>
-                            <input asp-for="Name" class="form-control border-pink" placeholder="Nhập tên sản phẩm..." />
-                            <span asp-validation-for="Name" class="text-danger small"></span>
-                        </div>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                        <div class="mb-3">
-                            <label asp-for="Price" class="form-label fw-semibold">Giá sản phẩm</label>
-                            <input asp-for="Price"
-                                   class="form-control border-pink"
-                                   type="number" step="0.01" min="0"
-                                   value="@(Model?.Price.ToString(CultureInfo.InvariantCulture))" />
-                            <span asp-validation-for="Price" class="text-danger small"></span>
-                        </div>
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
 
-                        <div class="mb-3">
-                            <label asp-for="PriceReduced" class="form-label fw-semibold">Giá giảm (nếu có)</label>
-                            <input asp-for="PriceReduced"
-                                   class="form-control border-pink"
-                                   type="number" step="0.01" min="0"
-                                   value="@(Model?.PriceReduced?.ToString(CultureInfo.InvariantCulture))" />
-                            <span asp-validation-for="PriceReduced" class="text-danger small"></span>
-                        </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="Name" class="form-control border-pink" />
+                </div>
 
-                        <div class="mb-3">
-                            <label asp-for="StockQuantity" class="form-label fw-semibold">Tồn kho hiện tại</label>
-                            <input asp-for="StockQuantity" type="number" min="0" class="form-control border-pink" readonly />
-                            <span asp-validation-for="StockQuantity" class="text-danger small"></span>
-                        </div>
+                <div class="col-md-6">
+                    <label asp-for="CategoryId" class="form-label">Loại sản phẩm</label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select border-pink"></select>
+                </div>
 
-                        <div class="mb-3">
-                            <label asp-for="LowStockThreshold" class="form-label fw-semibold">Ngưỡng cảnh báo sắp hết</label>
-                            <input asp-for="LowStockThreshold" type="number" min="0" class="form-control border-pink" />
-                            <span asp-validation-for="LowStockThreshold" class="text-danger small"></span>
-                        </div>
+                <div class="col-md-6">
+                    <label asp-for="Price" class="form-label">Giá</label>
+                    <input asp-for="Price" type="number" min="0" class="form-control border-pink" />
+                </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Trademark" class="form-label fw-semibold">Thương hiệu</label>
-                            <input asp-for="Trademark" class="form-control border-pink" placeholder="Nhập thương hiệu..." />
-                            <span asp-validation-for="Trademark" class="text-danger small"></span>
-                        </div>
-                    </div>
+                <div class="col-md-6">
+                    <label asp-for="PriceReduced" class="form-label">Giá giảm</label>
+                    <input asp-for="PriceReduced" type="number" min="0" class="form-control border-pink" />
+                </div>
 
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="CategoryId" class="form-label fw-semibold">Loại sản phẩm</label>
-                            <select asp-for="CategoryId" asp-items="@ViewBag.Categories" class="form-control border-pink"></select>
-                        </div>
+                <div class="col-md-6">
+                    <label asp-for="StockQuantity" class="form-label">Tồn kho</label>
+                    <input asp-for="StockQuantity" type="number" class="form-control border-pink" readonly/>
+                </div>
 
-                        <div class="mb-3">
-                            <label for="imageInput" class="form-label fw-semibold">Ảnh đại diện mới</label>
-                            <input type="file" name="imageUrl" class="form-control border-pink" id="imageInput" />
-                        </div>
+                <div class="col-md-6">
+                    <label asp-for="LowStockThreshold" class="form-label">Ngưỡng cảnh báo</label>
+                    <input asp-for="LowStockThreshold" type="number" min="0" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Trademark" class="form-label">Thương hiệu</label>
+                    <input asp-for="Trademark" class="form-control border-pink" />
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="col-md-6">
+                    <label class="form-label">Trạng thái</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input pink-switch" asp-for="IsActive" />
+                        <label class="form-check-label pink-label">@(@Model.IsActive ? "Đang bán" : "Tạm dừng")</label>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label fw-semibold">Mô tả sản phẩm</label>
-                    <textarea asp-for="Description" class="form-control border-pink" rows="3" placeholder="Nhập mô tả..."></textarea>
-                    <span asp-validation-for="Description" class="text-danger small"></span>
+                <!-- Ảnh -->
+                <div class="col-md-6">
+                    <label class="form-label">Ảnh đại diện mới</label>
+                    <input type="file" name="imageUrl" class="form-control" id="imageInput" />
                 </div>
-
-                <!-- HƯƠNG VỊ: chỉ hiện KHI KHÔNG có biến thể -->
-                @if (!hasVariants)
-                {
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Hương vị</label>
-                        <div class="row">
-                            @for (int i = 0; i < 3; i++)
-                            {
-                                <div class="col-md-4 mb-2">
-                                    <input type="text" name="flavorsList[@i]" class="form-control border-pink" placeholder="Nhập hương vị..." />
-                                </div>
-                            }
-                        </div>
-                    </div>
-                }
-
-                <!-- BIẾN THỂ: chỉ hiện KHI CÓ biến thể -->
-                @if (hasVariants)
-                {
-                   
-                        var variants = Model.Variants?.ToList() ?? new List<DoAnCoSo.Models.ProductVariant>();
-                    
-                    <div class="mt-4">
-                        <label class="form-label fw-semibold">Biến thể</label>
-
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:20%">Tên</th>
-                                    <th style="width:14%">SKU</th>
-                                    <th style="width:14%">Giá override</th>
-                                    <th style="width:12%">Tồn</th>
-                                    <th style="width:12%">Ngưỡng cảnh báo</th>
-                                    <th style="width:10%">Hoạt động</th>
-                                    <th style="width:8%"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="variantRows">
-                                @for (int i = 0; i < variants.Count; i++)
-                                {
-                                    <tr>
-                                        <td>
-                                            <input type="hidden" name="VariantIds[@i]" value="@variants[i].Id" />
-                                            <input class="form-control border-pink" name="VariantNames[@i]" value="@variants[i].Name" />
-                                        </td>
-                                        <td>
-                                            <input class="form-control border-pink" name="VariantSkus[@i]" value="@variants[i].Sku" />
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control border-pink" name="VariantPriceOverrides[@i]" value="@(variants[i].PriceOverride?.ToString() ?? "")" />
-                                        </td>
-                                        <td>
-                                            <input type="number" min="0" class="form-control border-pink" name="VariantStocks[@i]" value="@variants[i].StockQuantity" />
-                                        </td>
-                                        <td>
-                                            <input type="number" min="0" class="form-control border-pink" name="VariantThresholds[@i]" value="@variants[i].LowStockThreshold" />
-                                        </td>
-                                        <td class="text-center">
-                                            <!-- Hidden trước, checkbox sau để luôn post false/true đúng chuẩn -->
-                                            <input type="hidden" name="VariantIsActives[@i]" value="false" />
-                                            <input type="checkbox" class="form-check-input" name="VariantIsActives[@i]" value="true" @(variants[i].IsActive ? "checked" : "") />
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">Xóa</button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-
-                        <button type="button" id="btnAddVariant" class="btn btn-outline-pink">+ Thêm biến thể</button>
-                        <small class="text-muted ms-2 d-block mt-1">Để trống “Giá override” = dùng giá sản phẩm.</small>
-                    </div>
-                }
 
                 <div class="text-center mt-4">
-                    <h5 class="text-gradient-pink mb-3">Ảnh hiện tại</h5>
-                    <img src="@Model.ImageUrl" alt="Ảnh sản phẩm" class="img-fluid rounded shadow-sm border border-pink" style="max-width:220px;" id="previewImage" />
+                    <h5>Ảnh hiện tại</h5>
+                    <img src="@Model.ImageUrl" id="previewImage" style="max-width: 200px;" class="rounded shadow border-pink" />
                 </div>
+            </div>
 
-                <div class="text-center pt-4">
-                    <button type="submit" class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm me-2">
-                        💾 Lưu thay đổi
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill">
-                        ← Trở lại
-                    </a>
-                </div>
-            </form>
-            <!-- /FORM CHÍNH -->
+            <!-- Biến thể -->
+            @if (hasVariants)
+            {
+                var variants = Model.Variants.ToList();
 
-            <!-- FORM NHẬP/XUẤT KHO NHANH (độc lập) -->
-            @* <form asp-action="AdjustStock" method="post" class="mt-4">
-                <input type="hidden" name="productId" value="@Model.Id" />
-                <div class="row g-2 align-items-end">
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Điều chỉnh tồn kho</label>
-                        <input name="delta" type="number" class="form-control border-pink" placeholder="+ nhập / - xuất" required />
-                    </div>
-                    <div class="col-md-5">
-                        <label class="form-label fw-semibold">Lý do</label>
-                        <input name="reason" type="text" class="form-control border-pink" placeholder="VD: Manual / Điều chỉnh lỗi..." />
-                    </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm w-100">
-                            ⟲ Cập nhật kho (nhanh)
-                        </button>
-                    </div>
+                <div class="mt-4">
+                    <label class="form-label fw-semibold mb-2">Biến thể</label>
+
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 180px;">Tên</th>
+
+                                <th style="width: 200px;">SKU</th>   <!-- SKU rộng hơn -->
+
+                                <th style="width: 180px;">Giá override</th>
+
+                                <th style="width: 110px;">Tồn kho</th>
+
+                                <th style="width: 80px;">Ngưỡng</th>  <!-- Ngưỡng nhỏ lại -->
+
+                                <th style="width: 60px;">Hoạt động</th>
+
+                                <th style="width: 60px;">Hành động</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="variantRows">
+                            @for (int i = 0; i < variants.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="VariantIds[@i]" value="@variants[i].Id" />
+                                        <input class="form-control border-pink" name="VariantNames[@i]" value="@variants[i].Name" />
+                                    </td>
+
+                                    <td><input class="form-control border-pink" name="VariantSkus[@i]" value="@variants[i].Sku" /></td>
+
+                                    <td><input type="number" step="0.01" class="form-control border-pink" name="VariantPriceOverrides[@i]" value="@(variants[i].PriceOverride)" /></td>
+
+                                    <td><input type="number" min="0" class="form-control border-pink" name="VariantStocks[@i]" value="@variants[i].StockQuantity" read /></td>
+
+                                    <td><input type="number" min="0" class="form-control border-pink" name="VariantThresholds[@i]" value="@variants[i].LowStockThreshold" /></td>
+
+                                    <td class="text-center">
+                                        <input type="hidden" name="VariantIsActives[@i]" value="false" />
+                                        <input type="checkbox" class="form-check-input pink-switch" name="VariantIsActives[@i]" value="true" @(variants[i].IsActive ? "checked" : "") />
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button type="button" class="btn-delete btn-sm" onclick="removeRow(this)">Xóa</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <button type="button" id="btnAddVariant" class="btn-detail">+ Thêm biến thể</button>
                 </div>
-                <small class="text-muted d-block mt-1">Ví dụ: nhập 10 → <b>10</b>; xuất 2 → <b>-2</b>.</small>
-            </form> *@
-        </div>
+            }
+
+            <!-- Mô tả -->
+            <div class="mb-3 mt-3">
+                <label asp-for="Description" class="form-label">Mô tả sản phẩm</label>
+                <textarea asp-for="Description" class="form-control border-pink" rows="3"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Lưu thay đổi</button>
+            </div>
+        </form>
     </div>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<style>
+    .booking-card {
+        border-radius: 1rem;
+        background: white;
+        padding: 2rem;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+
+    .booking-title {
+        color: #FF6185;
+    }
+
+    .form-control {
+        border-radius: .5rem;
+    }
+
+    /* Nút switch màu hồng khi bật, trắng khi tắt */
+    .form-switch .form-check-input.pink-switch {
+        background-color: #e0c7cd; /* màu khi tắt */
+        border-color: #e0c7cd;
+        transition: background-color 0.25s, border-color 0.25s;
+    }
+
+        /* Khi bật: màu hồng */
+        .form-switch .form-check-input.pink-switch:checked {
+            background-color: #FF6185 !important;
+            border-color: #FF6185 !important;
+        }
+
+        /* Bỏ viền focus */
+        .form-switch .form-check-input.pink-switch:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+    /* Label chữ màu đen */
+    .pink-label {
+        color: #000 !important;
+        font-weight: 500;
+    }
+
+    /* Khi focus nhưng chưa tick: knob màu hồng mờ */
+    .form-switch .form-check-input.pink-switch:focus:not(:checked) {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23FF6185'/%3e%3c/svg%3e");
+    }
+
+    /* Khi tick: knob màu trắng */
+    .form-switch .form-check-input.pink-switch:checked {
+        background-color: #FF6185; /* track màu hồng */
+        border-color: #FF6185;
+    }
+
+        /* Khi tick + focus: knob vẫn trắng */
+        .form-switch .form-check-input.pink-switch:checked:focus {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+        }
+
+    .btn-detail {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: 0.3s;
+        background-color: #FFB6C1;
+        color: #000;
+        font-size: 16px;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    /* Ẩn mũi tên trong input type=number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+</style>
 
 <script>
-    // Xem trước ảnh mới
-    document.getElementById('imageInput')?.addEventListener('change', function (e) {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => document.getElementById('previewImage').src = ev.target.result;
-        reader.readAsDataURL(file);
+    document.getElementById('imageInput')?.addEventListener('change', e => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = ev => previewImage.src = ev.target.result;
+        r.readAsDataURL(f);
     });
 
-    // Xoá dòng biến thể
     function removeRow(btn) {
-        btn.closest('tr').remove();
+        btn.closest("tr").remove();
         renumberRows();
     }
 
-    // Đánh lại index [] trong name sau khi xoá/thêm
     function renumberRows() {
-        const rows = document.querySelectorAll('#variantRows tr');
-        rows.forEach((tr, idx) => {
-            tr.querySelectorAll('input').forEach(inp => {
-                inp.name = inp.name.replace(/\[\d+\]/, `[${idx}]`);
+        const rows = [...document.querySelectorAll("#variantRows tr")];
+        rows.forEach((tr, i) => {
+            tr.querySelectorAll("input").forEach(inp => {
+                inp.name = inp.name.replace(/\[\d+\]/, `[${i}]`);
             });
         });
     }
 
-    // Thêm dòng biến thể mới
-    document.getElementById('btnAddVariant')?.addEventListener('click', () => {
-        const tbody = document.getElementById('variantRows');
-        if (!tbody) return; // không có bảng nếu không có biến thể
-        const idx = tbody.querySelectorAll('tr').length;
-        const tr = document.createElement('tr');
+    document.getElementById("btnAddVariant")?.addEventListener("click", () => {
+        const idx = document.querySelectorAll("#variantRows tr").length;
+        const tr = document.createElement("tr");
+
         tr.innerHTML = `
             <td>
                 <input type="hidden" name="VariantIds[${idx}]" value="0" />
                 <input class="form-control border-pink" name="VariantNames[${idx}]" />
             </td>
             <td><input class="form-control border-pink" name="VariantSkus[${idx}]" /></td>
-            <td><input type="number" step="0.01" class="form-control border-pink" name="VariantPriceOverrides[${idx}]" /></td>
-            <td><input type="number" min="0" class="form-control border-pink" name="VariantStocks[${idx}]" value="0" /></td>
-            <td><input type="number" min="0" class="form-control border-pink" name="VariantThresholds[${idx}]" value="0" /></td>
+            <td><input type="number" class="form-control border-pink" name="VariantPriceOverrides[${idx}]" /></td>
+            <td><input type="number" class="form-control border-pink" name="VariantStocks[${idx}]" value="0" /></td>
+            <td><input type="number" class="form-control border-pink" name="VariantThresholds[${idx}]" value="0" /></td>
             <td class="text-center">
                 <input type="hidden" name="VariantIsActives[${idx}]" value="false" />
-                <input type="checkbox" class="form-check-input" name="VariantIsActives[${idx}]" value="true" checked />
+                <input type="checkbox" name="VariantIsActives[${idx}]" class="form-check-input pink-switch" value="true" checked />
             </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">Xóa</button>
-            </td>`;
-        tbody.appendChild(tr);
+            <td><button type="button" class="btn-delete btn-sm" onclick="removeRow(this)">Xóa</button></td>
+        `;
+
+        document.getElementById("variantRows").appendChild(tr);
     });
 </script>
-
-<style>
-    :root { --pink-main:#FF6185; --pink-accent:#FFB6C1; }
-    .bg-gradient-pink{background:linear-gradient(90deg,var(--pink-main),var(--pink-accent));color:black;}
-    .text-gradient-pink{background:linear-gradient(90deg,var(--pink-main),var(--pink-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .btn-gradient-pink{background:#FFB6C1;color:#000;font-weight:bold;border:none;transition:.25s;}
-    .btn-gradient-pink:hover{background:#FF6185;color:#fff;}
-    .btn-outline-pink{border:1.5px solid var(--pink-main);color:var(--pink-main);background:#fff;transition:.25s;font-weight:500;}
-    .btn-outline-pink:hover{background:var(--pink-main);color:#fff;}
-    .border-pink{border:1px solid var(--pink-main);}
-    .border-pink:focus{border-color:var(--pink-accent);box-shadow:0 0 0 .2rem rgba(255,107,107,.25);}
-    .card{border-radius:1rem;}
-    textarea{resize:none;}
-</style>

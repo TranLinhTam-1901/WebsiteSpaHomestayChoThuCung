@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.Order>
 
 @{
-    ViewData["Title"] = "🐾 Lịch sử đặt hàng";
+    ViewData["Title"] = "📦 Lịch sử đặt hàng";
 }
 @functions {
     // Trả về tên phân loại (Flavor/Variant) đúng quy tắc
@@ -29,16 +29,16 @@
 }
 
 <div class="order-wrapper py-5">
-    <h2 class="section-title">🐾 Lịch sử đặt hàng của bạn</h2>
+    <h2 class="section-title">📦 Lịch sử đặt hàng của bạn</h2>
 
-    @if (TempData["SuccessMessage"] != null)
+    @* @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger text-center">@TempData["ErrorMessage"]</div>
-    }
+    } *@
 
     @if (!Model.Any())
     {

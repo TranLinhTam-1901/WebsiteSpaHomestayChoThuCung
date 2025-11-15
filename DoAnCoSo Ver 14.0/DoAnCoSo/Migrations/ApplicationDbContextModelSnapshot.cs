@@ -423,11 +423,7 @@ namespace DoAnCoSo.Migrations
                     b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Note")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PerformedByUserId")
+                    b.Property<string>("DeletedBy")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Gender")
@@ -454,16 +450,11 @@ namespace DoAnCoSo.Migrations
                     b.Property<decimal?>("Weight")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("VariantId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("VariantId");
-
-                    b.ToTable("InventoryLogs");
+                    b.ToTable("DeletedPets");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.InventoryLog", b =>
@@ -476,6 +467,10 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("PerformedByUserId")
                         .HasColumnType("nvarchar(max)");
@@ -495,9 +490,14 @@ namespace DoAnCoSo.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("VariantId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("VariantId");
 
                     b.ToTable("InventoryLogs");
                 });
@@ -1484,13 +1484,7 @@ namespace DoAnCoSo.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DoAnCoSo.Models.ProductVariant", "Variant")
-                        .WithMany()
-                        .HasForeignKey("VariantId");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Variant");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.InventoryLog", b =>
@@ -1501,7 +1495,13 @@ namespace DoAnCoSo.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("DoAnCoSo.Models.ProductVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("VariantId");
+
                     b.Navigation("Product");
+
+                    b.Navigation("Variant");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Invoice", b =>

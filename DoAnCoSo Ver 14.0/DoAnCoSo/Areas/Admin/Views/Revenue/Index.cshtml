@@ -35,37 +35,37 @@
     <!-- 🧩 TẦNG 1: TỔNG QUAN NHANH -->
     <div id="overview-section" class="row text-center justify-content-center g-4 mb-5">
         <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 bg-success-subtle">
+            <div class="card shadow-sm border-0 rounded-4 bg-pink-subtle">
                 <div class="card-body">
-                    <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
+                    <i class="fas fa-dollar-sign fa-2x text-danger mb-2"></i>
                     <h6 class="text-muted">Tổng doanh thu tháng này</h6>
-                    <h4 id="revenueValue" class="fw-bold text-success mb-0">0 đ</h4>
+                    <h4 id="revenueValue" class="fw-bold text-danger mb-0">0 đ</h4>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 bg-primary-subtle">
+            <div class="card shadow-sm border-0 rounded-4 bg-purple-subtle">
                 <div class="card-body">
-                    <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                    <i class="fas fa-shopping-cart fa-2x text-purple mb-2"></i>
                     <h6 class="text-muted">Số đơn hàng</h6>
-                    <h4 id="ordersValue" class="fw-bold text-primary mb-0">0</h4>
+                    <h4 id="ordersValue" class="fw-bold text-purple mb-0">0</h4>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 bg-danger-subtle">
+            <div class="card shadow-sm border-0 rounded-4 bg-pink-subtle">
                 <div class="card-body">
-                    <i class="fas fa-percent fa-2x text-danger mb-2"></i>
+                    <i class="fas fa-percent fa-2x text-pink mb-2"></i>
                     <h6 class="text-muted">Tổng khuyến mãi áp dụng</h6>
-                    <h4 id="discountValue" class="fw-bold text-danger mb-0">0 đ</h4>
+                    <h4 id="discountValue" class="fw-bold text-pink mb-0">0 đ</h4>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3 col-6">
-            <div class="card shadow-sm border-0 rounded-4 bg-info-subtle">
+            <div class="card shadow-sm border-0 rounded-4 bg-cyan-subtle">
                 <div class="card-body">
                     <i class="fas fa-user-plus fa-2x text-info mb-2"></i>
                     <h6 class="text-muted">Khách hàng mới tháng này</h6>
@@ -74,6 +74,35 @@
             </div>
         </div>
     </div>
+
+    <style>
+        /* Màu sắc subtle để phù hợp PawHouse */
+        .bg-pink-subtle {
+            background-color: #ffe4eb;
+        }
+        /* hồng nhạt dễ nhìn */
+        .text-pink {
+            color: #FF6185;
+        }
+        /* chữ hồng đậm nổi bật */
+
+        .bg-purple-subtle {
+            background-color: #f3e8ff;
+        }
+
+        .bg-orange-subtle {
+            background-color: #fff3e0;
+        }
+
+        .bg-cyan-subtle {
+            background-color: #e0f7fa;
+        }
+
+        /* Chữ màu nổi trên thẻ */
+        .text-purple {
+            color: #8B5CF6;
+        }
+    </style>
 
     <!-- 🟧 TẦNG 2: BIỂU ĐỒ DOANH THU THEO THỜI GIAN -->
     <div class="card shadow-lg border-0 mb-5 rounded-4">

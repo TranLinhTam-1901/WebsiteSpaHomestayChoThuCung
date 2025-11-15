@@ -546,7 +546,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 UserId = selectedUser?.Id,
                 OwnerPhoneNumber = selectedUser?.PhoneNumber,
                 StartDate = DateTime.Now,
-                EndDate = DateTime.Now,
+                EndDate = DateTime.Now.AddDays(3),
                 UserPets = userPets
             };
 

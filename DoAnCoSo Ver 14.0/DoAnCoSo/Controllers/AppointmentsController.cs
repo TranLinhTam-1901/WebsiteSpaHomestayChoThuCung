@@ -291,7 +291,7 @@ namespace DoAnCoSo.Controllers
             var model = new HomestayBookingViewModel
             {
                 StartDate = DateTime.Now,
-                EndDate = DateTime.Now,
+                EndDate = DateTime.Now.AddDays(3),
                 OwnerPhoneNumber = user?.PhoneNumber,
                 UserPets = userPets
             };
