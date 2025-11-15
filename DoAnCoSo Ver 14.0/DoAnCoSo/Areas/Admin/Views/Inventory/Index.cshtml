@@ -1,0 +1,249 @@
+﻿@model IEnumerable<DoAnCoSo.ViewModels.InventoryDashboardViewModel>
+@{
+    ViewData["Title"] = "🏭 Quản lý kho hàng";
+}
+
+<div class="inventory-wrapper py-5">
+    <h2 class="section-title">🏭 Quản lý kho hàng</h2>
+
+    <div class="inventory-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Bảng tồn kho hàng</h4>
+            <a asp-action="Logs" class="btn-back">
+                <i class="fas fa-history"></i> Lịch sử kho hàng
+            </a>
+        </div>
+
+        <div class="card-body">
+            @* @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            } *@
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center inventory-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th>#</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Tồn kho</th>
+                            <th>Đã bán</th>
+                            <th>Giữ tạm</th>
+                            <th>Ngưỡng cảnh báo</th>
+                            <th>Nhập</th>
+                            <th>Xuất</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="no-data">Không có sản phẩm nào.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            var i = 1;
+                            foreach (var p in Model)
+                            {
+                                <tr class="@(p.IsLowStock ? "row-low" : "")">
+                                    <td>@i</td>
+                                    <td>@p.ProductName</td>
+                                    <td class="fw-bold">@p.StockQuantity</td>
+                                    <td class="fw-semibold">@p.SoldQuantity</td>
+                                    <td class="fw-semibold">@p.ReservedQuantity</td>
+                                    <td>@p.LowStockThreshold</td>
+
+                                    @* Nếu có biến thể → 1 nút xem *@
+                                    @if (p.VariantCount > 0)
+                                    {
+                                        <td colspan="2" class="actions-cell text-center">
+                                            <a asp-action="Variants"
+                                               asp-route-productId="@p.ProductId"
+                                               class="btn-blockchain">
+                                                🔎 Tùy chọn (@p.VariantCount)
+                                            </a>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        @* NHẬP *@
+                                        <td class="actions-cell">
+                                            <form asp-action="ImportStock" method="post"
+                                                  class="d-flex align-items-center gap-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@p.ProductId" />
+                                                <input type="number" name="quantity" min="1" class="form-control qty" placeholder="SL" />
+                                                <input type="text" name="note" class="form-control note" placeholder="Ghi chú" />
+                                                <button type="submit" class="btn-detail btn-sm">Nhập</button>
+                                            </form>
+                                        </td>
+
+                                        @* XUẤT *@
+                                        <td class="actions-cell">
+                                            <form asp-action="ExportStock" method="post"
+                                                  class="d-flex align-items-center gap-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@p.ProductId" />
+                                                <input type="number" name="quantity" min="1" class="form-control qty" placeholder="SL" />
+                                                <input type="text" name="note" class="form-control note" placeholder="Ghi chú" />
+                                                <button type="submit" class="btn-delete btn-sm">Xuất</button>
+                                            </form>
+                                        </td>
+                                    }
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    setTimeout(() => {
+        document.querySelectorAll('.alert')?.forEach(a => a.remove());
+    }, 3000);
+</script>
+
+<style>
+    .inventory-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+        .section-title::after {
+            content: "";
+            width: 80px;
+            height: 4px;
+            display: block;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .inventory-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background: white;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .inventory-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .inventory-table th, .inventory-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .inventory-table tbody tr:nth-child(even) {
+        background: #FFF7F9;
+    }
+
+    .inventory-table tbody tr:nth-child(odd) {
+        background: #FFFFFF;
+    }
+
+    .inventory-table tbody tr:hover {
+        background: #FFE9EF !important;
+    }
+
+    .row-low {
+        background-color: #FFF0F5 !important;
+    }
+
+    .no-data {
+        padding: 20px;
+        color: #777;
+    }
+
+    /* nút nhập */
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-weight: bold;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: white;
+        }
+
+    /* nút xuất */
+    .btn-delete {
+        border: 2px solid red;
+        color: red;
+        background: transparent;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-weight: bold;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: white;
+        }
+
+    /* nút variant xem tùy chọn */
+    .btn-blockchain {
+        background-color: #8B5CF6;
+        color: #fff;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 4px 10px;
+        text-decoration: none;
+    }
+
+        .btn-blockchain:hover {
+            background-color: #5B21B6;
+            color: #fff;
+        }
+
+    .qty {
+        width: 80px;
+    }
+
+    .note {
+        width: 200px;
+    }
+</style>

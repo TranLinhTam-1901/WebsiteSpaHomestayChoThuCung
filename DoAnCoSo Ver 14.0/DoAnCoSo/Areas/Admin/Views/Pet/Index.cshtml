@@ -1,0 +1,250 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Pet>
+
+@{
+    ViewData["Title"] = "🐾 Quản lý hồ sơ thú cưng";
+}
+
+<div class="pet-wrapper py-5">
+    <h2 class="section-title">🐾 Quản lý hồ sơ thú cưng</h2>
+
+    <div class="pet-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách thú cưng của khách hàng</h4>
+            <div>
+                <a asp-action="Add" class="btn-add">
+                    <i class="fas fa-plus-circle"></i> Thêm hồ sơ
+                </a>
+                <a asp-area="Admin" asp-controller="Master" asp-action="Index" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang quản trị
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center pet-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th>Chủ sở hữu</th>
+                            <th>Tên thú cưng</th>
+                            <th>Loại</th>
+                            <th>Giống</th>
+                            <th>Cân nặng</th>
+                            <th>Giới tính</th>
+                            <th>Ngày sinh</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var pet in Model)
+                            {
+                                <tr>
+                                    <td>@pet.User?.FullName</td>
+                                    <td>@pet.Name</td>
+                                    <td>@pet.Type</td>
+                                    <td>@pet.Breed</td>
+                                    <td>@pet.Weight kg</td>
+                                    <td>
+                                        @{
+                                            var genderText = pet.Gender?.ToLower() == "male" ? "Đực"
+                                            : pet.Gender?.ToLower() == "female" ? "Cái"
+                                            : "Không rõ";
+                                        }
+                                        @genderText
+                                    </td>
+                                    <td>@pet.DateOfBirth?.ToString("dd/MM/yyyy")</td>
+                                    <td class="actions-cell">
+                                        <div class="actions">
+                                            <a asp-action="Details" asp-route-id="@pet.PetId" class="btn-detail btn-sm">
+                                                <i class="fas fa-info-circle"></i> Chi tiết
+                                            </a>
+                                            <a asp-controller="Blockchain" asp-action="ViewByPet"
+                                               asp-route-petId="@pet.PetId"
+                                               class="btn-blockchain btn-sm">
+                                                <i class="fas fa-link"></i> Blockchain
+                                            </a>
+                                            <a asp-action="Update" asp-route-id="@pet.PetId" class="btn-edit btn-sm">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@pet.PetId" class="btn-delete btn-sm">
+                                                <i class="fas fa-trash-alt"></i> Xóa
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="no-pet">Chưa có hồ sơ thú cưng nào 🐶🐱</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS giữ nguyên từ giao diện user -->
+<style>
+    .pet-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .pet-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-add {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        margin-right: 10px;
+        transition: 0.3s;
+    }
+
+        .btn-add:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .pet-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .pet-table th, .pet-table td {
+        vertical-align: middle;
+    }
+
+    .pet-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .pet-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-detail, .btn-edit, .btn-delete {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: 0.3s;
+    }
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-edit {
+        border: 2px solid green;
+        background-color: transparent;
+        color: green;
+        font-weight: bold;
+    }
+
+        .btn-edit:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
+        font-weight: bold;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .no-pet {
+        text-align: center;
+        color: #777;
+        padding: 20px 0;
+    }
+
+    .btn-blockchain {
+        background-color: #8B5CF6; /* tím tươi nổi bật */
+        color: #fff;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-blockchain:hover {
+            background-color: #5B21B6;
+            color: #fff;
+        }
+</style>

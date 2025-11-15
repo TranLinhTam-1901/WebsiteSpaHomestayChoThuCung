@@ -3,13 +3,9 @@ using DoAnCoSo.Extensions;
 using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
 using DoAnCoSo.ViewModels;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -23,7 +19,7 @@ namespace DoAnCoSo.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
-        public ProductController(ILogger<ProductController> logger, IProductRepository productRepository, ICategoryRepository categoryRepository, 
+        public ProductController(ILogger<ProductController> logger, IProductRepository productRepository, ICategoryRepository categoryRepository,
             ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
@@ -34,10 +30,41 @@ namespace DoAnCoSo.Controllers
             _userManager = userManager;
         }
 
-        public IActionResult AllProducts()
+        public IActionResult AllProducts(string? promoCode)
         {
-            var products = _context.Products.ToList();
+            var products = _context.Products
+             .Where(p => p.IsActive && !p.IsDeleted)   // nếu chưa có IsDeleted thì bỏ điều kiện này
+             .AsQueryable();
 
+            products = products.Where(p => !p.IsDeleted && p.IsActive);
+
+
+            // 🟢 Nếu có promoCode được truyền vào
+            if (!string.IsNullOrEmpty(promoCode))
+            {
+                var promo = _context.Promotions
+                    .FirstOrDefault(p => p.Code == promoCode && p.IsActive);
+
+                if (promo != null)
+                {
+                    // ⚙️ Gợi ý 1: lọc sản phẩm theo giá trị tối thiểu
+                    if (promo.MinOrderValue.HasValue)
+                        products = products.Where(p => p.Price >= promo.MinOrderValue.Value);
+
+                    // ⚙️ (Tuỳ chọn mở rộng)
+                    // Nếu bạn có bảng PromotionCategory → lọc theo CategoryId
+
+                    ViewBag.AppliedPromo = promo;
+                }
+                else
+                {
+                    TempData["Error"] = "❌ Mã khuyến mãi không hợp lệ hoặc đã hết hạn.";
+                }
+            }
+
+            var productList = products.ToList();
+
+            // Giữ phần yêu thích cũ của bạn
             var json = HttpContext.Session.GetString("FavoriteProducts");
             List<int> favoriteIds = string.IsNullOrEmpty(json)
                 ? new List<int>()
@@ -45,7 +72,7 @@ namespace DoAnCoSo.Controllers
 
             ViewBag.FavoriteIds = favoriteIds;
 
-            return View(products);
+            return View(productList);
         }
 
         // Giả sử bạn lưu trữ danh sách yêu thích trong session
@@ -105,6 +132,7 @@ namespace DoAnCoSo.Controllers
             // Lấy review kèm User (để hiển thị tên)
             var productReviews = await _context.Reviews
                 .Include(r => r.User)
+                .Include(r => r.Images)
                 .Where(r => r.TargetType == ReviewTargetType.Product && r.TargetId == id)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
@@ -129,30 +157,62 @@ namespace DoAnCoSo.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddReview(Review NewReview, IEnumerable<IFormFile> reviewImages)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReview(Review newReview, IEnumerable<IFormFile> reviewImages)
         {
+            // 1) Yêu cầu đăng nhập
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
-            }
 
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString))
+            // 2) Gán thông tin bắt buộc
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
                 TempData["ErrorMessage"] = "Không xác định được người dùng.";
-                return RedirectToAction("Details", new { id = NewReview.TargetId });
+                return RedirectToAction("Details", new { id = newReview.TargetId });
             }
 
-            NewReview.UserId = userIdString;
-            NewReview.TargetType = ReviewTargetType.Product;   // ✅ bắt buộc
-            NewReview.CreatedDate = DateTime.Now;
+            newReview.UserId = userId;
+            newReview.TargetType = ReviewTargetType.Product; // bạn đang review sản phẩm
+            newReview.CreatedDate = DateTime.Now;
 
-            _context.Reviews.Add(NewReview);
+            // 3) Khởi tạo collection ảnh nếu null
+            newReview.Images ??= new List<ReviewImage>();
+
+            // 4) Upload ảnh (nếu có)
+            if (reviewImages != null)
+            {
+                var uploadsDir = Path.Combine(_webHostEnvironment.WebRootPath, "images", "reviews");
+                if (!Directory.Exists(uploadsDir))
+                    Directory.CreateDirectory(uploadsDir);
+
+                foreach (var file in reviewImages.Where(f => f?.Length > 0))
+                {
+                    // (tuỳ ý) kiểm tra mime/size ở đây
+                    var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                    var filePath = Path.Combine(uploadsDir, fileName);
+
+                    using (var fs = new FileStream(filePath, FileMode.Create))
+                        await file.CopyToAsync(fs);
+
+                    // THAY ProductReviewImage -> ReviewImage
+                    newReview.Images.Add(new ReviewImage
+                    {
+                        ImageUrl = $"/images/reviews/{fileName}"
+                        // nếu model có các field khác (Caption, SortOrder...) thì set thêm
+                    });
+                }
+            }
+
+            // 5) Lưu DB: THAY _context.ProductReviews -> _context.Reviews
+            _context.Reviews.Add(newReview);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", new { id = NewReview.TargetId });
+            TempData["SuccessMessage"] = "Bình luận đã được gửi.";
+            return RedirectToAction("Details", new { id = newReview.TargetId });
         }
+
 
         public IActionResult Search(string searchTerm)
         {

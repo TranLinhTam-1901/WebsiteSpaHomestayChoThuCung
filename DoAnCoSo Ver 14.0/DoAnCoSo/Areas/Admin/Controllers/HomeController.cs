@@ -1,20 +1,18 @@
-﻿using System.Diagnostics;
-using DoAnCoSo.Models;
+﻿using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace DoAnCoSo.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = SD.Role_Admin)]
+    [Authorize(Roles = "Admin")]
     public class HomeController : Controller
     {
-        
+
         private readonly IProductRepository _productRepository;
-        private readonly ILogger<HomeController>_logger;
+        private readonly ILogger<HomeController> _logger;
         private readonly ICategoryRepository _categoryRepository;
         private readonly ApplicationDbContext _context;
 
@@ -24,7 +22,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             _logger = logger;
             _productRepository = productRepository;
             _categoryRepository = categoryRepository;
-            _context = context;     
+            _context = context;
         }
 
         public async Task<IActionResult> Index()
@@ -47,7 +45,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var product =   await  _productRepository.GetByIdAsync(id);
+            var product = await _productRepository.GetByIdAsync(id);
             if (product == null)
             {
                 return NotFound();

@@ -1,126 +1,264 @@
 ﻿@model DoAnCoSo.Models.Product
 @using Microsoft.AspNetCore.Mvc.Rendering
 @{
-    ViewData["Title"] = "Thêm sản phẩm";
+    ViewData["Title"] = "🌸 Thêm sản phẩm";
+    var hasVariants = (bool?)ViewBag.HasVariants == true;
+    var vNames = (IEnumerable<string>)(ViewBag.VariantNames ?? new List<string>());
+    var vStocks = (IEnumerable<int>)(ViewBag.VariantStocks ?? new List<int>());
+    var vThresholds = (IEnumerable<int>)(ViewBag.VariantThresholds ?? new List<int>());
 }
 
-<div class="container py-5 d-flex justify-content-center">
-    <div class="card shadow-lg border-0 rounded-4 w-75">
-        <div class="card-header bg-gradient-pink text-white text-center rounded-top-4">
-            <h2 class="mb-0">🌸 Thêm sản phẩm 🌸</h2>
-        </div>
-        <div class="card-body p-4">
-            <form asp-action="Add" method="post" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label for="Name" class="form-label fw-semibold">Tên sản phẩm</label>
-                    <input id="Name" name="Name" class="form-control border-pink" placeholder="Nhập tên sản phẩm..." />
-                    <span asp-validation-for="Name" class="text-danger small"></span>
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <form asp-action="Add" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="Name" class="form-control" placeholder="Nhập tên sản phẩm..." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="CategoryId" class="form-label">Loại sản phẩm</label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select>
                 </div>
 
-                <div class="mb-3">
-                    <label for="Price" class="form-label fw-semibold">Giá sản phẩm</label>
-                    <input id="Price" name="Price" class="form-control border-pink" placeholder="Nhập giá..." />
-                    <span asp-validation-for="Price" class="text-danger small"></span>
+                <div class="col-md-6">
+                    <label asp-for="Price" class="form-label">Giá</label>
+                    <input asp-for="Price" type="number" min="0" class="form-control" placeholder="Nhập giá..." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PriceReduced" class="form-label">Giá giảm</label>
+                    <input asp-for="PriceReduced" type="number" min="0" class="form-control" placeholder="Nhập giá giảm..." />
                 </div>
 
-                <div class="mb-3">
-                    <label for="PriceReduced" class="form-label fw-semibold">Giá giảm (nếu có)</label>
-                    <input id="PriceReduced" name="PriceReduced" class="form-control border-pink" placeholder="Nhập giá giảm..." />
-                    <span asp-validation-for="PriceReduced" class="text-danger small"></span>
+                <!-- Toggle: Có biến thể? -->
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input pink-switch" id="hasVariants" name="HasVariants" value="true" @(hasVariants ? "checked" : "") />
+                        <label class="form-check-label pink-label" for="hasVariants">Sản phẩm có biến thể</label>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="Trademark" class="form-label fw-semibold">Thương hiệu</label>
-                    <input id="Trademark" name="Trademark" class="form-control border-pink" placeholder="Nhập thương hiệu..." />
-                    <span asp-validation-for="Trademark" class="text-danger small"></span>
+                <!-- Tồn kho tổng -->
+                <div class="col-md-6" id="blockStockTotal">
+                    <label asp-for="StockQuantity" class="form-label">Tồn kho ban đầu</label>
+                    <input asp-for="StockQuantity" type="number" min="0" class="form-control border-pink" placeholder="VD: 10" />
                 </div>
 
-                <div class="mb-3">
-                    <label for="Description" class="form-label fw-semibold">Mô tả sản phẩm</label>
-                    <textarea id="Description" name="Description" class="form-control border-pink" rows="3" placeholder="Nhập mô tả..."></textarea>
+                <div class="col-md-6">
+                    <label asp-for="LowStockThreshold" class="form-label">Ngưỡng cảnh báo</label>
+                    <input asp-for="LowStockThreshold" type="number" min="0" class="form-control" placeholder="VD: 5" />
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="CategoryId" class="form-label fw-semibold">Loại sản phẩm</label>
-                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-control border-pink"></select>
+                <div class="col-md-6">
+                    <label asp-for="Trademark" class="form-label">Thương hiệu</label>
+                    <input asp-for="Trademark" class="form-control" placeholder="Nhập thương hiệu..." />
                 </div>
 
-                <div class="mb-3">
-                    <label for="imageInput" class="form-label fw-semibold">Ảnh đại diện</label>
-                    <input type="file" name="imageUrl" class="form-control border-pink" id="imageInput" />
+                <div class="col-md-6">
+                    <label class="form-label">Trạng thái</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input pink-switch" asp-for="IsActive" />
+                        <label class="form-check-label pink-label">@(@Model?.IsActive != false ? "Đang bán" : "Tạm dừng")</label>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="additionalImagesInput" class="form-label fw-semibold">Ảnh sản phẩm khác (Upload nhiều file)</label>
-                    <input type="file" id="additionalImagesInput" name="images" class="form-control border-pink" multiple />
+                <!-- Ảnh sản phẩm -->
+                <div class="col-md-6">
+                    <label for="imageInput" class="form-label">Ảnh đại diện</label>
+                    <input type="file" name="imageUrl" class="form-control" id="imageInput" />
                 </div>
+                <div class="col-md-6">
+                    <label for="additionalImagesInput" class="form-label">Ảnh khác</label>
+                    <input type="file" name="images" class="form-control" multiple />
+                </div>
+            </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Hương vị</label>
-                    @for (int i = 0; i < 3; i++)
-                    {
-                        <input type="text" name="flavorsList[@i]" class="form-control border-pink mb-2" placeholder="Nhập hương vị..." />
-                    }
-                </div>
+            <!-- Bảng biến thể -->
+            <div id="blockVariants" class="mb-3 mt-3" style="display:none;">
+                <label class="form-label">Biến thể & tồn kho</label>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tên biến thể</th>
+                            <th>Tồn kho</th>
+                            <th>Ngưỡng cảnh báo</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="variantRows"></tbody>
+                </table>
+                <a class="btn btn-detail" id="btnAddVariant">+ Thêm biến thể</a>
+            </div>
 
-                <div class="text-center">
-                    <button type="submit" class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
-                        + Thêm sản phẩm
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill ms-2">
-                        ← Trở lại
-                    </a>
-                </div>
-            </form>
-        </div>
+            <div class="mb-3 mt-3">
+                <label asp-for="Description" class="form-label">Mô tả sản phẩm</label>
+                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Nhập mô tả..."></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Lưu sản phẩm</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <style>
-    :root {
-        --pink-main: #FF6185;
-        --pink-accent: #FF6B6B;
+    .booking-card { border-radius: 1rem; background:white; padding:2rem; box-shadow:0 6px 16px rgba(0,0,0,0.1); }
+    .booking-title { color:#FF6185; }
+    .form-control { border-radius:.5rem; }
+
+    /* Nút switch màu hồng khi bật, trắng khi tắt */
+    .form-switch .form-check-input.pink-switch {
+        background-color: #e0c7cd; /* màu khi tắt */
+        border-color: #e0c7cd;
+        transition: background-color 0.25s, border-color 0.25s;
     }
 
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-    }
-
-    .btn-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: #fff;
-        border: none;
-        transition: 0.3s;
-    }
-
-        .btn-gradient-pink:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
+        /* Khi bật: màu hồng */
+        .form-switch .form-check-input.pink-switch:checked {
+            background-color: #FF6185 !important;
+            border-color: #FF6185 !important;
         }
 
-    .btn-outline-pink {
-        border: 1px solid var(--pink-main);
-        color: var(--pink-main);
-        background-color: #fff;
-        transition: 0.3s;
+        /* Bỏ viền focus */
+        .form-switch .form-check-input.pink-switch:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+    /* Label chữ màu đen */
+    .pink-label {
+        color: #000 !important;
+        font-weight: 500;
     }
 
-        .btn-outline-pink:hover {
-            background-color: var(--pink-accent);
-            border-color: var(--pink-accent);
+    /* Khi focus nhưng chưa tick: knob màu hồng mờ */
+    .form-switch .form-check-input.pink-switch:focus:not(:checked) {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23FF6185'/%3e%3c/svg%3e");
+    }
+
+    /* Khi tick: knob màu trắng */
+    .form-switch .form-check-input.pink-switch:checked {
+        background-color: #FF6185; /* track màu hồng */
+        border-color: #FF6185;
+    }
+
+        /* Khi tick + focus: knob vẫn trắng */
+        .form-switch .form-check-input.pink-switch:checked:focus {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+        }
+
+    .btn-detail {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: 0.3s;
+        background-color: #FFB6C1;
+        color: #000;
+        font-size: 16px;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
             color: #fff;
         }
 
-    .border-pink {
-        border: 1px solid var(--pink-main);
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
     }
 
-        .border-pink:focus {
-            border-color: var(--pink-accent);
-            box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
         }
 
-    .card {
-        border-radius: 1rem;
+    /* Ẩn mũi tên trong input type=number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
     }
 </style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const hasVariants = document.getElementById('hasVariants');
+        const blockStockTotal = document.getElementById('blockStockTotal');
+        const stockInput = blockStockTotal.querySelector('input[name="StockQuantity"]');
+        const stockHidden = document.getElementById('stockHiddenWhenVariant');
+        const blockVariants = document.getElementById('blockVariants');
+        const variantRows = document.getElementById('variantRows');
+        const btnAddVariant = document.getElementById('btnAddVariant');
+
+        function addVariantRow(name = '', stock = 0, threshold = 0) {
+            const idx = variantRows.children.length;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input name="VariantNames[${idx}]" class="form-control border-pink" value="${name}" /></td>
+                <td><input name="VariantStocks[${idx}]" type="number" min="0" class="form-control border-pink" value="${stock}" /></td>
+                <td><input name="VariantThresholds[${idx}]" type="number" min="0" class="form-control border-pink" value="${threshold}" /></td>
+                <td class="text-center"><button type="button" class="btn-delete btn-sm" onclick="this.closest('tr').remove(); renumberRows();">Xóa</button></td>
+            `;
+            variantRows.appendChild(tr);
+        }
+
+        function renumberRows() {
+            [...variantRows.children].forEach((tr, i) => {
+                const inputs = tr.querySelectorAll('input');
+                inputs[0].name = `VariantNames[${i}]`;
+                inputs[1].name = `VariantStocks[${i}]`;
+                inputs[2].name = `VariantThresholds[${i}]`;
+            });
+        }
+
+        function toggleVariantUI() {
+            const useVariant = hasVariants.checked;
+            const stockInput = document.querySelector('#blockStockTotal input[name="StockQuantity"]');
+
+            if (useVariant) stockInput.setAttribute("disabled", "disabled");
+            else stockInput.removeAttribute("disabled");
+
+            blockVariants.style.display = useVariant ? 'block' : 'none';
+
+            if (useVariant && variantRows.children.length === 0) {
+                addVariantRow();
+                addVariantRow();
+            }
+        }
+
+        hasVariants.addEventListener('change', toggleVariantUI);
+
+        // Load previously posted variants
+        const postedNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vNames));
+        const postedStocks = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vStocks));
+        const postedThresholds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vThresholds));
+        if (hasVariants && postedNames.length > 0) {
+            variantRows.innerHTML = '';
+            for (let i=0;i<postedNames.length;i++) addVariantRow(postedNames[i],postedStocks[i],postedThresholds[i]);
+        }
+
+        toggleVariantUI();
+        btnAddVariant?.addEventListener('click', () => addVariantRow());
+    </script>
+}

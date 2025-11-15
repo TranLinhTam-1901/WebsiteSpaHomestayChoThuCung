@@ -14,6 +14,9 @@ namespace DoAnCoSo.Models
         Completed,
 
         [Display(Name = "Đã hủy")]
-        Cancelled
+        Cancelled,
+
+        [Display(Name = "Đã xóa")]
+        Deleted
     }
 }

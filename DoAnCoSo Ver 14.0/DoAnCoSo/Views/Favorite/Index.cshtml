@@ -2,69 +2,222 @@
 @{
     ViewData["Title"] = "Sản phẩm yêu thích";
 }
-<div class="container mt-4">
-    <h2 class="text-center">SẢN PHẨM YÊU THÍCH</h2>
-    @if (Model.Any())
+
+<div class="favorite-page py-5">
+    <h2 class="section-title">💖 Sản phẩm yêu thích 💖</h2>
+
+    @if (Model != null && Model.Count > 0)
     {
-        <div class="row row-cols-1 row-cols-md-4 g-2" style="margin-left: 0 !important;">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
             @foreach (var item in Model)
             {
-                <div class="col mt-3">
+                var detailsUrl = Url.Action("Details", "Product", new { id = item.Id });
 
-                    <div class="card h-100">
-                        @* Chỉnh sửa kích thước cố định cho hình ảnh  *@
-                        <div class="product-img-wrapper">
-                            <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name">
+                <div class="col">
+                    <div class="card product-card h-100">
+                        <div class="product-img-wrapper" onclick="window.location.href='@detailsUrl'">
+                            <img src="@item.ImageUrl" alt="@item.Name" />
+
+                            <button class="btn favorite-btn"
+                                    data-id="@item.Id"
+                                    data-authenticated="@User.Identity.IsAuthenticated.ToString().ToLower()"
+                                    onclick="event.stopPropagation();">
+                                <i class="bi-heart-fill"></i>
+                            </button>
                         </div>
 
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="fw-bold">@item.Name</h5>
-                            <p>Thương hiệu: <span class="text-primary fw-semibold">@item.Trademark</span></p>
-                            <div class="bg-light p-2 rounded">
-                                <p class="mb-0">
-                                    @if (@item.PriceReduced != null && @item.PriceReduced > 0 && @item.PriceReduced < @item.Price)
-                                    {
-                                        // Nếu có giá giảm -> Hiển thị giá giảm, giá gốc gạch ngang và phần trăm giảm
-                                        <span class="fw-bold text-danger fs-4">@($"{item.PriceReduced:N0}đ")</span>
+                        <div class="card-body text-center">
+                            <h5 onclick="window.location.href='@detailsUrl'">@item.Name</h5>
+                            <p>Thương hiệu: <span class="fw-semibold text-pink">@item.Trademark</span></p>
 
-                                        <del class="text-muted">@item.Price.ToString("0.##")đ</del>
-                                        <span class="badge bg-danger">@item.DiscountPercentage.ToString("0.##")%</span>
-                                    }
-                                    else
-                                    {
-                                        // Nếu không nhập giá giảm -> Chỉ hiển thị giá gốc
-                                        <span class="fw-bold text-danger fs-4">@($"{@item.Price:N0}đ")</span>
-                                    }
-                                </p>
-                            </div>
-                            <div class="mt-auto text-center d-flex flex-column gap-2">
-                                <div class="d-flex gap-2 w-100">
-
-                                    <a href="@Url.Action("BuyNow", "ShoppingCart", new { productId =item.Id, quantity = 1 })"
-                                       class="btn btn-primary btn-sm w-50">Mua Ngay</a>
-                                    <a asp-controller="Product" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm w-50">Xem Chi Tiết</a>
-
-                                    <button class="btn btn-sm favorite-btn mx-auto w-20
-                                        @(ViewBag.FavoriteIds != null && ((List<int>)ViewBag.FavoriteIds).Contains(item.Id) ? "btn-danger" : "btn-outline-danger")"
-                                            data-id="@item.Id"
-                                            data-authenticated="@User.Identity.IsAuthenticated.ToString().ToLower()">
-                                        <i class="@(ViewBag.FavoriteIds != null && ((List<int>)ViewBag.FavoriteIds).Contains(item.Id) ? "bi-heart-fill" : "bi-heart")"></i>
-                                    </button>
-
-                                </div>
+                            <div class="price-box">
+                                @if (item.PriceReduced != null && item.PriceReduced > 0 && item.PriceReduced < item.Price)
+                                {
+                                    <span class="price-current">@($"{item.PriceReduced:N0}đ")</span>
+                                    <span class="price-old">@($"{item.Price:N0}đ")</span>
+                                    <span class="badge discount-badge">@item.DiscountPercentage.ToString("0.##")%</span>
+                                }
+                                else
+                                {
+                                    <span class="price-current">@($"{item.Price:N0}đ")</span>
+                                }
                             </div>
                         </div>
                     </div>
-
                 </div>
             }
         </div>
     }
     else
     {
-        <p class="text-center">Bạn chưa có sản phẩm yêu thích nào.</p>
+        <div class="empty-favorite">
+            <p>😿 Bạn chưa có sản phẩm yêu thích nào.</p>
+            <a asp-controller="Product" asp-action="AllProducts" class="btn mt-2">Khám phá sản phẩm</a>
+        </div>
     }
 </div>
+
+<style>
+    :root {
+        --pink-main: #ff7aa2;
+        --pink-light: #ffe3ec;
+        --pink-dark: #e74c7b;
+    }
+
+    body {
+        background-color: #FFF0F5;
+    }
+
+    .favorite-page {
+        max-width: 960px;
+        margin: auto;
+        padding: 15px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    /* CARD */
+    .product-card {
+        border: none;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(255, 122, 162, 0.25);
+        background-color: #fff;
+        transition: none !important;
+        position: relative;
+        height: 100%;
+        cursor: default;
+    }
+
+        .product-card:hover {
+            transform: none !important;
+            box-shadow: 0 3px 10px rgba(255, 122, 162, 0.25) !important;
+        }
+
+    /* ẢNH */
+    .product-img-wrapper {
+        width: 100%;
+        height: 260px; /* giống trang tất cả sản phẩm */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+        .product-img-wrapper img {
+            max-height: 100%;
+            width: auto;
+            object-fit: contain;
+            transition: none !important;
+        }
+
+    /* NÚT YÊU THÍCH */
+    .favorite-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        border: 2px solid var(--pink-dark);
+        transition: none;
+    }
+
+        .favorite-btn i {
+            font-size: 1.3rem;
+        }
+
+    /* TEXT */
+    .product-card h5 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 10px 0 6px 0;
+        text-align: center;
+        color: #444;
+        cursor: pointer;
+    }
+
+        .product-card h5:hover {
+            color: var(--pink-dark);
+        }
+
+    .product-card p {
+        text-align: center;
+        color: #777;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+
+    /* GIÁ */
+    .price-box {
+        background-color: var(--pink-light);
+        border-radius: 10px;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .price-current {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--pink-dark);
+    }
+
+    .price-old {
+        text-decoration: line-through;
+        color: #999;
+        margin-left: 6px;
+        font-size: 0.9rem;
+    }
+
+    .discount-badge {
+        background-color: var(--pink-main);
+        font-size: 0.8rem;
+        color: #fff;
+        margin-left: 6px;
+        border-radius: 8px;
+    }
+
+    /* EMPTY */
+    .empty-favorite {
+        text-align: center;
+        margin-top: 60px;
+        font-size: 1.1rem;
+        color: #777;
+    }
+
+        .empty-favorite a {
+            color: var(--pink-dark);
+            border-color: var(--pink-main);
+        }
+
+            .empty-favorite a:hover {
+                background-color: var(--pink-main);
+                color: white;
+            }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');

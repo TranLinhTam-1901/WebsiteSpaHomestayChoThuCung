@@ -1,115 +1,464 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.Product>
 
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-gradient-pink fw-bold">🌸 Quản lý Sản phẩm</h2>
-        <a asp-area="Admin" asp-controller="Product" asp-action="Add"
-           class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
-            + Thêm sản phẩm
-        </a>
-    </div>
+@{
+    ViewData["Title"] = "🏬 Quản lý sản phẩm";
+    int pageSize = 16;
+    int totalItems = Model.Count();
+    int currentPage = string.IsNullOrEmpty(Context.Request.Query["page"]) ? 1 : int.Parse(Context.Request.Query["page"]);
+    int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+    var products = Model.Skip((currentPage - 1) * pageSize).Take(pageSize);
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle shadow-sm rounded-3 overflow-hidden">
-            <thead class="bg-gradient-pink text-white">
-                <tr>
-                    <th>ID</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Hình ảnh</th>
-                    <th>Giá</th>
-                    <th>Mô tả</th>
-                    <th>Danh mục</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var product in Model)
-                {
-                    <tr>
-                        <td>@product.Id</td>
-                        <td class="fw-semibold">@product.Name</td>
-                        <td>
-                            <img src="@product.ImageUrl" alt="pic"
-                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" />
-                        </td>
-                        <td>
-                            @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
+    // nhận flag xem danh sách đã ẩn từ Controller
+    bool showDeleted = ViewBag.ShowDeleted == true;
+}
+
+<div class="product-wrapper py-5">
+    <h2 class="section-title">🏬 Quản lý sản phẩm</h2>
+
+    <div class="admin-product-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div></div>
+            <a asp-area="Admin" asp-controller="Product" asp-action="Add" class="btn-add">
+                <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm
+            </a>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center product-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width: 70px;">ID</th>
+                            <th style="width: 180px;">Tên sản phẩm</th>
+                            <th style="width: 120px;">Hình ảnh</th>
+                            <th style="width: 110px;">Giá</th>
+                            <th style="width: 100px;">Tồn kho</th>
+
+                            <th style="width: 210px;">Mô tả</th> <!-- Mô tả dài hơn -->
+
+                            <th style="width: 120px;">Danh mục</th> <!-- Nhỏ hơn -->
+
+                            <th style="width: 200px;">Hành động</th> <!-- Nhỏ lại -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (products.Any())
+                        {
+                            foreach (var product in products)
                             {
-                                <span class="text-muted text-decoration-line-through">@product.Price.ToString("N0")</span>
-                        
-                                <br />
-                                <span class="text-danger fw-bold">@product.PriceReduced.Value.ToString("N0")</span>
+                                <tr>
+                                    <td>@product.Id</td>
+                                    <td>@product.Name</td>
+                                    <td>
+                                        <img src="@product.ImageUrl" alt="@product.Name" class="product-img" />
+                                    </td>
+                                    <td>
+                                        @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
+                                        {
+                                            <span class="text-decoration-line-through text-muted d-block">@product.Price.ToString("N0")đ</span>
+                                            <span class="fw-bold text-pink">@product.PriceReduced.Value.ToString("N0")đ</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@product.Price.ToString("N0")đ</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @product.StockQuantity
+                                        @if (product.StockQuantity <= product.LowStockThreshold)
+                                        {
+                                            <span class="badge bg-danger ms-2">Sắp hết</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success ms-2">OK</span>
+                                        }
+                                    </td>
+                                    <td class="text-truncate" style="max-width: 220px;">@product.Description</td>
+                                    <td>@product.Category?.Name</td>
+                                    <td class="actions-cell">
+                                        <div class="actions">
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn-detail btn-sm">
+                                                <i class="bi bi-eye"></i> Xem
+                                            </a>
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id" class="btn-edit btn-sm">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </a>
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id" class="btn-delete btn-sm">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
                             }
-                            else
-                            {
-                                <span>@product.Price.ToString("N0")</span>
-                            }
-                        </td>
-                        <td style="max-width: 200px;" class="text-truncate">@product.Description</td>
-                        <td>@product.Category?.Name</td>
-                        <td>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id"
-                               class="btn btn-outline-pink btn-sm me-1">Xem</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id"
-                               class="btn btn-outline-warning btn-sm me-1">Sửa</a>
-                            <a asp-area="Admin" asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id"
-                               class="btn btn-outline-danger btn-sm">Xóa</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="no-product">Chưa có sản phẩm nào</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* PHÂN TRANG *@
+        @if (totalPages > 1)
+        {
+            <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+                <nav>
+                    <ul class="pagination pagination-pink mb-0">
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = i })">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="hideModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ẩn sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn ẩn <b id="hideName"></b> (ID: <span id="hideIdText"></span>) không?
+                <small class="text-muted d-block mt-2">Sản phẩm sẽ không xuất hiện với khách hàng, và trạng thái sẽ chuyển sang <b>Tạm dừng</b>.</small>
+            </div>
+            <div class="modal-footer">
+                <form id="hideForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="hideId" name="id" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="submit" class="btn btn-danger">Ẩn sản phẩm</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
-    :root {
-        --pink-main: #FF6185;
-        --pink-accent: #FF6B6B;
+    .product-wrapper {
+        max-width: 1300px;
+        margin: auto;
     }
 
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
     }
 
-    .text-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .admin-product-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+        background-color: #fff;
+        overflow: hidden;
     }
 
-    .btn-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+        .admin-product-card .card-header {
+            background-color: #FFF0F5;
+            padding: 12px 20px;
+            border-bottom: 1px solid #FFB6C1;
+        }
+
+    .btn-add {
+        background-color: #FF6185;
         color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-add:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .product-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .product-table th, .product-table td {
+        vertical-align: middle;
+    }
+
+    .product-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .product-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .product-img {
+        width: 75px;
+        height: 75px;
+        object-fit: cover;
+        border-radius: 8px;
+        transition: transform 0.2s ease;
+    }
+
+        .product-img:hover {
+            transform: scale(1.07);
+        }
+
+    .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-detail, .btn-edit, .btn-delete {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
         border: none;
         transition: 0.3s;
     }
 
-        .btn-gradient-pink:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-    .btn-outline-pink {
-        border: 1px solid var(--pink-main);
-        color: var(--pink-main);
-        background-color: #fff;
-        transition: 0.3s;
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
     }
 
-        .btn-outline-pink:hover {
-            background-color: var(--pink-accent);
-            border-color: var(--pink-accent);
+        .btn-detail:hover {
+            background-color: #FF6185;
             color: #fff;
         }
 
-    table {
-        border-radius: 0.75rem;
-        overflow: hidden;
-        font-size: 0.95rem;
+    .btn-edit {
+        border: 2px solid green;
+        color: green;
+        background-color: transparent;
     }
 
-        table tbody tr:hover {
-            background-color: #fff0f4;
+        .btn-edit:hover {
+            background-color: green;
+            color: #fff;
         }
+
+    .btn-delete {
+        border: 2px solid red;
+        color: red;
+        background-color: transparent;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .no-product {
+        text-align: center;
+        color: #777;
+        padding: 20px 0;
+    }
+
+    /* Pagination style */
+    .pagination-pink .page-link {
+        color: #FF6185;
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination-pink .page-link:hover {
+            background-color: #FFB6C1;
+            color: #fff;
+        }
+
+    .pagination-pink .active .page-link {
+        background-color: #FF6185;
+        border-color: #FF6185;
+        color: #fff;
+    }
 </style>
+@section Scripts {
+    <script>
+        (() => {
+          const SHOW_DELETED = @Html.Raw((ViewBag.ShowDeleted == true ? "true" : "false"));
+
+          // Template URL (id=0 rồi thay 0 bằng id thật, hỗ trợ cả dạng /0 và ?id=0)
+          const UPDATE_TPL  = '@Url.Action("Update", "Product", new { area = "Admin", id = 0 })';
+          const DETAILS_TPL = '@Url.Action("Details", "Product", new { area = "Admin", id = 0 })';
+          const HIDE_URL    = '@Url.Action("Hide", "Product", new { area = "Admin" })';
+          const UNHIDE_URL  = '@Url.Action("Unhide", "Product", new { area = "Admin" })';
+
+          const replaceId = (tpl, id) =>
+            tpl.replace(/\/0(?=$)/, '/' + id)    // .../0  -> .../id
+               .replace(/=0(?=(&|$))/, '=' + id); // ?id=0 -> ?id=id
+
+          // ===== Modal Ẩn =====
+          const hideModalEl = document.getElementById('hideModal');
+          const hideNameEl  = document.getElementById('hideName');
+          const hideIdText  = document.getElementById('hideIdText');
+          const hideIdInput = document.getElementById('hideId');
+          const hideForm    = document.getElementById('hideForm');
+          const bsModal     = new bootstrap.Modal(hideModalEl);
+
+          const getToken = () =>
+            hideForm.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+          // ===== Event-delegation: mở modal Ẩn cho cả nút có sẵn & nút vừa render =====
+          document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.js-hide');
+            if (!btn) return;
+
+            const id   = btn.dataset.id;
+            const row  = document.querySelector(`tr[data-row-id="${id}"]`);
+            const name = btn.dataset.name || (row?.querySelector('td:nth-child(2)')?.textContent.trim() ?? ('#' + id));
+
+            hideNameEl.textContent   = name;
+            hideIdText.textContent   = id;
+            hideIdInput.value        = id;
+            hideForm.dataset.rowId   = id;
+            bsModal.show();
+          });
+
+          // ===== Submit Ẩn (AJAX) =====
+          hideForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id    = hideIdInput.value;
+            const token = getToken();
+
+            try {
+              const res  = await fetch(HIDE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id, __RequestVerificationToken: token })
+              });
+              const data = await res.json();
+
+              if (data?.success) {
+                const row = document.querySelector(`tr[data-row-id="${id}"]`);
+                if (row) {
+                  setStatus(row, 'hidden');
+                  if (SHOW_DELETED) {
+                    renderActions(row, 'hidden');     // đổi sang: Xem chi tiết + Phục hồi
+                  } else {
+                    row.remove();                     // trang không showDeleted → bỏ dòng
+                  }
+                }
+                bsModal.hide();
+              } else {
+                alert(data?.message || 'Ẩn thất bại.');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Có lỗi khi ẩn sản phẩm.');
+            }
+          });
+
+          // ===== Event-delegation: Phục hồi (AJAX) =====
+          document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.js-unhide');
+            if (!btn) return;
+
+            e.preventDefault();
+            const id    = btn.dataset.id;
+            const token = getToken();
+            if (!token) { alert('Thiếu anti-forgery token.'); return; }
+
+            try {
+              const res  = await fetch(UNHIDE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id, __RequestVerificationToken: token })
+              });
+              const data = await res.json();
+
+              if (data?.success) {
+                const row = document.querySelector(`tr[data-row-id="${id}"]`);
+                if (row) {
+                  setStatus(row, 'active');           // → Đang bán
+                  renderActions(row, 'active');       // 🔁 render lại đủ 3 nút: Xem chi tiết + Sửa + Ẩn
+                }
+              } else {
+                alert(data?.message || 'Phục hồi thất bại.');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Có lỗi khi phục hồi sản phẩm.');
+            }
+          });
+
+          // ===== Helpers =====
+          function setStatus(row, mode) {
+            const statusCell = row.querySelector('.status-cell');
+            if (!statusCell) return;
+            statusCell.innerHTML = (mode === 'active')
+              ? '<span class="badge bg-success status-badge">Đang bán</span>'
+              : '<span class="badge bg-secondary status-badge">Ngừng bán</span>';
+          }
+
+          function renderActions(row, mode) {
+            const id         = row.getAttribute('data-row-id');
+            const name       = row.querySelector('td:nth-child(2)')?.textContent.trim() ?? ('#' + id);
+            const actionsTd  = row.lastElementChild;
+            if (!actionsTd) return;
+
+            if (mode === 'active') {
+              actionsTd.innerHTML = `
+                <a href="${replaceId(DETAILS_TPL, id)}"
+                   class="btn-action btn-delete btn-sm">
+                   <i class="bi bi-trash"></i> Xem chi tiết
+                </a>
+                <a href="${replaceId(UPDATE_TPL, id)}"
+                   class="btn-action btn-edit btn-sm">
+                   <i class="bi bi-pencil"></i> Sửa
+                </a>
+                <button type="button"
+                        class="btn-action btn-delete btn-sm js-hide"
+                        data-id="${id}" data-name="${encodeHtml(name)}">
+                  <i class="bi bi-eye-slash"></i> Ẩn
+                </button>`;
+            } else { // hidden
+              actionsTd.innerHTML = `
+                <a href="${replaceId(DETAILS_TPL, id)}"
+                   class="btn-action btn-delete btn-sm">
+                   <i class="bi bi-trash"></i> Xem chi tiết
+                </a>
+                <button type="button"
+                        class="btn-action btn-edit btn-sm js-unhide"
+                        data-id="${id}">
+                  <i class="bi bi-arrow-counterclockwise"></i> Phục hồi
+                </button>`;
+            }
+          }
+
+          function encodeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({
+              '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'
+            }[c]));
+          }
+        })();
+    </script>
+}
+
+

@@ -1,0 +1,124 @@
+﻿@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "🛍️ Khuyến mãi của tôi";
+}
+
+<section class="order-wrapper py-5">
+    <h2 class="section-title">🛍️ Khuyến mãi của tôi</h2>
+
+    @if (Model == null || !Model.Any())
+    {
+        <p class="no-promotions">Bạn chưa lưu mã khuyến mãi nào.</p>
+    }
+    else
+    {
+        <table class="table table-bordered align-middle text-center shadow-sm">
+            <thead class="table-pink bg-light">
+                <tr>
+                    <th>Tên khuyến mãi</th>
+                    <th>Mã</th>
+                    <th>Giảm giá</th>
+                    <th>Ngày lưu</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var promo in Model)
+                {
+                    bool isExpired = promo.EndDate < DateTime.Now;
+                    bool isUsed = promo.IsUsed;
+                    bool isActive = !isExpired && !isUsed;
+
+                    <tr>
+                        <td>@promo.Title</td>
+                        <td><span class="fw-bold text-danger">@promo.Code</span></td>
+                        <td>@(promo.IsPercent ? $"{promo.Discount}%" : $"{promo.Discount:N0}đ")</td>
+                        <td>@promo.DateSaved.ToString("dd/MM/yyyy")</td>
+
+                        <td>
+                            @if (isExpired)
+                            {
+                                <span class="badge bg-secondary">Hết hạn</span>
+                            }
+                            else if (isUsed)
+                            {
+                                <span class="badge bg-success">Đã dùng</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Còn hiệu lực</span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (isActive)
+                            {
+                                <a asp-action="Apply"
+                                   asp-route-id="@promo.Id"
+                                   class="btn btn-sm btn-outline-success me-2">
+                                    🛒 Áp dụng
+                                </a>
+                            }
+
+                            <form asp-action="RemoveSavedPromotion" method="post" class="d-inline">
+                                <input type="hidden" name="promotionId" value="@promo.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    🗑 Xóa
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<style>
+    .order-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding: 15px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .table-pink th {
+        background-color: #ffe5ec;
+        color: #FF6185;
+    }
+
+    .btn-sm {
+        padding: 3px 10px;
+        font-size: 0.85rem;
+    }
+
+    .fw-bold.text-danger {
+        color: #FF6185 !important;
+    }
+
+    .no-promotions {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #666;
+        margin-top: 40px;
+    }
+</style>

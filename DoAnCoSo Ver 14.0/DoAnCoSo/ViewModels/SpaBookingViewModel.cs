@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DoAnCoSo.Models;
 using System.ComponentModel.DataAnnotations;
-using DoAnCoSo.Models;
 
 namespace DoAnCoSo.ViewModels
 {
     public class SpaBookingViewModel
     {
+        public int? AppointmentId { get; set; } // để biết đang sửa lịch nào
+
         [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
         [Display(Name = "Số điện thoại")]
         [Phone(ErrorMessage = "Số điện thoại không hợp lệ.")]
@@ -54,5 +54,10 @@ namespace DoAnCoSo.ViewModels
         public List<Pet> UserPets { get; set; } = new List<Pet>();
 
         public decimal? CalculatedPrice { get; set; }
+
+        public bool IsUpdate { get; set; } = false;
+
+        [Required]
+        public string UserId { get; set; }
     }
 }

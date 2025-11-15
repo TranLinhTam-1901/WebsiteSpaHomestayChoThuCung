@@ -25,11 +25,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     @* liên kết để lấy icon form đăng ký *@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <link rel="stylesheet" href="~/css/site.css">
     <link rel="stylesheet" href="~/css/style.css">
+    <link rel="stylesheet" href="~/css/adminChat.css">
 </head>
 
-<body>
+<body data-role="admin">
     <header class="header">
         <div class="top-bar clearfix">
             <div class="container">
@@ -315,7 +319,7 @@
                     </li>
 
                     <li class="nav-item ">
-                        <a asp-area="" asp-controller="Promotion" asp-action="Index" class="nav-link" title="KHUYẾN MÃI">
+                        <a asp-area="Admin" asp-controller="Promotion" asp-action="Index" class="nav-link" title="KHUYẾN MÃI">
                             KHUYẾN MÃI
                         </a>
                     </li>
@@ -342,28 +346,43 @@
                             <div class="container">
                                 <ul class="level0">
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Categories" asp-action="" title="Quản lý danh mục sản phẩm">
-                                            Quản lý danh mục sản phẩm
+                                        <a class="hmega" asp-area="Admin" asp-controller="Categories" asp-action="" title="QL Danh mục sản phẩm">
+                                            QL Danh mục sản phẩm
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Product" asp-action="" title="Quản lý sản phẩm">
-                                            Quản lý sản phẩm
+                                        <a class="hmega" asp-area="Admin" asp-controller="Product" asp-action="" title="QL Sản phẩm">
+                                            QL Sản phẩm
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="User" asp-action="UserList" title="Quản lý tài khoản">
-                                            Quản lý tài khoản
+                                        <a class="hmega" asp-area="Admin" asp-controller="Order" asp-action="Index" title="QL Đơn hàng">
+                                            QL Đơn hàng
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Order" asp-action="Index" title="Quản lý Đơn hàng">
-                                            Quản lý Đơn hàng
+                                        <a class="hmega" asp-area="Admin" asp-controller="Inventory" asp-action="Index" title="Quản lý kho">
+                                            QL kho hàng
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
-                                        <a class="hmega" asp-area="Admin" asp-controller="Revenue" asp-action="Index" title="Quản lý doanh thu">
-                                            Quản lý doanh thu
+                                        <a class="hmega" asp-area="Admin" asp-controller="Revenue" asp-action="Index" title="QL Doanh thu">
+                                            QL Doanh thu
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Pet" asp-action="Index" title="QL Hồ sơ thú cưng">
+                                            QL Hồ sơ thú cưng
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="Blockchain" asp-action="Index" title="QL Blockchain">
+                                            QL Blockchain
+                                        </a>
+                                    </li>
+                                    <li class="level1 parent item fix-navs">
+                                        <a class="hmega" asp-area="Admin" asp-controller="User" asp-action="UserList" title="QL Tài khoản">
+                                            QL Tài khoản
                                         </a>
                                     </li>
                                     <li class="level1 parent item fix-navs">
@@ -403,7 +422,7 @@
     @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
     <div class="modal fade booking-modal" id="bookingOptionsModal" tabindex="-1" aria-labelledby="bookingOptionsModalLabel" aria-hidden="true">
         @*Modal để hiển thị tùy chọn trong nút đặt hẹn của thanh nav*@
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="bookingOptionsModalLabel">Chọn dịch vụ bạn muốn đặt lịch</h5>
@@ -414,13 +433,13 @@
                     <p class="lead mb-4">Vui lòng chọn loại dịch vụ bạn muốn đặt:</p>
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
                                     <i class="bi bi-house-door-fill display-4 text-homestay-theme"></i>
                                     <h5 class="card-title mt-3">Đặt lịch Homestay</h5>
                                     <p class="card-text text-muted">Nơi nghỉ ngơi thoải mái cho thú cưng của bạn.</p>
-                                    <a href="@Url.Action("BookAppointmentHomestay", "Appointments", new { area = "" })"
+                                    <a asp-area="Admin" asp-controller="Service" asp-action="AppointmentHomestay"
                                        class="btn btn-homestay-theme mt-3">
                                         Chọn Homestay
                                     </a>
@@ -428,15 +447,29 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <div class="card h-100">
                                 <div class="card-body">
                                     <i class="bi bi-heart-pulse-fill display-4 text-spa-theme"></i>
                                     <h5 class="card-title mt-3">Đặt lịch Spa</h5>
                                     <p class="card-text text-muted">Chăm sóc và làm đẹp cho thú cưng yêu.</p>
-                                    <a href="@Url.Action("BookAppointmentSpa", "Appointments", new { area = "" })"
+                                    <a asp-area="Admin" asp-controller="Service" asp-action="AppointmentSpa"
                                        class="btn btn-spa-theme mt-3">
                                         Chọn Spa
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-hospital-fill display-4 text-spa-theme"></i>
+                                    <h5 class="card-title mt-3">Đặt lịch Thú y</h5>
+                                    <p class="card-text text-muted">Khám chữa bệnh cho thú cưng.</p>
+                                    <a asp-area="Admin" asp-controller="Service" asp-action="AppointmentVet"
+                                       class="btn btn-spa-theme mt-3">
+                                        Chọn Thú y
                                     </a>
                                 </div>
                             </div>
@@ -702,19 +735,26 @@
 
     <!-- Swiper -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
     <script>
+        // ------------------- SWIPER -------------------
         var swiper = new Swiper(".mySwiper", {
             slidesPerView: 1,
             spaceBetween: 20,
             loop: false,
             autoplay: { delay: 3000, disableOnInteraction: false },
             navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
-            breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 }, 1200: { slidesPerView: 4 } }
+            breakpoints: {
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+                1200: { slidesPerView: 4 }
+            }
         });
-    </script>
 
-    <!-- Active nav menu -->
-    <script>
+        // ------------------- ACTIVE NAV -------------------
         function normalizePath(path) {
             return path.toLowerCase().replace(/\/+$/, ""); // bỏ hết dấu / ở cuối
         }
@@ -749,27 +789,28 @@
                 if (isActive) item.classList.add("active");
             });
         });
-    </script>
 
-    <!-- SignalR ForceLogout -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script>
+        // ------------------- SIGNALR FORCE LOGOUT -------------------
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/chathub")
             .build();
 
         connection.on("ForceLogout", () => {
             alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
-
-            // Redirect ngay sang trang login
-            window.location.href = "/Identity/Account/Login";
+            window.location.href = "/Identity/Account/Login"; // redirect sang login
         });
 
         connection.start().catch(err => console.error("SignalR connection error:", err));
     </script>
 
+    <!-- 🗓️ Flatpickr (CSS + JS + locale) dùng chung cho toàn site -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 

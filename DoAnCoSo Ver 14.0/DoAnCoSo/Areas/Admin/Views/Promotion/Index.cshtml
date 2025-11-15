@@ -1,0 +1,222 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Promotion>
+
+@{
+    ViewData["Title"] = "🎁 Quản lý khuyến mãi";
+}
+
+<div class="promotion-wrapper py-5">
+    <h2 class="section-title">🎁 Quản lý khuyến mãi</h2>
+
+    <div class="promotion-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách khuyến mãi</h4>
+            <div>
+                <a asp-action="Create" class="btn-add">
+                    <i class="fas fa-plus-circle"></i> Thêm khuyến mãi mới
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center promotion-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th>Tiêu đề</th>
+                            <th>Mã</th>
+                            <th>Giảm</th>
+                            <th>Thời gian</th>
+                            <th>Hoạt động</th>
+                            <th>Sử dụng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var promo in Model)
+                            {
+                                var isExpired = promo.EndDate < DateTime.Now;
+                                <tr class="@(isExpired ? "text-muted bg-light" : "")">
+                                    <td>@promo.Title</td>
+                                    <td>@promo.Code</td>
+                                    <td>@(promo.IsPercent ? $"{promo.Discount:0}%" : $"{promo.Discount:N0}đ")</td>
+                                    <td>@promo.StartDate.ToString("dd/MM/yyyy") - @promo.EndDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@(promo.IsActive ? "🟢" : "🔴")</td>
+                                    <td>
+                                        <a asp-action="UsageDetails" asp-route-id="@promo.Id"
+                                           class="btn-detail btn-sm">
+                                            Xem lượt dùng
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="actions">
+                                            <a asp-action="Edit" asp-route-id="@promo.Id"
+                                               class="btn-edit btn-sm">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </a>
+                                            <form asp-action="Delete" asp-route-id="@promo.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn-delete btn-sm"
+                                                        onclick="return confirm('Xác nhận xóa khuyến mãi này?')">
+                                                    <i class="fas fa-trash-alt"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="no-promo">Chưa có khuyến mãi nào 🎁</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .promotion-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .promotion-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-add {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        margin-right: 10px;
+        transition: 0.3s;
+    }
+
+        .btn-add:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .btn-detail {
+        background-color: #8B5CF6; /* tím tươi nổi bật */
+        color: #fff;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-detail:hover {
+            background-color: #5B21B6;
+            color: #fff;
+        }
+
+    .promotion-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .promotion-table th, .promotion-table td {
+        vertical-align: middle;
+    }
+
+    .promotion-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .promotion-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .btn-edit {
+        border: 2px solid green;
+        background-color: transparent;
+        color: green;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12px;
+        transition: 0.3s;
+    }
+
+        .btn-edit:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 12px;
+        transition: 0.3s;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .no-promo {
+        text-align: center;
+        color: #777;
+        padding: 20px 0;
+    }
+
+    .btn-info {
+        border-radius: 20px;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+
+    .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>

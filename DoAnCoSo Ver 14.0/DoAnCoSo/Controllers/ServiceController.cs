@@ -1,8 +1,6 @@
 ﻿
-using Microsoft.AspNetCore.Mvc;
 using DoAnCoSo.Models;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace DoAnCoSo.Controllers

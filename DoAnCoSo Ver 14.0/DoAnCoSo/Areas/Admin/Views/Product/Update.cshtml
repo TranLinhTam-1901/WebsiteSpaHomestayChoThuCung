@@ -1,157 +1,300 @@
 ﻿@model DoAnCoSo.Models.Product
+@using System.Globalization
 @using Microsoft.AspNetCore.Mvc.Rendering
+
 @{
-    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    ViewData["Title"] = "🌸 Chỉnh sửa sản phẩm";
+    var hasVariants = Model.Variants != null && Model.Variants.Any();
 }
 
-<div class="container py-5 d-flex justify-content-center">
-    <div class="card shadow-lg border-0 rounded-4 w-75">
-        <div class="card-header bg-gradient-pink text-white text-center rounded-top-4">
-            <h2 class="mb-0">✏️ Chỉnh sửa sản phẩm</h2>
-        </div>
-        <div class="card-body p-4">
-            <form asp-action="Update" method="post" enctype="multipart/form-data">
-                <input type="hidden" asp-for="Id" />
+<link rel="stylesheet" href="~/css/booking.css" />
 
-                <div class="mb-3">
-                    <label asp-for="Name" class="form-label fw-semibold">Tên sản phẩm</label>
-                    <input asp-for="Name" class="form-control border-pink" placeholder="Nhập tên sản phẩm..." />
-                    <span asp-validation-for="Name" class="text-danger small"></span>
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">✏️ Chỉnh sửa sản phẩm</h2>
+
+        <form asp-action="Update" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="Name" class="form-control border-pink" />
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Price" class="form-label fw-semibold">Giá sản phẩm</label>
-                        <input asp-for="Price" class="form-control border-pink" placeholder="Nhập giá..." />
-                        <span asp-validation-for="Price" class="text-danger small"></span>
+                <div class="col-md-6">
+                    <label asp-for="CategoryId" class="form-label">Loại sản phẩm</label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select border-pink"></select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Price" class="form-label">Giá</label>
+                    <input asp-for="Price" type="number" min="0" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PriceReduced" class="form-label">Giá giảm</label>
+                    <input asp-for="PriceReduced" type="number" min="0" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="StockQuantity" class="form-label">Tồn kho</label>
+                    <input asp-for="StockQuantity" type="number" class="form-control border-pink" readonly/>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="LowStockThreshold" class="form-label">Ngưỡng cảnh báo</label>
+                    <input asp-for="LowStockThreshold" type="number" min="0" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Trademark" class="form-label">Thương hiệu</label>
+                    <input asp-for="Trademark" class="form-control border-pink" />
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="col-md-6">
+                    <label class="form-label">Trạng thái</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input pink-switch" asp-for="IsActive" />
+                        <label class="form-check-label pink-label">@(@Model.IsActive ? "Đang bán" : "Tạm dừng")</label>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="PriceReduced" class="form-label fw-semibold">Giá giảm (nếu có)</label>
-                        <input asp-for="PriceReduced" class="form-control border-pink" placeholder="Nhập giá giảm..." />
-                        <span asp-validation-for="PriceReduced" class="text-danger small"></span>
-                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Trademark" class="form-label fw-semibold">Thương hiệu</label>
-                    <input asp-for="Trademark" class="form-control border-pink" placeholder="Nhập thương hiệu..." />
-                    <span asp-validation-for="Trademark" class="text-danger small"></span>
+                <!-- Ảnh -->
+                <div class="col-md-6">
+                    <label class="form-label">Ảnh đại diện mới</label>
+                    <input type="file" name="imageUrl" class="form-control" id="imageInput" />
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label fw-semibold">Mô tả sản phẩm</label>
-                    <textarea asp-for="Description" class="form-control border-pink" rows="3" placeholder="Nhập mô tả..."></textarea>
-                    <span asp-validation-for="Description" class="text-danger small"></span>
+                <div class="text-center mt-4">
+                    <h5>Ảnh hiện tại</h5>
+                    <img src="@Model.ImageUrl" id="previewImage" style="max-width: 200px;" class="rounded shadow border-pink" />
                 </div>
-
-                <div class="mb-3">
-                    <label asp-for="CategoryId" class="form-label fw-semibold">Loại sản phẩm</label>
-                    <select asp-for="CategoryId" asp-items="@ViewBag.Categories" class="form-control border-pink"></select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="imageInput" class="form-label fw-semibold">Ảnh sản phẩm</label>
-                    <input type="file" name="imageUrl" class="form-control border-pink" id="imageInput" />
-                </div>
-
-                <div class="mb-3">
-                    <label for="additionalImagesInput" class="form-label fw-semibold">Ảnh sản phẩm khác (Upload nhiều file)</label>
-                    <input type="file" id="additionalImagesInput" name="images" class="form-control border-pink" multiple />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Hương vị</label>
-                    @for (int i = 0; i < 3; i++)
-                    {
-                        <input type="text" name="flavorsList[@i]" class="form-control border-pink mb-2" placeholder="Nhập hương vị..." />
-                    }
-                </div>
-
-                <div class="text-center">
-                    <button type="submit" class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
-                        💾 Lưu
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill ms-2">
-                        ← Trở lại
-                    </a>
-                </div>
-            </form>
-
-            <div class="text-center mt-4">
-                <h5 class="text-gradient-pink">Ảnh hiện tại</h5>
-                <img src="@Model.ImageUrl" alt="Ảnh sản phẩm" class="img-fluid rounded shadow-sm" style="max-width:200px;" id="previewImage" />
             </div>
-        </div>
+
+            <!-- Biến thể -->
+            @if (hasVariants)
+            {
+                var variants = Model.Variants.ToList();
+
+                <div class="mt-4">
+                    <label class="form-label fw-semibold mb-2">Biến thể</label>
+
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 180px;">Tên</th>
+
+                                <th style="width: 200px;">SKU</th>   <!-- SKU rộng hơn -->
+
+                                <th style="width: 180px;">Giá override</th>
+
+                                <th style="width: 110px;">Tồn kho</th>
+
+                                <th style="width: 80px;">Ngưỡng</th>  <!-- Ngưỡng nhỏ lại -->
+
+                                <th style="width: 60px;">Hoạt động</th>
+
+                                <th style="width: 60px;">Hành động</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="variantRows">
+                            @for (int i = 0; i < variants.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="VariantIds[@i]" value="@variants[i].Id" />
+                                        <input class="form-control border-pink" name="VariantNames[@i]" value="@variants[i].Name" />
+                                    </td>
+
+                                    <td><input class="form-control border-pink" name="VariantSkus[@i]" value="@variants[i].Sku" /></td>
+
+                                    <td><input type="number" step="0.01" class="form-control border-pink" name="VariantPriceOverrides[@i]" value="@(variants[i].PriceOverride)" /></td>
+
+                                    <td><input type="number" min="0" class="form-control border-pink" name="VariantStocks[@i]" value="@variants[i].StockQuantity" read /></td>
+
+                                    <td><input type="number" min="0" class="form-control border-pink" name="VariantThresholds[@i]" value="@variants[i].LowStockThreshold" /></td>
+
+                                    <td class="text-center">
+                                        <input type="hidden" name="VariantIsActives[@i]" value="false" />
+                                        <input type="checkbox" class="form-check-input pink-switch" name="VariantIsActives[@i]" value="true" @(variants[i].IsActive ? "checked" : "") />
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button type="button" class="btn-delete btn-sm" onclick="removeRow(this)">Xóa</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <button type="button" id="btnAddVariant" class="btn-detail">+ Thêm biến thể</button>
+                </div>
+            }
+
+            <!-- Mô tả -->
+            <div class="mb-3 mt-3">
+                <label asp-for="Description" class="form-label">Mô tả sản phẩm</label>
+                <textarea asp-for="Description" class="form-control border-pink" rows="3"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Lưu thay đổi</button>
+            </div>
+        </form>
     </div>
 </div>
 
-<script>
-    document.querySelectorAll('input[type="file"]').forEach(input => {
-        input.addEventListener('change', function (event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const img = document.getElementById("previewImage");
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    });
-</script>
-
 <style>
-    :root {
-        --pink-main: #FF6185;
-        --pink-accent: #FF6B6B;
+    .booking-card {
+        border-radius: 1rem;
+        background: white;
+        padding: 2rem;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
     }
 
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
+    .booking-title {
+        color: #FF6185;
     }
 
-    .text-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .form-control {
+        border-radius: .5rem;
     }
 
-    .btn-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: #fff;
-        border: none;
-        transition: 0.3s;
+    /* Nút switch màu hồng khi bật, trắng khi tắt */
+    .form-switch .form-check-input.pink-switch {
+        background-color: #e0c7cd; /* màu khi tắt */
+        border-color: #e0c7cd;
+        transition: background-color 0.25s, border-color 0.25s;
     }
 
-        .btn-gradient-pink:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
+        /* Khi bật: màu hồng */
+        .form-switch .form-check-input.pink-switch:checked {
+            background-color: #FF6185 !important;
+            border-color: #FF6185 !important;
         }
 
-    .btn-outline-pink {
-        border: 1px solid var(--pink-main);
-        color: var(--pink-main);
-        background-color: #fff;
-        transition: 0.3s;
+        /* Bỏ viền focus */
+        .form-switch .form-check-input.pink-switch:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+    /* Label chữ màu đen */
+    .pink-label {
+        color: #000 !important;
+        font-weight: 500;
     }
 
-        .btn-outline-pink:hover {
-            background-color: var(--pink-accent);
-            border-color: var(--pink-accent);
+    /* Khi focus nhưng chưa tick: knob màu hồng mờ */
+    .form-switch .form-check-input.pink-switch:focus:not(:checked) {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23FF6185'/%3e%3c/svg%3e");
+    }
+
+    /* Khi tick: knob màu trắng */
+    .form-switch .form-check-input.pink-switch:checked {
+        background-color: #FF6185; /* track màu hồng */
+        border-color: #FF6185;
+    }
+
+        /* Khi tick + focus: knob vẫn trắng */
+        .form-switch .form-check-input.pink-switch:checked:focus {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+        }
+
+    .btn-detail {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: 0.3s;
+        background-color: #FFB6C1;
+        color: #000;
+        font-size: 16px;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
             color: #fff;
         }
 
-    .border-pink {
-        border: 1px solid var(--pink-main);
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
     }
 
-        .border-pink:focus {
-            border-color: var(--pink-accent);
-            box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
         }
 
-    .card {
-        border-radius: 1rem;
+    /* Ẩn mũi tên trong input type=number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
     }
 </style>
+
+<script>
+    document.getElementById('imageInput')?.addEventListener('change', e => {
+        const f = e.target.files?.[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = ev => previewImage.src = ev.target.result;
+        r.readAsDataURL(f);
+    });
+
+    function removeRow(btn) {
+        btn.closest("tr").remove();
+        renumberRows();
+    }
+
+    function renumberRows() {
+        const rows = [...document.querySelectorAll("#variantRows tr")];
+        rows.forEach((tr, i) => {
+            tr.querySelectorAll("input").forEach(inp => {
+                inp.name = inp.name.replace(/\[\d+\]/, `[${i}]`);
+            });
+        });
+    }
+
+    document.getElementById("btnAddVariant")?.addEventListener("click", () => {
+        const idx = document.querySelectorAll("#variantRows tr").length;
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>
+                <input type="hidden" name="VariantIds[${idx}]" value="0" />
+                <input class="form-control border-pink" name="VariantNames[${idx}]" />
+            </td>
+            <td><input class="form-control border-pink" name="VariantSkus[${idx}]" /></td>
+            <td><input type="number" class="form-control border-pink" name="VariantPriceOverrides[${idx}]" /></td>
+            <td><input type="number" class="form-control border-pink" name="VariantStocks[${idx}]" value="0" /></td>
+            <td><input type="number" class="form-control border-pink" name="VariantThresholds[${idx}]" value="0" /></td>
+            <td class="text-center">
+                <input type="hidden" name="VariantIsActives[${idx}]" value="false" />
+                <input type="checkbox" name="VariantIsActives[${idx}]" class="form-check-input pink-switch" value="true" checked />
+            </td>
+            <td><button type="button" class="btn-delete btn-sm" onclick="removeRow(this)">Xóa</button></td>
+        `;
+
+        document.getElementById("variantRows").appendChild(tr);
+    });
+</script>

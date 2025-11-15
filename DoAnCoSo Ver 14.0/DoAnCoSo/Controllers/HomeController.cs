@@ -1,12 +1,8 @@
-﻿using System.Diagnostics;
-using DoAnCoSo.Models;
+﻿using DoAnCoSo.Models;
 using DoAnCoSo.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.Linq;
-using DoAnCoSo.ViewModels;
-using System.Security.Claims;
+using System.Diagnostics;
 
 namespace DoAnCoSo.Controllers
 {
@@ -27,6 +23,7 @@ namespace DoAnCoSo.Controllers
 
         public IActionResult Index()
         {
+         
             // Nếu chưa có dữ liệu trong session thì random, ngược lại thì lấy ra
             var catJson = HttpContext.Session.GetString("CatProducts");
             var dogJson = HttpContext.Session.GetString("DogProducts");
@@ -44,13 +41,17 @@ namespace DoAnCoSo.Controllers
 
                 // Lấy 5 sản phẩm ngẫu nhiên theo category
                 catProducts = _context.Products
-                    .Where(p => p.CategoryId == catpateCategoryId || p.CategoryId == catCategoryId)
+                    .Where(p =>
+                    !p.IsDeleted && p.IsActive && 
+                    p.CategoryId == catpateCategoryId || p.CategoryId == catCategoryId)
                     .OrderBy(p => Guid.NewGuid())
                     .Take(5)
                     .ToList();
 
                 dogProducts = _context.Products
-                    .Where(p => p.CategoryId == dogpateCategoryId || p.CategoryId == dogCategoryId)
+                    .Where(p =>
+                    !p.IsDeleted && p.IsActive &&
+                    p.CategoryId == dogpateCategoryId || p.CategoryId == dogCategoryId)
                     .OrderBy(p => Guid.NewGuid())
                     .Take(5)
                     .ToList();
@@ -67,7 +68,9 @@ namespace DoAnCoSo.Controllers
             }
 
             var discountedProducts = _context.Products
-                .Where(p => p.PriceReduced.HasValue && p.PriceReduced < p.Price)
+                .Where(p =>
+                 !p.IsDeleted && p.IsActive && 
+                 p.PriceReduced.HasValue && p.PriceReduced < p.Price)
                 .ToList();
 
             var viewModel = new HomeViewModel

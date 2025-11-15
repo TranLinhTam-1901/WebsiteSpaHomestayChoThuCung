@@ -3,8 +3,270 @@
 @{
     ViewData["Title"] = "💳 Thanh Toán";
 }
+<div class="checkout-wrapper py-5">
+    <div class="checkout-box">
+        <h2 class="checkout-title">@ViewData["Title"]</h2>
 
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                    @foreach (var modelStateEntry in ViewData.ModelState.Values)
+                    {
+                        foreach (var error in modelStateEntry.Errors)
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (Model != null && Model.CartItemsFromDb != null && Model.CartItemsFromDb.Any())
+        {
+            <h5 class="mb-3">🛒 Các sản phẩm đã chọn:</h5>
+            <ul class="list-group mb-4">
+                @foreach (var item in Model.CartItemsFromDb)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="img-thumbnail me-2" style="width: 50px;">
+                            @item.Product.Name (@item.Quantity x @((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price).ToString("N0"))đ)
+                            @{
+                                var hasVariantName = !string.IsNullOrWhiteSpace(item.SelectedVariantName);
+                                var hasVariantId = item.VariantId.HasValue;
+                            }
+                            @if (hasVariantName)
+                            {
+                                <small class="text-muted ms-1">(Hương vị: @item.SelectedVariantName)</small>
+                            }
+                            else if (hasVariantId)
+                            {
+                                <small class="text-muted ms-1">(Hương vị: #@item.VariantId)</small>
+                            }
+
+                            @* Giữ nguyên hiển thị hương vị khi không dùng biến thể *@
+                            @if (!string.IsNullOrEmpty(item.SelectedFlavor))
+                            {
+                                <small class="text-muted ms-1">(Hương vị: @item.SelectedFlavor)</small>
+                            }
+                            @if (!string.IsNullOrEmpty(item.SelectedFlavor))
+                            {
+                                <small class="text-muted">(Hương vị: @item.SelectedFlavor)</small>
+                            }
+                        </div>
+                        <span class="fw-bold">@(((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price) * item.Quantity).ToString("N0"))đ</span>
+                    </li>
+                }
+            </ul>
+
+            <h4 class="text-end mb-4">Tổng tiền: <span class="text-danger fw-bold">@Model.CartTotal.ToString("N0")đ</span></h4>
+
+            <form asp-controller="ShoppingCart" asp-action="Checkout" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="IsBuyNowCheckout" />
+                @if (Model.IsBuyNowCheckout)
+                {
+                    <input type="hidden" asp-for="BuyNowProductId" />
+                    <input type="hidden" asp-for="BuyNowQuantity" />
+                    <input type="hidden" asp-for="BuyNowFlavor" />
+                    <input asp-for="BuyNowVariantId" type="hidden" />
+
+                }
+                else
+                {
+                    @for (int i = 0; i < Model.CartItemsFromDb.Count; i++)
+                    {
+                        <input type="hidden" name="SelectedCartItemIds[@i]" value="@Model.CartItemsFromDb[i].Id" />
+                    }
+                }
+                <input type="hidden" asp-for="CartTotal" />
+
+                <h5 class="mb-3">📦 Thông tin nhận hàng</h5>
+
+                <div class="mb-3">
+                    <label asp-for="Order.CustomerName" class="form-label">Họ và tên người nhận:</label>
+                    <input asp-for="Order.CustomerName" class="form-control" placeholder="Nhập tên người nhận..." />
+                    <span asp-validation-for="Order.CustomerName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.PhoneNumber" class="form-label">Số điện thoại:</label>
+                    <input asp-for="Order.PhoneNumber" class="form-control" type="tel" placeholder="Nhập số điện thoại..." />
+                    <span asp-validation-for="Order.PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.ShippingAddress" class="form-label">Địa chỉ giao hàng:</label>
+                    <textarea asp-for="Order.ShippingAddress" class="form-control" rows="3" placeholder="Nhập địa chỉ chi tiết..."></textarea>
+                    <span asp-validation-for="Order.ShippingAddress" class="text-danger"></span>
+                </div>
+
+                <h5 class="mb-3">🎁 Mã khuyến mãi</h5>
+
+                <div class="input-group mb-3">
+                    <input type="text" name="PromoCode" id="PromoCode" class="form-control" placeholder="Nhập mã khuyến mãi của bạn..." />
+                    <button type="button" id="btnSelectPromo" class="btn btn-outline-info">📋 Chọn mã</button>
+                    @* <button type="button" id="applyPromoBtn" class="btn btn-outline-success">Áp dụng</button> *@
+                </div>
+                <div id="promoResult" class="mt-2"></div>
+                <h5 class="mb-3">💰 Phương thức thanh toán</h5>
+
+                <div class="mb-3">
+                    <label asp-for="Order.PaymentMethod" class="form-label">Phương thức:</label>
+                    <select asp-for="Order.PaymentMethod" class="form-select">
+                        <option value="">-- Chọn phương thức --</option>
+                        <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                        <option value="BankTransfer">Chuyển khoản ngân hàng</option>
+                    </select>
+                    <span asp-validation-for="Order.PaymentMethod" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Order.Notes" class="form-label">Ghi chú (tùy chọn):</label>
+                    <textarea asp-for="Order.Notes" class="form-control" rows="2" placeholder="Ghi chú thêm về đơn hàng..."></textarea>
+                    <span asp-validation-for="Order.Notes" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-checkout w-100 mt-3">
+                    🛍️ Đặt Hàng Ngay
+                </button>
+            </form>
+            <!-- 🪄 Modal danh sách mã khuyến mãi -->
+            <div class="modal fade" id="promoModal" tabindex="-1" aria-labelledby="promoModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-pink text-white">
+                            <h5 class="modal-title" id="promoModalLabel">🎁 Chọn mã khuyến mãi phù hợp</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="promoList" class="row g-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center mt-4">
+                Không có sản phẩm nào được chọn để thanh toán. Vui lòng quay lại <a asp-action="Index">giỏ hàng</a>.
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+
+            // 🟩 [1] Sự kiện khi nhấn "Chọn mã"
+            document.getElementById("btnSelectPromo").addEventListener("click", async function () {
+                const cartTotal = parseFloat("@Model.CartTotal");
+                const res = await fetch(`/ShoppingCart/GetValidPromos?cartTotal=${cartTotal}`);
+                const promos = await res.json();
+
+                const listDiv = document.getElementById("promoList");
+                listDiv.innerHTML = "";
+
+                if (!promos.length) {
+                    listDiv.innerHTML = `<div class="alert alert-warning text-center">
+                        Không có mã nào phù hợp với đơn hàng này 😢
+                    </div>`;
+                    return;
+                }
+
+                       promos.forEach(p => {
+            const discountText = p.isPercent ? `${p.discount}%` : `${p.discount.toLocaleString()}đ`;
+
+            // 🧩 Nếu người dùng đã dùng mã này rồi
+            const isUsed = p.isUsedByUser;
+            const usedBadge = isUsed
+                ? `<span class="badge bg-secondary ms-2">Đã dùng</span>`
+                : "";
+            const disabledClass = isUsed ? "opacity-50" : "";
+            const applyButton = isUsed
+                ? `<button class="btn btn-secondary w-100" disabled>Đã sử dụng</button>`
+                : `<button class="btn btn-outline-success w-100 selectPromoBtn" data-code="${p.code}">
+                        Áp dụng mã ${p.code}
+                    </button>`;
+
+            const item = document.createElement("div");
+            item.className = "col-md-6";
+            item.innerHTML = `
+                <div class="card shadow-sm h-100 ${disabledClass}">
+                    <div class="card-body">
+                        <h5 class="fw-bold text-pink">${p.title} ${usedBadge}</h5>
+                        <p>${p.description || ""}</p>
+                        <p>💰 Giảm <b>${discountText}</b></p>
+                        <p>📅 HSD: ${new Date(p.endDate).toLocaleDateString()}</p>
+                        ${applyButton}
+                    </div>
+                </div>`;
+            listDiv.appendChild(item);
+        });
+                const modal = new bootstrap.Modal(document.getElementById("promoModal"));
+                modal.show();
+
+                // 🟩 [2] Khi chọn mã trong modal → tự động áp dụng (không cần nút Áp dụng)
+                listDiv.querySelectorAll(".selectPromoBtn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const code = btn.dataset.code;
+                        document.getElementById("PromoCode").value = code;
+                        modal.hide();
+                        applyPromoCode(code); // 🟢 gọi hàm trực tiếp, không dùng .click()
+                    });
+                });
+            });
+
+            // 🟩 [3] Hàm applyPromoCode — tách riêng, gọi trực tiếp
+            async function applyPromoCode(code) {
+                const total = parseFloat("@Model.CartTotal");
+
+                document.getElementById("promoResult").innerHTML =
+                    `<div class='alert alert-info text-center'>⏳ Đang kiểm tra mã khuyến mãi...</div>`;
+
+                try {
+                    const res = await fetch("/ShoppingCart/ValidatePromo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code, cartTotal: total })
+                    });
+
+                    const data = await res.json();
+                    document.getElementById("promoResult").innerHTML =
+                        `<div class='alert alert-${data.success ? "success" : "danger"} text-center'>
+                            ${data.message}
+                        </div>`;
+                } catch (err) {
+                    console.error("❌ Lỗi khi gọi API ValidatePromo:", err);
+                    document.getElementById("promoResult").innerHTML =
+                        `<div class='alert alert-danger text-center'>
+                            Không thể kiểm tra mã. Vui lòng thử lại sau.
+                        </div>`;
+                }
+            }
+
+        }); // kết thúc DOMContentLoaded
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
 <style>
+    .opacity-50 {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
     .checkout-wrapper {
         max-width: 960px;
         margin: auto;
@@ -93,149 +355,21 @@
     }
 
     @@media (max-width: 768px) {
-        .checkout-title
+        .checkout-title {
+            font-size: 1.4rem;
+        }
 
-    {
-        font-size: 1.4rem;
-    }
+        .section-subtitle {
+            font-size: 1rem;
+        }
 
-    .section-subtitle {
-        font-size: 1rem;
-    }
+        .form-label, .form-control, .form-select {
+            font-size: 0.9rem;
+        }
 
-    .form-label, .form-control, .form-select {
-        font-size: 0.9rem;
-    }
-
-    .btn-checkout {
-        font-size: 0.9rem;
-        padding: 8px 16px;
-    }
-
+        .btn-checkout {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
     }
 </style>
-
-<div class="checkout-wrapper py-5">
-    <div class="checkout-box">
-        <h2 class="checkout-title">@ViewData["Title"]</h2>
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger" role="alert">
-                @TempData["ErrorMessage"]
-            </div>
-        }
-
-        @if (!ViewData.ModelState.IsValid)
-        {
-            <div class="alert alert-danger" role="alert">
-                <ul class="mb-0">
-                    @foreach (var modelStateEntry in ViewData.ModelState.Values)
-                    {
-                        foreach (var error in modelStateEntry.Errors)
-                        {
-                            <li>@error.ErrorMessage</li>
-                        }
-                    }
-                </ul>
-            </div>
-        }
-
-        @if (Model != null && Model.CartItemsFromDb != null && Model.CartItemsFromDb.Any())
-        {
-            <h5 class="mb-3">🛒 Các sản phẩm đã chọn:</h5>
-            <ul class="list-group mb-4">
-                @foreach (var item in Model.CartItemsFromDb)
-                {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="img-thumbnail me-2" style="width: 50px;">
-                            @item.Product.Name (@item.Quantity x @((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price).ToString("N0"))đ)
-                            @if (!string.IsNullOrEmpty(item.SelectedFlavor))
-                            {
-                                <small class="text-muted">(Hương vị: @item.SelectedFlavor)</small>
-                            }
-                        </div>
-                        <span class="fw-bold">@(((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price) * item.Quantity).ToString("N0"))đ</span>
-                    </li>
-                }
-            </ul>
-
-            <h4 class="text-end mb-4">Tổng tiền: <span class="text-danger fw-bold">@Model.CartTotal.ToString("N0")đ</span></h4>
-
-            <form asp-controller="ShoppingCart" asp-action="Checkout" method="post">
-                @Html.AntiForgeryToken()
-
-                <input type="hidden" asp-for="IsBuyNowCheckout" />
-                @if (Model.IsBuyNowCheckout)
-                {
-                    <input type="hidden" asp-for="BuyNowProductId" />
-                    <input type="hidden" asp-for="BuyNowQuantity" />
-                    <input type="hidden" asp-for="BuyNowFlavor" />
-                }
-                else
-                {
-                    @for (int i = 0; i < Model.CartItemsFromDb.Count; i++)
-                    {
-                        <input type="hidden" name="SelectedCartItemIds[@i]" value="@Model.CartItemsFromDb[i].Id" />
-                    }
-                }
-                <input type="hidden" asp-for="CartTotal" />
-
-                <h5 class="mb-3">📦 Thông tin nhận hàng</h5>
-
-                <div class="mb-3">
-                    <label asp-for="Order.CustomerName" class="form-label">Họ và tên người nhận:</label>
-                    <input asp-for="Order.CustomerName" class="form-control" placeholder="Nhập tên người nhận..." />
-                    <span asp-validation-for="Order.CustomerName" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Order.PhoneNumber" class="form-label">Số điện thoại:</label>
-                    <input asp-for="Order.PhoneNumber" class="form-control" type="tel" placeholder="Nhập số điện thoại..." />
-                    <span asp-validation-for="Order.PhoneNumber" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Order.ShippingAddress" class="form-label">Địa chỉ giao hàng:</label>
-                    <textarea asp-for="Order.ShippingAddress" class="form-control" rows="3" placeholder="Nhập địa chỉ chi tiết..."></textarea>
-                    <span asp-validation-for="Order.ShippingAddress" class="text-danger"></span>
-                </div>
-
-                <h5 class="mb-3">💰 Phương thức thanh toán</h5>
-
-                <div class="mb-3">
-                    <label asp-for="Order.PaymentMethod" class="form-label">Phương thức:</label>
-                    <select asp-for="Order.PaymentMethod" class="form-select">
-                        <option value="">-- Chọn phương thức --</option>
-                        <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-                        <option value="BankTransfer">Chuyển khoản ngân hàng</option>
-                    </select>
-                    <span asp-validation-for="Order.PaymentMethod" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Order.Notes" class="form-label">Ghi chú (tùy chọn):</label>
-                    <textarea asp-for="Order.Notes" class="form-control" rows="2" placeholder="Ghi chú thêm về đơn hàng..."></textarea>
-                    <span asp-validation-for="Order.Notes" class="text-danger"></span>
-                </div>
-
-                <button type="submit" class="btn btn-checkout w-100 mt-3">
-                    🛍️ Đặt Hàng Ngay
-                </button>
-            </form>
-        }
-        else
-        {
-            <div class="alert alert-info text-center mt-4">
-                Không có sản phẩm nào được chọn để thanh toán. Vui lòng quay lại <a asp-action="Index">giỏ hàng</a>.
-            </div>
-        }
-    </div>
-</div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}

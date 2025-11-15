@@ -1,81 +1,77 @@
 ﻿@model DoAnCoSo.Models.Category
 @{
-    ViewData["Title"] = "Chỉnh sửa Danh Mục";
+    ViewData["Title"] = "✏️ Chỉnh sửa danh mục";
 }
 
-<div class="container py-5 d-flex justify-content-center">
-    <div class="card shadow-lg border-0 rounded-4 w-50">
-        <div class="card-header bg-gradient-pink text-white text-center rounded-top-4">
-            <h2 class="mb-0">✏️ Chỉnh sửa Danh Mục</h2>
-        </div>
-        <div class="card-body p-4">
-            <form asp-action="Update" method="post">
-                <input type="hidden" asp-for="Id" />
+<link rel="stylesheet" href="~/css/booking.css" />
 
-                <div class="mb-3">
-                    <label asp-for="Name" class="form-label fw-semibold">Tên danh mục</label>
-                    <input asp-for="Name" class="form-control border-pink" placeholder="Nhập tên danh mục..." />
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <form asp-action="Update" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+            <div class="row g-3 mb-3">
+                <div class="col-md-12">
+                    <label asp-for="Name" class="form-label">Tên danh mục</label>
+                    <input asp-for="Name" class="form-control" placeholder="Nhập tên danh mục..." required />
                     <span asp-validation-for="Name" class="text-danger small"></span>
                 </div>
+            </div>
 
-                <div class="text-center">
-                    <button type="submit" class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
-                        💾 Lưu
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill ms-2">
-                        ← Trở lại
-                    </a>
-                </div>
-            </form>
-        </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">
+                    ← Quay lại
+                </a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">
+                    💾 Lưu danh mục
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <style>
-    :root {
-        --pink-main: #FF6185;
-        --pink-accent: #FF6B6B;
-    }
-
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-    }
-
-    .btn-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: #fff;
-        border: none;
-        transition: 0.3s;
-    }
-
-        .btn-gradient-pink:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-    .btn-outline-pink {
-        border: 1px solid var(--pink-main);
-        color: var(--pink-main);
+    /* Card giống form Add Pet */
+    .booking-card {
         background-color: #fff;
-        transition: 0.3s;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
     }
 
-        .btn-outline-pink:hover {
-            background-color: var(--pink-accent);
-            border-color: var(--pink-accent);
+    .booking-title {
+        font-weight: 600;
+        color: #FF6185;
+    }
+
+    /* Button hồng */
+    .btn-pink {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        border: none;
+        transition: 0.25s;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF6185;
             color: #fff;
         }
 
-    .border-pink {
-        border: 1px solid var(--pink-main);
+    label {
+        font-weight: 500;
     }
 
-        .border-pink:focus {
-            border-color: var(--pink-accent);
-            box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
-        }
+    @@media (max-width: 768px) {
+        .booking-card
 
-    .card {
-        border-radius: 1rem;
+    {
+        padding: 1.5rem;
+    }
+
     }
 </style>

@@ -1,5 +1,4 @@
 ﻿using DoAnCoSo.Models;
-using System.Collections.Generic;
 
 namespace DoAnCoSo.ViewModels
 {

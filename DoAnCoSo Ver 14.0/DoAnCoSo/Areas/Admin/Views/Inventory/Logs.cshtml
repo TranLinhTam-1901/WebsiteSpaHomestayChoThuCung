@@ -1,0 +1,170 @@
+﻿@model IEnumerable<DoAnCoSo.Models.InventoryLog>
+@{
+    ViewData["Title"] = "📜 Lịch sử kho";
+    var optionLabel = (string)(ViewBag.OptionLabel ?? "Tùy chọn");
+}
+
+<div class="inventory-wrapper py-5">
+    <h2 class="section-title">📜 Lịch sử giao dịch kho</h2>
+
+    <div class="inventory-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách giao dịch</h4>
+            <a asp-action="Index" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center inventory-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th>#</th>
+                            <th>Sản phẩm</th>
+                            <th>Thay đổi (SL)</th>
+                            <th>Lý do</th>
+                            <th>Tham chiếu</th>
+                            <th>Người thực hiện</th>
+                            <th>Thời gian</th>
+                            <th>Ghi chú</th>
+                            <th>@optionLabel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="no-data">Chưa có giao dịch nào.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            int i = 1;
+                            var map = ViewBag.UserMap as IDictionary<string, string>;
+                            foreach (var log in Model)
+                            {
+                                string actor = "-";
+                                if (!string.IsNullOrEmpty(log.PerformedByUserId))
+                                {
+                                    actor = map != null && map.ContainsKey(log.PerformedByUserId)
+                                    ? map[log.PerformedByUserId]
+                                    : log.PerformedByUserId;
+                                }
+
+                                <tr class="@(log.QuantityChange < 0 ? "row-export" : "row-import")">
+                                    <td>@i</td>
+                                    <td>@log.Product?.Name</td>
+                                    <td>@log.QuantityChange</td>
+                                    <td>@log.Reason</td>
+                                    <td>@log.ReferenceId</td>
+                                    <td title="@log.PerformedByUserId">@actor</td>
+                                    <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="note">@log.Note</td>
+                                    <td>@(!string.IsNullOrWhiteSpace(log.Variant?.Name) ? log.Variant!.Name : "—")</td>
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .inventory-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .inventory-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+        background: white;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: .3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .inventory-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .inventory-table th, .inventory-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .inventory-table tbody tr:nth-child(odd) {
+        background: #fff;
+    }
+
+    .inventory-table tbody tr:nth-child(even) {
+        background: #FFF7F9;
+    }
+
+    .inventory-table tbody tr:hover {
+        background: #FFE9EF !important;
+    }
+
+    .row-import > * {
+        background: #E9F8EF !important;
+    }
+
+    .row-export > * {
+        background: #FFE9EC !important;
+    }
+
+    .note {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+    }
+</style>

@@ -1,40 +1,287 @@
-﻿@model IEnumerable<DoAnCoSo.Models.Product>
-<!-- Doanh thu -->
-<div class="tab-pane fade show active" id="doanhthu">
-    <h3>Thống kê Doanh thu</h3>
-    <div class="alert alert-info">
-        Doanh thu tháng 4/2025: <strong>12,000,000đ</strong>
+﻿@{
+    ViewData["Title"] = "📊 Thống kê doanh thu - PawHouse";
+}
+
+<style>
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+</style>
+
+<div class="container mt-4 py-4">
+    <!-- 🧭 TIÊU ĐỀ CHÍNH -->
+    <div class="text-center mb-5">
+        <h2 class="section-title">
+            📈 Thống kê Doanh thu hệ thống PawHouse
+        </h2>
+        <p class="text-muted mb-0">Báo cáo tổng hợp hiệu quả kinh doanh theo thời gian và danh mục</p>
     </div>
-    <canvas id="doanhthuChart" height="100"></canvas>
+
+    <!-- 🧩 TẦNG 1: TỔNG QUAN NHANH -->
+    <div id="overview-section" class="row text-center justify-content-center g-4 mb-5">
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm border-0 rounded-4 bg-pink-subtle">
+                <div class="card-body">
+                    <i class="fas fa-dollar-sign fa-2x text-danger mb-2"></i>
+                    <h6 class="text-muted">Tổng doanh thu tháng này</h6>
+                    <h4 id="revenueValue" class="fw-bold text-danger mb-0">0 đ</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm border-0 rounded-4 bg-purple-subtle">
+                <div class="card-body">
+                    <i class="fas fa-shopping-cart fa-2x text-purple mb-2"></i>
+                    <h6 class="text-muted">Số đơn hàng</h6>
+                    <h4 id="ordersValue" class="fw-bold text-purple mb-0">0</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm border-0 rounded-4 bg-pink-subtle">
+                <div class="card-body">
+                    <i class="fas fa-percent fa-2x text-pink mb-2"></i>
+                    <h6 class="text-muted">Tổng khuyến mãi áp dụng</h6>
+                    <h4 id="discountValue" class="fw-bold text-pink mb-0">0 đ</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6">
+            <div class="card shadow-sm border-0 rounded-4 bg-cyan-subtle">
+                <div class="card-body">
+                    <i class="fas fa-user-plus fa-2x text-info mb-2"></i>
+                    <h6 class="text-muted">Khách hàng mới tháng này</h6>
+                    <h4 id="customersValue" class="fw-bold text-info mb-0">0</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Màu sắc subtle để phù hợp PawHouse */
+        .bg-pink-subtle {
+            background-color: #ffe4eb;
+        }
+        /* hồng nhạt dễ nhìn */
+        .text-pink {
+            color: #FF6185;
+        }
+        /* chữ hồng đậm nổi bật */
+
+        .bg-purple-subtle {
+            background-color: #f3e8ff;
+        }
+
+        .bg-orange-subtle {
+            background-color: #fff3e0;
+        }
+
+        .bg-cyan-subtle {
+            background-color: #e0f7fa;
+        }
+
+        /* Chữ màu nổi trên thẻ */
+        .text-purple {
+            color: #8B5CF6;
+        }
+    </style>
+
+    <!-- 🟧 TẦNG 2: BIỂU ĐỒ DOANH THU THEO THỜI GIAN -->
+    <div class="card shadow-lg border-0 mb-5 rounded-4">
+        <div class="card-header text-white fw-semibold d-flex justify-content-between align-items-center" style="background:#FF6185">
+            <span><i class="fas fa-chart-line me-2" ></i>Doanh thu theo thời gian</span>
+            <select id="filterRange" class="form-select w-auto bg-light border-0">
+                <option value="week">Tuần này</option>
+                <option value="month" selected>Tháng này</option>
+                <option value="year">Cả năm</option>
+            </select>
+        </div>
+        <div class="card-body bg-light">
+            <canvas id="doanhthuChart" height="120"></canvas>
+        </div>
+        <div class="card-footer text-center text-muted small">
+            Biểu đồ thể hiện xu hướng doanh thu của hệ thống theo thời gian được chọn
+        </div>
+    </div>
+
+    <!-- 🟨 + 🟩 TẦNG 3: BIỂU ĐỒ DANH MỤC & TOP SẢN PHẨM -->
+    <div class="row g-4">
+        <!-- 🍩 Doanh thu theo danh mục -->
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header text-dark fw-semibold" style="background:#FF6185">
+                    <i class="fas fa-paw me-2"></i>Doanh thu theo danh mục sản phẩm / dịch vụ
+                </div>
+                <div class="card-body bg-light text-center">
+                    <canvas id="categoryChart" height="205"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 👑 Top sản phẩm bán chạy -->
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header text-dark fw-semibold" style="background:#FF6185">
+                    <i class="fas fa-crown me-2"></i>Top sản phẩm / dịch vụ bán chạy
+                </div>
+                <div class="card-body bg-light p-0">
+                    <table class="table table-hover align-middle text-center mb-0">
+                        <thead class="table" style="background:#FFB6C1">
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên sản phẩm / dịch vụ</th>
+                                <th>Danh mục</th>
+                                <th>Số lượng bán</th>
+                                <th>Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topProductsBody">
+                            <tr><td colspan="5" class="text-muted">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-
-<!-- Chart.js for doanh thu -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    const ctx = document.getElementById('doanhthuChart');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4'],
-        datasets: [{
-          label: 'Doanh thu (VNĐ)',
-          data: [5000000, 7000000, 9000000, 12000000],
-          backgroundColor: 'rgba(255, 159, 64, 0.7)',
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function (value) {
-                return value.toLocaleString('vi-VN') + 'đ';
-              }
-            }
-          }
-        }
-      }
+    document.addEventListener("DOMContentLoaded", async () => {
+        await loadOverview();
+        await loadCharts("month");
+        await loadCategoryChart();
+        await loadTopProducts();
+
+        document.getElementById("filterRange").addEventListener("change", async (e) => {
+            const range = e.target.value;
+            await loadCharts(range);
+        });
     });
+
+    // 🧾 Load dữ liệu tổng quan
+    async function loadOverview() {
+        const overview = await fetch('/Admin/Revenue/GetOverview').then(r => r.json());
+        document.getElementById('revenueValue').innerText = formatCurrency(overview.monthlyRevenue);
+        document.getElementById('ordersValue').innerText = overview.totalOrders;
+        document.getElementById('discountValue').innerText = formatCurrency(overview.totalDiscount);
+        document.getElementById('customersValue').innerText = overview.newCustomers;
+    }
+
+    // 📈 Biểu đồ doanh thu (tuần / tháng / năm)
+    async function loadCharts(range) {
+        const monthly = await fetch(`/Admin/Revenue/GetRevenue?range=${range}`).then(r => r.json());
+        const labels = monthly.map(m => m.label);
+        const data = monthly.map(m => m.revenue);
+
+        const ctx = document.getElementById('doanhthuChart');
+
+        if (window.doanhthuChart && typeof window.doanhthuChart.destroy === "function") {
+            window.doanhthuChart.destroy();
+        }
+
+        window.doanhthuChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data,
+                    borderColor: '#FF6185',
+                    backgroundColor: 'rgba(255,99,132,0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: { duration: 1000, easing: 'easeOutCubic' },
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: value => formatCurrency(value) }
+                    }
+                }
+            }
+        });
+    }
+
+    // 🟨 Biểu đồ doanh thu theo danh mục
+    async function loadCategoryChart() {
+        const category = await fetch('/Admin/Revenue/GetRevenueByCategory').then(r => r.json());
+        if (!category || category.length === 0) return;
+
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: category.map(c => c.category || "Không rõ"),
+                datasets: [{
+                    data: category.map(c => c.revenue || 0),
+                    backgroundColor: ['#FFB6C1', '#FFD580', '#A0E7E5', '#B39DDB', '#90CAF9']
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+        // 👑 Top sản phẩm bán chạy
+    async function loadTopProducts() {
+        const topProducts = await fetch('/Admin/Revenue/GetTopProducts').then(r => r.json());
+        const tbody = document.getElementById("topProductsBody");
+        tbody.innerHTML = "";
+
+        const maxRows = 5; // chiều dài cố định bằng bảng danh mục
+
+        if (!topProducts || topProducts.length === 0) {
+            for (let i = 0; i < maxRows; i++) {
+                tbody.innerHTML += `<tr><td colspan="5" class="text-muted">&nbsp;</td></tr>`;
+            }
+            return;
+        }
+
+        topProducts.forEach((p, i) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${p.productName}</td>
+                    <td>${p.categoryName || "Không rõ"}</td>
+                    <td>${p.quantity}</td>
+                    <td>${formatCurrency(p.revenue)}</td>
+                </tr>`;
+        });
+
+        // nếu dữ liệu < maxRows, thêm các hàng trống
+        for (let i = topProducts.length; i < maxRows; i++) {
+            tbody.innerHTML += `<tr><td colspan="5" class="text-muted">&nbsp;</td></tr>`;
+        }
+    }
+
+    // 💰 Format tiền VND
+    function formatCurrency(value) {
+        return (parseInt(value) || 0).toLocaleString('vi-VN') + " đ";
+    }
 </script>
