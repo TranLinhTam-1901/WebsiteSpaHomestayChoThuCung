@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+=======
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using DoAnCoSo.Models;
+>>>>>>> 47478e8a4d766272fbd7162d63193bbd37bf0b5e
 
 namespace DoAnCoSo.Models
 {

@@ -302,4 +302,107 @@
             padding: 6px 12px;
         }
     }
+<<<<<<< HEAD
 </style>
+=======
+</style>
+
+<div class="order-wrapper py-5">
+    <h2 class="section-title">🛒 Lịch sử đặt hàng</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="no-orders">Bạn chưa có đơn hàng nào.</p>
+    }
+    else
+    {
+        @foreach (var order in Model)
+        {
+            <div class="order-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="fas fa-receipt me-1"></i> Mã đơn:</strong> @order.Id <br />
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i> Ngày đặt: @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </small>
+                    </div>
+                    <div>
+                        @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                        {
+                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                        }
+                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                        {
+                            <span class="badge bg-success">Đã xác nhận</span>
+                        }
+                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
+                        {
+                            <span class="badge bg-danger">Đã hủy</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@order.Status.ToString()</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <p><strong><i class="fas fa-user me-1"></i> Người nhận:</strong> @order.CustomerName</p>
+                    <p><strong><i class="fas fa-money-bill-wave me-1"></i> Tổng tiền:</strong> <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span></p>
+
+                    <div>
+                        <strong><i class="fas fa-box-open me-1"></i> Chi tiết sản phẩm:</strong>
+                        @if (order.OrderDetails != null && order.OrderDetails.Any())
+                        {
+                            <ul class="list-group list-group-flush mt-2">
+                                @foreach (var item in order.OrderDetails)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="fw-semibold">@item.Product.Name</span>
+                                            @if (!string.IsNullOrEmpty(item.SelectedFlavor))
+                                            {
+                                                <span class="text-muted">(Vị: @item.SelectedFlavor)</span>
+                                            }
+                                            <br />
+                                            <small>Số lượng: @item.Quantity</small>
+                                        </div>
+                                        <span>@item.Price.ToString("N0") VNĐ</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted mt-2">Không có chi tiết sản phẩm.</p>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-footer text-end">
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail me-2">
+                        <i class="fas fa-info-circle me-1"></i> Xem chi tiết
+                    </a>
+                    @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                    {
+                        <form asp-action="CancelOrder" asp-route-id="@order.Id" method="post"
+                              class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?');">
+                            <button type="submit" class="btn-cancel">Hủy đơn</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+>>>>>>> 47478e8a4d766272fbd7162d63193bbd37bf0b5e

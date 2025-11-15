@@ -2,6 +2,13 @@
 
 namespace DoAnCoSo.Models
 {
+    public enum ServiceCategory
+    {
+        Spa,
+        Homestay,
+        Vet
+    }
+
     public class Service
     {
         [Key]
@@ -33,4 +40,5 @@ namespace DoAnCoSo.Models
         // Quan hệ với PetServiceRecord
         public ICollection<PetServiceRecord> PetServiceRecords { get; set; } = new List<PetServiceRecord>();
     }
+
 }
