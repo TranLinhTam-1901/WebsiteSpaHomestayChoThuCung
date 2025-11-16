@@ -30,7 +30,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 FullName = u.FullName,
                 UserName = u.UserName,
                 Email = u.Email,
-                Role = "" // Khởi tạo
+                Role = "",
+                IsLocked = u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.Now
             }).ToListAsync();
 
             foreach (var userViewModel in users)
@@ -42,6 +43,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     userViewModel.Role = string.Join(", ", roles);
                 }
             }
+
+            ViewBag.CurrentUserId = _userManager.GetUserId(User);
 
             return View(users);
         }
@@ -128,60 +131,116 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
         }
 
+        //[HttpPost]
+        //public async Task<IActionResult> DeleteUser(string id)
+        //{
+        //    if (id == null) return NotFound();
+
+        //    var user = await _userManager.FindByIdAsync(id);
+        //    if (user == null) return NotFound();
+
+        //    // Lấy danh sách các Appointments liên quan đến người dùng này
+        //    var appointmentsToDelete = _context.Appointments.Where(a => a.UserId == id);
+
+        //    // Xóa các Appointments này
+        //    _context.Appointments.RemoveRange(appointmentsToDelete);
+
+        //    // Lưu các thay đổi vào database
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        ModelState.AddModelError("", $"Lỗi khi xóa các Appointments liên quan: {ex.Message}");
+        //        return RedirectToAction("UserList"); // Hoặc xử lý lỗi khác nếu cần
+        //    }
+
+        //    // Sau khi đã xóa các Appointments, tiến hành xóa vai trò của người dùng
+        //    var roles = await _userManager.GetRolesAsync(user);
+        //    var removeRolesResult = await _userManager.RemoveFromRolesAsync(user, roles);
+
+        //    if (!removeRolesResult.Succeeded)
+        //    {
+        //        foreach (var error in removeRolesResult.Errors)
+        //        {
+        //            ModelState.AddModelError("", $"Lỗi khi xóa vai trò của người dùng: {error.Description}");
+        //        }
+        //        return RedirectToAction("UserList"); // Hoặc xử lý lỗi khác nếu cần
+        //    }
+
+        //    // Cuối cùng, xóa tài khoản người dùng
+        //    var result = await _userManager.DeleteAsync(user);
+
+        //    if (result.Succeeded)
+        //    {
+        //        return RedirectToAction("UserList");
+        //    }
+        //    else
+        //    {
+        //        foreach (var error in result.Errors)
+        //        {
+        //            ModelState.AddModelError("", $"Có lỗi xảy ra khi xóa người dùng: {error.Description}");
+        //        }
+        //        return RedirectToAction("UserList");
+        //    }
+        //}
+
+
+        // ✅ KHÓA USER
         [HttpPost]
-        public async Task<IActionResult> DeleteUser(string id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LockUser(string id)
         {
             if (id == null) return NotFound();
 
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            // Lấy danh sách các Appointments liên quan đến người dùng này
-            var appointmentsToDelete = _context.Appointments.Where(a => a.UserId == id);
+            // Bật lockout và đặt thời gian khóa rất xa
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.MaxValue;
+            user.AccessFailedCount = 0;
 
-            // Xóa các Appointments này
-            _context.Appointments.RemoveRange(appointmentsToDelete);
-
-            // Lưu các thay đổi vào database
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", $"Lỗi khi xóa các Appointments liên quan: {ex.Message}");
-                return RedirectToAction("UserList"); // Hoặc xử lý lỗi khác nếu cần
-            }
-
-            // Sau khi đã xóa các Appointments, tiến hành xóa vai trò của người dùng
-            var roles = await _userManager.GetRolesAsync(user);
-            var removeRolesResult = await _userManager.RemoveFromRolesAsync(user, roles);
-
-            if (!removeRolesResult.Succeeded)
-            {
-                foreach (var error in removeRolesResult.Errors)
-                {
-                    ModelState.AddModelError("", $"Lỗi khi xóa vai trò của người dùng: {error.Description}");
-                }
-                return RedirectToAction("UserList"); // Hoặc xử lý lỗi khác nếu cần
-            }
-
-            // Cuối cùng, xóa tài khoản người dùng
-            var result = await _userManager.DeleteAsync(user);
+            var result = await _userManager.UpdateAsync(user);
 
             if (result.Succeeded)
             {
-                return RedirectToAction("UserList");
+                TempData["SuccessMessage"] = $"Đã khóa tài khoản của người dùng {user.UserName}.";
             }
             else
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError("", $"Có lỗi xảy ra khi xóa người dùng: {error.Description}");
-                }
-                return RedirectToAction("UserList");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi khóa người dùng.";
             }
+
+            return RedirectToAction("UserList");
         }
 
+        // ✅ MỞ KHÓA USER
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnlockUser(string id)
+        {
+            if (id == null) return NotFound();
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            user.LockoutEnd = null;
+            user.AccessFailedCount = 0;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = $"Đã mở khóa tài khoản của người dùng {user.UserName}.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi mở khóa người dùng.";
+            }
+
+            return RedirectToAction("UserList");
+        }
     }
 }

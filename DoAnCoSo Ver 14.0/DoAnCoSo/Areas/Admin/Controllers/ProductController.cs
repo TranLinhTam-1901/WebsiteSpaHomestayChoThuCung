@@ -288,7 +288,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         {
             var product = await _context.Products
             .Include(p => p.Category)
-            .Include(p => p.Variants)        
+            .Include(p => p.Variants)
+            .Include(p => p.Images)
             .FirstOrDefaultAsync(p => p.Id == id);
             if (product == null) return NotFound();
 
@@ -301,12 +302,14 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         int id,
         Product product,
         IFormFile? imageUrl,
+        [FromForm(Name = "images")] List<IFormFile>? newImages,
         List<string>? flavorsList,
         [FromForm] List<int>? VariantIds,
         [FromForm] List<string>? VariantNames,
         [FromForm] List<string>? VariantSkus,
         [FromForm] List<decimal?>? VariantPriceOverrides,
         [FromForm] List<int>? VariantStocks,
+        [FromForm] List<int>? DeleteImageIds,
         [FromForm] List<int>? VariantThresholds,
         [FromForm] IFormCollection form)
         {
@@ -322,9 +325,43 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             var existingProduct = await _productRepository.GetByIdAsync(id);
             if (existingProduct == null) return NotFound();
 
+            await _context.Entry(existingProduct)
+                  .Collection(p => p.Images)
+                  .LoadAsync();
+
             // === cập nhật fields cơ bản ===
             if (imageUrl != null)
                 existingProduct.ImageUrl = await SaveImage(imageUrl);
+
+
+            if (DeleteImageIds != null && DeleteImageIds.Any())
+            {
+                var toDelete = existingProduct.Images
+                    .Where(img => DeleteImageIds.Contains(img.Id))
+                    .ToList();
+
+                foreach (var img in toDelete)
+                {
+                   
+                    _context.Set<ProductImage>().Remove(img);
+                }
+
+            }
+            if (newImages != null && newImages.Any())
+            {
+                foreach (var file in newImages)
+                {
+                    if (file == null || file.Length == 0) continue;
+
+                    var url = await SaveImage(file);
+
+                    existingProduct.Images.Add(new ProductImage
+                    {
+                        ProductId = existingProduct.Id,
+                        Url = url
+                    });
+                }
+            }
 
             existingProduct.Name = product.Name;
             existingProduct.Price = product.Price;
@@ -357,8 +394,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             // KHÔNG tính theo checkbox để tránh rớt index
             int n = new[]
             {
-        VariantIds.Count, VariantNames.Count, VariantSkus.Count,
-        VariantPriceOverrides.Count, VariantStocks.Count, VariantThresholds.Count
+            VariantIds.Count, VariantNames.Count, VariantSkus.Count,
+            VariantPriceOverrides.Count, VariantStocks.Count, VariantThresholds.Count
             }.Min();
 
             await _context.Entry(existingProduct).Collection(p => p.Variants).LoadAsync();
@@ -460,10 +497,13 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     if (!seen.Contains(v.Id))
                         v.IsActive = false;
 
-                // Tính lại tồn tổng theo biến thể đang hoạt động
-                existingProduct.StockQuantity = existingProduct.Variants
-                    .Where(v => v.IsActive)
-                    .Sum(v => v.StockQuantity);
+                // ✅ CHỈ khi có biến thể thì mới ghi đè tồn kho
+                if (existingProduct.Variants != null && existingProduct.Variants.Any())
+                {
+                    existingProduct.StockQuantity = existingProduct.Variants
+                        .Where(v => v.IsActive)
+                        .Sum(v => v.StockQuantity);
+                }
 
                 await _context.SaveChangesAsync();
                 await tx.CommitAsync();
@@ -479,42 +519,42 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
 
 
-        public async Task<IActionResult> Delete(int id)
-        {
-            var product = await _productRepository.GetByIdAsync(id);
-            if (product == null) return NotFound();
-            return View(product);
-        }
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    var product = await _productRepository.GetByIdAsync(id);
+        //    if (product == null) return NotFound();
+        //    return View(product);
+        //}
 
-        [HttpPost, ActionName("DeleteConfirmed")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var product = await _context.Products
-               .Include(p => p.Variants)
-               .FirstOrDefaultAsync(p => p.Id == id);
+        //[HttpPost, ActionName("DeleteConfirmed")]
+        //public async Task<IActionResult> DeleteConfirmed(int id)
+        //{
+        //    var product = await _context.Products
+        //       .Include(p => p.Variants)
+        //       .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (product == null) return NotFound();
+        //    if (product == null) return NotFound();
 
-            // chuyển sang ẩn mềm
-            product.IsDeleted = true;
-            product.IsActive = false;
-            product.DeletedAt = DateTime.UtcNow;
-            product.DeletedBy = _userManager.GetUserId(User);
-            product.DeletedReason = string.IsNullOrWhiteSpace(product.DeletedReason)
-                ? "Ẩn bởi Admin"
-                : product.DeletedReason;
+        //    // chuyển sang ẩn mềm
+        //    product.IsDeleted = true;
+        //    product.IsActive = false;
+        //    product.DeletedAt = DateTime.UtcNow;
+        //    product.DeletedBy = _userManager.GetUserId(User);
+        //    product.DeletedReason = string.IsNullOrWhiteSpace(product.DeletedReason)
+        //        ? "Ẩn bởi Admin"
+        //        : product.DeletedReason;
 
-            // tắt toàn bộ biến thể để ngăn AddToCart/BuyNow
-            if (product.Variants != null)
-            {
-                foreach (var v in product.Variants)
-                    v.IsActive = false;
-            }
+        //    // tắt toàn bộ biến thể để ngăn AddToCart/BuyNow
+        //    if (product.Variants != null)
+        //    {
+        //        foreach (var v in product.Variants)
+        //            v.IsActive = false;
+        //    }
 
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Đã ẩn sản phẩm #{product.Id} - {product.Name}.";
-            return RedirectToAction(nameof(Index));
-        }
+        //    await _context.SaveChangesAsync();
+        //    TempData["SuccessMessage"] = $"Đã ẩn sản phẩm #{product.Id} - {product.Name}.";
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]

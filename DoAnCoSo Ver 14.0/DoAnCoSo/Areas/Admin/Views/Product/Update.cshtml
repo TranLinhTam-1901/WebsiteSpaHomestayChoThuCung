@@ -73,10 +73,39 @@
                     <input type="file" name="imageUrl" class="form-control" id="imageInput" />
                 </div>
 
+
+                <!-- ✅ Ảnh phụ mới -->
+                <div class="col-md-6">
+                    <label class="form-label">Ảnh phụ mới</label>
+                    <input type="file" name="images" class="form-control" multiple />
+                </div>
+
                 <div class="text-center mt-4">
                     <h5>Ảnh hiện tại</h5>
                     <img src="@Model.ImageUrl" id="previewImage" style="max-width: 200px;" class="rounded shadow border-pink" />
                 </div>
+
+                @foreach (var img in Model.Images)
+                {
+                    <div class="col-6 col-md-4 text-center">
+                        <img src="@img.Url"
+                             class="img-thumbnail mb-2"
+                             style="max-height: 120px; object-fit: cover;" />
+
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="DeleteImageIds"
+                                   value="@img.Id"
+                                   id="del_@img.Id" />
+
+                            <label class="form-check-label" for="del_@img.Id">
+                                Xoá ảnh này
+                            </label>
+                        </div>
+                    </div>
+                }
+
             </div>
 
             <!-- Biến thể -->

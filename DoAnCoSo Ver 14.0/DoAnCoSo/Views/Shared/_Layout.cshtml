@@ -4,12 +4,12 @@
 @inject DoAnCoSo.Models.ApplicationDbContext _context
 @using System.Security.Claims
 
-@{
+@* @{
     string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     var favoriteCount = userId != null
         ? _context.Favorites.Count(f => f.UserId == userId)
         : 0;
-}
+} *@
 
 <!DOCTYPE html>
 <html lang="vi">
