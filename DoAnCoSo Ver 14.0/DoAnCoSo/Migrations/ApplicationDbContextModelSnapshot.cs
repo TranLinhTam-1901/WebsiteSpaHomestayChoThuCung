@@ -882,6 +882,57 @@ namespace DoAnCoSo.Migrations
                     b.ToTable("ProductImages");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.ProductOptionGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductId1")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductId1");
+
+                    b.ToTable("ProductOptionGroups");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ProductOptionValue", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductOptionGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductOptionGroupId");
+
+                    b.ToTable("ProductOptionValues");
+                });
+
             modelBuilder.Entity("DoAnCoSo.Models.ProductVariant", b =>
                 {
                     b.Property<int>("Id")
@@ -929,6 +980,21 @@ namespace DoAnCoSo.Migrations
                         .IsUnique();
 
                     b.ToTable("ProductVariants");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ProductVariantOptionValue", b =>
+                {
+                    b.Property<int>("ProductVariantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductOptionValueId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductVariantId", "ProductOptionValueId");
+
+                    b.HasIndex("ProductOptionValueId");
+
+                    b.ToTable("ProductVariantOptionValues");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Promotion", b =>
@@ -1630,6 +1696,32 @@ namespace DoAnCoSo.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("DoAnCoSo.Models.ProductOptionGroup", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DoAnCoSo.Models.Product", null)
+                        .WithMany("OptionGroups")
+                        .HasForeignKey("ProductId1");
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ProductOptionValue", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.ProductOptionGroup", "Group")
+                        .WithMany("Values")
+                        .HasForeignKey("ProductOptionGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+                });
+
             modelBuilder.Entity("DoAnCoSo.Models.ProductVariant", b =>
                 {
                     b.HasOne("DoAnCoSo.Models.Product", "Product")
@@ -1639,6 +1731,25 @@ namespace DoAnCoSo.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ProductVariantOptionValue", b =>
+                {
+                    b.HasOne("DoAnCoSo.Models.ProductOptionValue", "OptionValue")
+                        .WithMany("Variants")
+                        .HasForeignKey("ProductOptionValueId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("DoAnCoSo.Models.ProductVariant", "Variant")
+                        .WithMany("OptionValues")
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("OptionValue");
+
+                    b.Navigation("Variant");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Review", b =>
@@ -1821,9 +1932,26 @@ namespace DoAnCoSo.Migrations
 
                     b.Navigation("Images");
 
+                    b.Navigation("OptionGroups");
+
                     b.Navigation("Reviews");
 
                     b.Navigation("Variants");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ProductOptionGroup", b =>
+                {
+                    b.Navigation("Values");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ProductOptionValue", b =>
+                {
+                    b.Navigation("Variants");
+                });
+
+            modelBuilder.Entity("DoAnCoSo.Models.ProductVariant", b =>
+                {
+                    b.Navigation("OptionValues");
                 });
 
             modelBuilder.Entity("DoAnCoSo.Models.Promotion", b =>

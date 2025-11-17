@@ -65,9 +65,11 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         List<IFormFile>? images,
         List<string>? flavorsList,
         [FromForm] bool? HasVariants,
-        [FromForm] List<string>? VariantNames,
-        [FromForm] List<int>? VariantStocks,
-        [FromForm] List<int>? VariantThresholds)
+        [FromForm] List<string>? OptionGroupNames,
+        [FromForm] List<List<string>>? OptionGroupValues,
+        [FromForm] List<string>? VariantGeneratedNames,
+        [FromForm] List<int>? VariantGeneratedStocks,
+        [FromForm] List<int>? VariantGeneratedThresholds)        
         {
             var useVariants = HasVariants == true;
 
@@ -87,9 +89,10 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             {
                 await PopulateCategoriesDropdown();
                 ViewBag.HasVariants = useVariants;
-                ViewBag.VariantNames = VariantNames ?? new List<string>();
-                ViewBag.VariantStocks = VariantStocks ?? new List<int>();
-                ViewBag.VariantThresholds = VariantThresholds ?? new List<int>();
+                ViewBag.VariantGeneratedNames = VariantGeneratedNames ?? new List<string>();
+                ViewBag.VariantGeneratedStocks = VariantGeneratedStocks ?? new List<int>();
+                ViewBag.VariantGeneratedThresholds = VariantGeneratedThresholds ?? new List<int>();
+
             }
 
             if (!ModelState.IsValid)
@@ -135,26 +138,15 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
 
             // ============= NHÁNH CÓ BIẾN THỂ =============
-            VariantNames ??= new List<string>();
-            VariantStocks ??= new List<int>();
-            VariantThresholds ??= new List<int>();
 
-            var names = VariantNames
-                .Select(s => (s ?? "").Trim())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .ToList();
-
-            if (names.Count == 0)
-                ModelState.AddModelError("", "Vui lòng nhập ít nhất 1 biến thể.");
-
-            if (names.Count != VariantStocks.Count || names.Count != VariantThresholds.Count)
-                ModelState.AddModelError("", "Dữ liệu biến thể không khớp số cột.");
-
-            var dup = names.GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
-                           .FirstOrDefault(g => g.Count() > 1)?.Key;
-            if (dup != null)
-                ModelState.AddModelError("", $"Tên biến thể bị trùng: {dup}");
-
+            if (VariantGeneratedNames == null || VariantGeneratedNames.Count == 0)
+                 {
+                ModelState.AddModelError("", "Bạn chưa tạo biến thể!");
+                 }
+             if (OptionGroupNames == null || OptionGroupNames.Count == 0)
+                 {
+                ModelState.AddModelError("", "Bạn chưa nhập nhóm biến thể!");
+                 }
             if (!ModelState.IsValid)
             {
                 await PrepViewBags();
@@ -171,7 +163,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             await using var tx = await _context.Database.BeginTransactionAsync();
             try
             {
-                // A) tạo Product trước để lấy Id
+                // tạo Product trước để lấy Id
                 product.StockQuantity = 0;
                 product.ReservedQuantity = 0;
                 product.SoldQuantity = 0;
@@ -179,28 +171,48 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 _context.Products.Add(product);
                 await _context.SaveChangesAsync(); // cần Id
 
-                // B) tạo danh sách biến thể và tính tổng tồn
-                var variants = new List<ProductVariant>();
-                var total = 0;
-
-                for (int i = 0; i < names.Count; i++)
+                // Lưu Option Groups + Option Values
+                var groups = new List<ProductOptionGroup>();
+                for (int g = 0; g < OptionGroupNames.Count; g++)
                 {
-                    var stock = Math.Max(0, VariantStocks[i]);
-                    var threshold = Math.Max(0, VariantThresholds[i]);
+                    var group = new ProductOptionGroup
+                    {
+                        ProductId = product.Id,
+                        Name = OptionGroupNames[g]
+                    };
 
-                    // ✅ TẠO SKU KHÔNG NULL & DUY NHẤT CHO MỖI BIẾN THỂ                    
-                    string sku = $"P{product.Id}-V{i + 1}-{Guid.NewGuid().ToString("N")[..4]}";
+                    _context.ProductOptionGroups.Add(group);
+                    await _context.SaveChangesAsync();
+
+                    foreach (var val in OptionGroupValues[g].Where(v => !string.IsNullOrWhiteSpace(v)))
+                    {
+                        _context.ProductOptionValues.Add(new ProductOptionValue
+                        {
+                            ProductOptionGroupId = group.Id,
+                            Value = val.Trim()
+                        });
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                //  Lưu Variants sinh từ UI
+                var variants = new List<ProductVariant>();
+                int total = 0;
+
+                for (int i = 0; i < VariantGeneratedNames.Count; i++)
+                {
+                    int stock = Math.Max(0, VariantGeneratedStocks[i]);
+                    int threshold = Math.Max(0, VariantGeneratedThresholds[i]);
 
                     variants.Add(new ProductVariant
                     {
                         ProductId = product.Id,
-                        Sku = sku,                       // 👈 BẮT BUỘC: KHÔNG ĐỂ NULL
-                        Name = names[i],
-                        PriceOverride = null,            // nếu DB không cho NULL, đặt = 0m
+                        Name = VariantGeneratedNames[i],
+                        Sku = $"P{product.Id}-V{i + 1}-{Guid.NewGuid().ToString("N")[..4]}",
                         StockQuantity = stock,
-                        ReservedQuantity = 0,
-                        SoldQuantity = 0,                // an toàn nếu cột này NOT NULL
                         LowStockThreshold = threshold,
+                        ReservedQuantity = 0,
+                        SoldQuantity = 0,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     });
@@ -208,11 +220,43 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     total += stock;
                 }
 
-
                 _context.ProductVariants.AddRange(variants);
-                await _context.SaveChangesAsync(); // để có Variant.Id
+                await _context.SaveChangesAsync();
 
-                // C) log nhập kho ban đầu cho các biến thể có tồn
+                // ================= Mapping Variant <-> OptionValues ==================
+                var optionValues = await _context.ProductOptionValues
+                    .Where(v => v.Group.ProductId == product.Id)
+                    .Include(v => v.Group)
+                    .ToListAsync();
+
+                foreach (var variant in variants)
+                {
+                    string[] parts = variant.Name.Split(" - ", StringSplitOptions.TrimEntries);
+
+                    for (int i = 0; i < parts.Length; i++)
+                    {
+                        string groupName = OptionGroupNames[i].Trim();
+                        string valueName = parts[i].Trim();
+
+                        var match = optionValues.FirstOrDefault(v =>
+                            v.Group.Name.Equals(groupName, StringComparison.OrdinalIgnoreCase) &&
+                            v.Value.Equals(valueName, StringComparison.OrdinalIgnoreCase)
+                        );
+
+                        if (match != null)
+                        {
+                            _context.ProductVariantOptionValues.Add(new ProductVariantOptionValue
+                            {
+                                ProductVariantId = variant.Id,
+                                ProductOptionValueId = match.Id
+                            });
+                        }
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+
+                // log nhập kho ban đầu cho các biến thể có tồn
                 var logs = variants
                     .Where(v => v.StockQuantity > 0)
                     .Select(v => new InventoryLog
@@ -255,22 +299,22 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         }
 
 
-        public async Task<IActionResult> Details(int id, int currentPage = 1)
+        
+
+        public async Task<IActionResult> Details(int id)
         {
             var product = await _context.Products
-              .Include(p => p.Category)
-              .Include(p => p.Images)
-              .Include(p => p.Variants) // lấy danh sách biến thể
-              .FirstOrDefaultAsync(p => p.Id == id);
+                .Include(p => p.Category)
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound();
 
-            // Tổng hợp nhanh cho biến thể
             ViewBag.TotalVariantStock = product.Variants?.Sum(v => v.StockQuantity) ?? 0;
             ViewBag.TotalVariantReserved = product.Variants?.Sum(v => v.ReservedQuantity) ?? 0;
             ViewBag.TotalVariantSold = product.Variants?.Sum(v => v.SoldQuantity) ?? 0;
 
-            // Reviews (y như Display)
             var reviews = await _context.Reviews
                 .Include(r => r.User)
                 .Where(r => r.TargetType == ReviewTargetType.Product && r.TargetId == id)
@@ -280,9 +324,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             ViewBag.Reviews = reviews;
             ViewBag.TotalReviews = reviews.Count;
             ViewBag.AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0d;
-            ViewBag.CurrentPage = currentPage;
 
-            return View(product); // Model là Product
+            return View(product);
         }
         public async Task<IActionResult> Update(int id)
         {

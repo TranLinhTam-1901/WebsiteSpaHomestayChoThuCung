@@ -85,15 +85,14 @@
             <div class="product-detail-actions-container">
 
                 @{
-                    // Biến thể đang hoạt động
-                    var activeVariants = (Model.Product?.Variants ?? new List<DoAnCoSo.Models.ProductVariant>())
-                    .Where(v => v.IsActive).ToList();
+                    // Dùng list biến thể đã được controller lọc sẵn
+                    var activeVariants = Model.Variants ?? new List<DoAnCoSo.Models.ProductVariant>();
                     bool hasVariants = activeVariants.Any();
 
-                    // Tồn cho sản phẩm (khi không có biến thể)
-                    int productAvailable = Math.Max(0, (Model.Product?.StockQuantity ?? 0) - (Model.Product?.ReservedQuantity ?? 0));
+                    // Tồn cho sản phẩm (khi KHÔNG có biến thể)
+                    int productAvailable = Math.Max(0,
+                    (Model.Product?.StockQuantity ?? 0) - (Model.Product?.ReservedQuantity ?? 0));
 
-                    // Nhãn tồn
                     string StockLabel(int stock) => stock switch
                     {
                         0 => "Hết hàng",
@@ -102,29 +101,37 @@
                     };
                 }
 
+
                 <!-- (A) Khối chọn biến thể nếu có -->
                 @if (hasVariants)
                 {
-                    <h6 class="mb-2">Hương vị</h6>
-                    <div class="mb-3">
-                        @for (int i = 0; i < activeVariants.Count; i++)
+                    @if (Model.OptionGroups != null && Model.OptionGroups.Any())
+                    {
+                        @for (int g = 0; g < Model.OptionGroups.Count; g++)
                         {
-                            var v = activeVariants[i];
-                            var vid = $"variant{i}";
-                            var available = Math.Max(0, v.StockQuantity - v.ReservedQuantity);  // 🔴 không dùng ??
+                            var group = Model.OptionGroups[g];
 
-                            <input type="radio"
-                                   class="btn-check variant-radio"
-                                   name="variantId"
-                                   id="@vid"
-                                   value="@v.Id"
-                                   data-available="@available"
-                                   @(i == 0 ? "checked" : "") />
-                            <label class="flavor-option-label" for="@vid">
-                                @v.Name (@StockLabel(available))
-                            </label>
+                            <h6 class="mt-3">@group.GroupName</h6>
+                            <div class="mb-2 option-group" data-group="@g">
+                                @foreach (var val in group.Values)
+                                {
+                                    var valId = $"opt{g}_{val.OptionValueId}";
+                                    <input type="radio"
+                                           class="btn-check option-value-radio"
+                                           name="group_@g"
+                                           id="@valId"
+                                           value="@val.OptionValueId"
+                                           data-group-index="@g"
+                                           @(val.IsAvailable ? "" : "disabled") />
+
+                                    <label class="flavor-option-label @(val.IsAvailable ? "" : "disabled")"
+                                           for="@valId">
+                                        @val.Value
+                                    </label>
+                                }
+                            </div>
                         }
-                    </div>
+                    }
                 }
 
                 <!-- (B) Khối hương vị: chỉ hiện khi KHÔNG có biến thể -->
@@ -191,8 +198,8 @@
                         <input type="hidden" name="productId" value="@Model.Product.Id" />
                         <input type="hidden" id="hiddenQuantity" name="quantity" value="1" />
                         <input type="hidden" id="hiddenSelectedFlavor" name="SelectedFlavor" value="" />
-                        <input type="hidden" id="hiddenVariantId" name="variantId"
-                               value="@(hasVariants? activeVariants.First().Id.ToString() : "")" />  <!-- 🔴 rỗng nếu không có biến thể -->
+                        <input type="hidden" id="hiddenVariantId" name="variantId" value="" />
+
 
                         <button type="submit" class="btn btn-outline-dark w-100">
                             <i class="bi-cart-fill me-1"></i> Thêm vào giỏ
@@ -397,148 +404,210 @@
 </style>
 
 <script>
+    function updateHiddenInputs() {
+        var qSel = document.getElementById('quantitySelect');
+        if (qSel) document.getElementById('hiddenQuantity').value = qSel.value;
+
+        var hasVariants = document.querySelector('.option-value-radio') !== null;
+
+        // Flavor
+        var flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
+        document.getElementById('hiddenSelectedFlavor').value =
+            hasVariants ? '' : (flavorRadio ? flavorRadio.value : '');
+
+        // Variant ID
+        var variantId = Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count
+            ? document.getElementById('hiddenVariantId').value
+            : '';
+
+        document.getElementById('hiddenVariantId').value = variantId;
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        // 1) Đổi ảnh chính khi click thumbnail
+        // 1) change thumbnail
         var mainImage = document.getElementById('mainProductImage');
         document.querySelectorAll('.img-thumbnail').forEach(function (t) {
             t.addEventListener('click', function () { mainImage.src = this.src; });
         });
 
-        // 2) Cập nhật hidden inputs mỗi khi có thay đổi
-        function updateHiddenInputs() {
-            var qSel = document.getElementById('quantitySelect');
-            if (qSel) document.getElementById('hiddenQuantity').value = qSel.value;
+        // 2) change quantity
+        var qSel = document.getElementById('quantitySelect');
+        if (qSel) qSel.addEventListener('change', updateHiddenInputs);
 
-            var hasVariants = document.querySelector('.variant-radio') !== null;
-
-            // ✅ HƯƠNG VỊ: chỉ gửi SelectedFlavor khi KHÔNG có biến thể
-            var flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
-            document.getElementById('hiddenSelectedFlavor').value = hasVariants ? '' : (flavorRadio ? flavorRadio.value : '');
-
-            // ✅ variantId: để rỗng nếu không chọn
-            var variantRadio = document.querySelector('input[name="variantId"]:checked');
-            document.getElementById('hiddenVariantId').value = variantRadio ? variantRadio.value : '';
-        }
-
-        // 3) Khi đổi biến thể: cập nhật tồn khả dụng & quantity dropdown
-        document.querySelectorAll('.variant-radio').forEach(function (r) {
-            r.addEventListener('change', function () {
-                var available = parseInt(this.dataset.available || '0');
-                var qSel = document.getElementById('quantitySelect');
-                if (qSel) {
-                    qSel.dataset.available = available;
-                    // làm lại options (tối đa 5)
-                    qSel.innerHTML = '';
-                    var maxUi = Math.min(5, Math.max(0, available));
-                    for (var i = 1; i <= maxUi; i++) {
-                        var op = document.createElement('option'); op.value = i; op.textContent = i;
-                        qSel.appendChild(op);
-                    }
-                    // cập nhật nhãn tồn
-                    var label = 'Còn hàng';
-                    if (available === 0) label = 'Hết hàng';
-                    else if (available <= 5) label = 'Còn ' + available;
-                    var lbl = document.getElementById('stockLabelTxt');
-                    if (lbl) lbl.textContent = label;
-                }
-                updateHiddenInputs();
-            });
-        });
-
-        // 4) quantity change → đồng bộ hidden
-        var quantitySelect = document.getElementById('quantitySelect');
-        if (quantitySelect) quantitySelect.addEventListener('change', updateHiddenInputs);
-
-        // 5) ✅ flavor change → đồng bộ hidden (trường hợp không có biến thể)
+        // 3) change flavor
         document.querySelectorAll('input[name="SelectedFlavor"]').forEach(function (r) {
             r.addEventListener('change', updateHiddenInputs);
         });
 
-        // 6) AddToCart submit → chặn vượt tồn phía client
-        var addToCartForm = document.getElementById('addToCartForm');
-        if (addToCartForm) {
-            addToCartForm.addEventListener('submit', function (e) {
+        // 4) AddToCart check
+        var form = document.getElementById('addToCartForm');
+        if (form) {
+            form.addEventListener('submit', function (e) {
                 updateHiddenInputs();
-                var qSel = document.getElementById('quantitySelect');
-                var qty = parseInt(document.getElementById('hiddenQuantity').value || '1');
-                var available = parseInt((qSel?.dataset?.available) || '0');
+                let qty = parseInt(document.getElementById('hiddenQuantity').value || '1');
+                let available = parseInt((qSel?.dataset?.available) || '0');
+
                 if (qty > available) {
                     e.preventDefault();
-                    alert('Số lượng bạn chọn vượt quá tồn kho (' + available + '). Vui lòng giảm số lượng.');
+                    alert(`Số lượng vượt quá tồn kho (${available})`);
+                    return;
+                }
+
+                let hasVariants = document.querySelector('.option-value-radio') !== null;
+                let variantId = document.getElementById('hiddenVariantId').value;
+                if (hasVariants && !variantId) {
+                    e.preventDefault();
+                    alert("Vui lòng chọn đủ các tuỳ chọn!");
                 }
             });
         }
-
-        // 7) init
-        updateHiddenInputs();
     });
 
-    
+    function submitBuyNow() {
+        updateHiddenInputs();
+        let qSel = document.getElementById('quantitySelect');
+        let qty = parseInt(qSel.value || '1');
+        let available = parseInt((qSel?.dataset?.available) || '0');
+        if (qty > available) {
+            alert(`Số lượng vượt quá (${available})`);
+            return;
+        }
 
-        // Rating click + hover JS
+        let variantId = document.getElementById('hiddenVariantId').value;
+        let hasVariants = document.querySelector('.option-value-radio') !== null;
+        if (hasVariants && !variantId) {
+            alert("Bạn chưa chọn đầy đủ tuỳ chọn!");
+            return;
+        }
+
+        document.getElementById('buyNowQty').value = qty;
+        document.getElementById('buyNowVariantId').value = variantId;
+
+        let flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
+        document.getElementById('buyNowFlavor').value =
+            hasVariants ? '' : (flavorRadio?.value || '');
+
+        document.getElementById('buyNowForm').submit();
+    }
+
+    // ⭐ Rating Logic
     document.addEventListener('DOMContentLoaded', function () {
         const stars = document.querySelectorAll('.rating-input .star');
-        const ratingValueInput = document.getElementById('ratingValue');
-        let currentRating = parseInt(ratingValueInput.value) || 0;
+        const ratingInput = document.getElementById('ratingValue');
+        let currentRating = parseInt(ratingInput.value) || 0;
 
-        function updateStarAppearance(rating) {
-            stars.forEach(star => {
-                const val = parseInt(star.dataset.value);
-                if (val <= rating) {
-                    star.classList.remove('far');
-                    star.classList.add('fas');
+        function render(rating) {
+            stars.forEach(s => {
+                let v = parseInt(s.dataset.value);
+                if (v <= rating) {
+                    s.classList.add("fas");
+                    s.classList.remove("far");
                 } else {
-                    star.classList.remove('fas');
-                    star.classList.add('far');
+                    s.classList.add("far");
+                    s.classList.remove("fas");
                 }
             });
         }
 
-        updateStarAppearance(currentRating);
+        render(currentRating);
 
-        stars.forEach(star => {
-            star.addEventListener('mouseover', () => {
-                updateStarAppearance(parseInt(star.dataset.value));
-            });
-
-            star.addEventListener('mouseout', () => {
-                updateStarAppearance(currentRating);
-            });
-
-            star.addEventListener('click', () => {
-                currentRating = parseInt(star.dataset.value);
-                ratingValueInput.value = currentRating;
-                updateStarAppearance(currentRating);
+        stars.forEach(s => {
+            s.addEventListener("mouseover", () => render(parseInt(s.dataset.value)));
+            s.addEventListener("mouseout", () => render(currentRating));
+            s.addEventListener("click", () => {
+                currentRating = parseInt(s.dataset.value);
+                ratingInput.value = currentRating;
+                render(currentRating);
             });
         });
     });
 
-        function submitBuyNow() {
-        // Đồng bộ hidden của AddToCart trước (tận dụng code sẵn có)
-        if (typeof updateHiddenInputs === 'function') updateHiddenInputs();
+    // ================= VARIANT SELECTING =================
+    let selectedOptionValues = {}; // { groupIndex: valueId }
+    let variantData = {};
 
-        // Lấy số lượng & kiểm tra tồn UI
-        var qSel = document.getElementById('quantitySelect');
-        var qty = qSel ? parseInt(qSel.value || '1') : 1;
-        var available = parseInt((qSel?.dataset?.available) || '0');
-        if (qty > available) {
-            alert('Số lượng vượt quá tồn kho (' + available + ').');
+    @* Load Variant Data *@
+    @{
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    Model.Variants.Select(v => new
+                    {
+                            VariantId = v.Id,
+                            Stock = Math.Max(0, v.StockQuantity - v.ReservedQuantity),
+                            OptionValueIds = v.OptionValues?.Select(ov => ov.ProductOptionValueId).ToList()
+                    })
+            );
+    }
+    variantData = @Html.Raw(json);
+
+    document.querySelectorAll('.option-value-radio').forEach(el => {
+        el.addEventListener('change', function () {
+            selectedOptionValues[this.dataset.groupIndex] = parseInt(this.value);
+
+            updateAvailableOptions();
+            updateSelectedVariantAndStock();
+        });
+    });
+
+    function updateAvailableOptions() {
+        document.querySelectorAll('.option-group').forEach(groupEl => {
+            groupEl.querySelectorAll('.option-value-radio').forEach(rd => {
+                let id = parseInt(rd.value);
+                let enabled = Object.values(variantData).some(v => v.OptionValueIds.includes(id));
+                rd.disabled = !enabled;
+            });
+        });
+    }
+
+        function updateSelectedVariantAndStock() {
+        if (Object.keys(selectedOptionValues).length !== @Model.OptionGroups?.Count) return;
+
+        let selected = Object.values(selectedOptionValues);
+        let found = Object.values(variantData).find(v =>
+            selected.every(id => v.OptionValueIds.includes(id))
+        );
+
+        let stockLabel = document.getElementById('stockLabelTxt');
+        let select = document.getElementById('quantitySelect');
+        let buyBtn = document.querySelector(".product-detail-actions-container button.btn-primary");
+        let cartBtn = document.querySelector("#addToCartForm button");
+
+        if (!found) {
+            document.getElementById('hiddenVariantId').value = "";
+            stockLabel.innerText = "Hết hàng";
+
+            // Disable actions
+            buyBtn.disabled = true;
+            cartBtn.disabled = true;
+            select.disabled = true;
+
             return;
         }
 
-        // Gán vào form BuyNow
-        document.getElementById('buyNowQty').value = qty;
+        document.getElementById('hiddenVariantId').value = found.VariantId;
+        let available = found.Stock;
 
-        // Variant: lấy từ radio đang chọn (giống hiddenVariantId)
-        var variantRadio = document.querySelector('input[name="variantId"]:checked');
-        document.getElementById('buyNowVariantId').value = variantRadio ? variantRadio.value : '';
+        // Update quantity dropdown
+        select.dataset.available = available;
+        select.innerHTML = "";
+        if (available > 0) {
+            select.disabled = false;
+            for (let i = 1; i <= Math.min(5, available); i++) {
+                select.innerHTML += `<option value="${i}">${i}</option>`;
+            }
+            stockLabel.innerText =
+                available <= 5 ? `Còn ${available}` : "Còn hàng";
 
-        // Flavor: CHỈ khi KHÔNG có biến thể
-        var hasVariants = document.querySelector('.variant-radio') !== null;
-        var flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
-        document.getElementById('buyNowFlavor').value = hasVariants ? '' : (flavorRadio ? flavorRadio.value : '');
+            // Enable buttons
+            buyBtn.disabled = false;
+            cartBtn.disabled = false;
+        } else {
+            select.disabled = true;
+            select.innerHTML = `<option value="0">0</option>`;
+            stockLabel.innerText = "Hết hàng";
 
-        // Submit POST tới BuyNow
-        document.getElementById('buyNowForm').submit();
+            buyBtn.disabled = true;
+            cartBtn.disabled = true;
+        }
     }
+
 </script>

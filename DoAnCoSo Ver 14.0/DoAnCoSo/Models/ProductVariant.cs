@@ -15,6 +15,10 @@
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+     
         public Product Product { get; set; }
+
+        public ICollection<ProductVariantOptionValue> OptionValues { get; set; } = new List<ProductVariantOptionValue>();
+
     }
 }
