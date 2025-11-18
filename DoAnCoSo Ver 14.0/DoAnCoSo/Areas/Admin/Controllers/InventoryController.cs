@@ -125,7 +125,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         //Lịch sử giao dịch kho
         public async Task<IActionResult> Logs()
         {
-            ViewBag.OptionLabel = "Tùy chọn";
+            //ViewBag.OptionLabel = "Tùy chọn";
             var logs = await _context.InventoryLogs
             .Include(l => l.Product)
             .Include(l => l.Variant)

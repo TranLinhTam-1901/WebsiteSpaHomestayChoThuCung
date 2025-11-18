@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<DoAnCoSo.Models.InventoryLog>
 @{
     ViewData["Title"] = "📜 Lịch sử kho";
-    var optionLabel = (string)(ViewBag.OptionLabel ?? "Tùy chọn");
+    // var optionLabel = (string)(ViewBag.OptionLabel ?? "Phân loại");
 }
 
 <div class="inventory-wrapper py-5">
@@ -28,7 +28,7 @@
                             <th>Người thực hiện</th>
                             <th>Thời gian</th>
                             <th>Ghi chú</th>
-                            <th>@optionLabel</th>
+                            <th>Phân loại</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,11 +56,108 @@
                                     <td>@i</td>
                                     <td>@log.Product?.Name</td>
                                     <td>@log.QuantityChange</td>
-                                    <td>@log.Reason</td>
-                                    <td>@log.ReferenceId</td>
+                                    <td>
+                                        @switch (log.Reason)
+                                        {
+                                            case "OrderReserved":
+                                                @:Giữ hàng cho đơn hàng
+                                                break;
+                                            case "OrderUnreserved":
+                                                @:Bỏ giữ hàng cho đơn hàng
+                                                break;
+                                            case "OrderConfirmed":
+                                                @:Xuất kho cho đơn hàng
+                                                break;
+                                            case "OrderCanceledRestock":
+                                                @:Hoàn kho từ đơn hàng
+                                                break;
+
+                                            case "AdjustStock":
+                                                @:Điều chỉnh tồn kho
+                                                break;
+                                            case "ExportStock":
+                                                @:Xuất kho
+                                                break;
+                                            case "ImportStock":
+                                                @:Nhập kho
+                                                break;
+                                            case "InitialImport":
+                                                @:Khởi tạo tồn kho ban đầu
+                                                break;
+                                            default:
+                                                @log.Reason
+                                                break;
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            string raw = log.ReferenceId ?? ""; // <-- tên property bạn đang dùng
+                                            string refText = "";
+
+                                            if (int.TryParse(raw, out int idOnly))
+                                            {
+                                                refText = $"Đơn hàng #{idOnly}";
+                                            }
+                                            else if (raw.StartsWith("Order:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                var id = raw.Split(':')[1];
+                                                refText = $"Đơn hàng #{id}";
+                                            }
+                                            else if (raw.StartsWith("Product:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                var id = raw.Split(':')[1];
+                                                refText = $"Sản phẩm #{id}";
+                                            }
+                                            else
+                                            {
+                                                refText = raw;
+                                            }
+                                        }
+                                        @refText
+                                    </td>                                 
                                     <td title="@log.PerformedByUserId">@actor</td>
                                     <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td class="note">@log.Note</td>
+                                    <td class="note">
+                                        @switch (log.Reason)
+                                        {
+                                            case "OrderReserved":
+                                                @:Giữ hàng theo yêu cầu đặt hàng
+                                                break;
+
+                                            case "OrderUnreserved":
+                                                @:Bỏ giữ hàng sau khi đơn bị huỷ
+                                                break;
+
+                                            case "OrderConfirmed":
+                                                @:Xuất kho khi đơn được xác nhận
+                                                break;
+
+                                            case "OrderCanceledRestock":
+                                                @:Hoàn kho do đơn bị huỷ
+                                                break;
+
+                                            case "InitialImport":
+                                                @:Khởi tạo tồn kho ban đầu
+                                                break;
+
+                                            case "AdjustStock":
+                                                @:Điều chỉnh số lượng tồn kho
+                                                break;
+
+                                            case "ExportStock":
+                                                @:Xuất kho theo thao tác quản trị
+                                                break;
+
+                                            case "ImportStock":
+                                                @:Nhập kho bổ sung hàng hoá
+                                                break;
+
+                                            default:
+                                                @log.Note
+                                                break;
+                                        }
+                                    </td>
+
                                     <td>@(!string.IsNullOrWhiteSpace(log.Variant?.Name) ? log.Variant!.Name : "—")</td>
                                 </tr>
                                 i++;

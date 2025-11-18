@@ -298,9 +298,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
         }
 
-
-        
-
         public async Task<IActionResult> Details(int id)
         {
             var product = await _context.Products
@@ -331,7 +328,17 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         {
             var product = await _context.Products
             .Include(p => p.Category)
+
+            // 1) Load OptionGroups (Hương vị, Khối lượng...)
+            .Include(p => p.OptionGroups)
+            .ThenInclude(g => g.Values)
+
+            // 2) Load Variants
             .Include(p => p.Variants)
+            .ThenInclude(v => v.OptionValues)
+                .ThenInclude(ov => ov.OptionValue)
+
+            // 3) Load hình ảnh
             .Include(p => p.Images)
             .FirstOrDefaultAsync(p => p.Id == id);
             if (product == null) return NotFound();
