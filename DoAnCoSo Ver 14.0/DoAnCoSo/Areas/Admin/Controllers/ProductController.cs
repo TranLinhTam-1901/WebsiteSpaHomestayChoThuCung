@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Security.Claims;
+using Microsoft.Extensions.Primitives;
+using DoAnCoSo.ViewModels.VariantPreview;
 
 namespace DoAnCoSo.Areas.Admin.Controllers
 {
@@ -327,284 +330,521 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         public async Task<IActionResult> Update(int id)
         {
             var product = await _context.Products
+            .AsSplitQuery()
             .Include(p => p.Category)
-
-            // 1) Load OptionGroups (Hương vị, Khối lượng...)
-            .Include(p => p.OptionGroups)
-            .ThenInclude(g => g.Values)
-
-            // 2) Load Variants
-            .Include(p => p.Variants)
-            .ThenInclude(v => v.OptionValues)
-                .ThenInclude(ov => ov.OptionValue)
-
-            // 3) Load hình ảnh
+            .Include(p => p.OptionGroups).ThenInclude(g => g.Values)
+            .Include(p => p.Variants).ThenInclude(v => v.OptionValues).ThenInclude(ov => ov.OptionValue)
             .Include(p => p.Images)
             .FirstOrDefaultAsync(p => p.Id == id);
+
             if (product == null) return NotFound();
+
+            
+            product.Variants = product.Variants
+                .Where(v => v.IsActive)
+                .ToList();
 
             await PopulateCategoriesDropdown(product.CategoryId);
             return View(product);
         }
 
-        [HttpPost]     
+        [HttpPost]
         public async Task<IActionResult> Update(
-        int id,
-        Product product,
-        IFormFile? imageUrl,
-        [FromForm(Name = "images")] List<IFormFile>? newImages,
-        List<string>? flavorsList,
-        [FromForm] List<int>? VariantIds,
-        [FromForm] List<string>? VariantNames,
-        [FromForm] List<string>? VariantSkus,
-        [FromForm] List<decimal?>? VariantPriceOverrides,
-        [FromForm] List<int>? VariantStocks,
-        [FromForm] List<int>? DeleteImageIds,
-        [FromForm] List<int>? VariantThresholds,
-        [FromForm] IFormCollection form)
+            int id,
+            Product product,
+            IFormFile? imageUrl,
+            [FromForm(Name = "images")] List<IFormFile>? newImages,
+            [FromForm] IFormCollection form)
         {
             ModelState.Remove("ImageUrl");
+
             if (id != product.Id) return NotFound();
 
-            if (!ModelState.IsValid)
-            {
-                await PopulateCategoriesDropdown(product.CategoryId);
-                return View(product);
-            }
+            // =============================
+            // LOAD PRODUCT
+            // =============================
+            var existingProduct = await _context.Products
+                .Include(p => p.Images)
+                .Include(p => p.OptionGroups).ThenInclude(g => g.Values)
+                .Include(p => p.Variants).ThenInclude(v => v.OptionValues)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-            var existingProduct = await _productRepository.GetByIdAsync(id);
-            if (existingProduct == null) return NotFound();
+            if (existingProduct == null)
+                return NotFound();
 
-            await _context.Entry(existingProduct)
-                  .Collection(p => p.Images)
-                  .LoadAsync();
-
-            // === cập nhật fields cơ bản ===
-            if (imageUrl != null)
-                existingProduct.ImageUrl = await SaveImage(imageUrl);
-
-
-            if (DeleteImageIds != null && DeleteImageIds.Any())
-            {
-                var toDelete = existingProduct.Images
-                    .Where(img => DeleteImageIds.Contains(img.Id))
-                    .ToList();
-
-                foreach (var img in toDelete)
-                {
-                   
-                    _context.Set<ProductImage>().Remove(img);
-                }
-
-            }
-            if (newImages != null && newImages.Any())
-            {
-                foreach (var file in newImages)
-                {
-                    if (file == null || file.Length == 0) continue;
-
-                    var url = await SaveImage(file);
-
-                    existingProduct.Images.Add(new ProductImage
-                    {
-                        ProductId = existingProduct.Id,
-                        Url = url
-                    });
-                }
-            }
-
+            // =============================
+            // UPDATE BASIC FIELDS
+            // =============================
             existingProduct.Name = product.Name;
             existingProduct.Price = product.Price;
             existingProduct.PriceReduced = product.PriceReduced;
-            existingProduct.Trademark = product.Trademark;
             existingProduct.Description = product.Description;
+            existingProduct.Trademark = product.Trademark;
             existingProduct.CategoryId = product.CategoryId;
-            existingProduct.LowStockThreshold = product.LowStockThreshold;
-            // NEW: cập nhật trạng thái bán/tạm dừng
             existingProduct.IsActive = product.IsActive;
+            existingProduct.LowStockThreshold = product.LowStockThreshold;
 
+            if (imageUrl != null)
+                existingProduct.ImageUrl = await SaveImage(imageUrl);
 
-            // Nếu đã có biến thể thì bỏ hương vị dạng chuỗi cho nhất quán UI
-            await _context.Entry(existingProduct).Collection(p => p.Variants).LoadAsync();
-            if (existingProduct.Variants != null && existingProduct.Variants.Any())
+            // DELETE IMAGES
+            var deleteImageIds = form["DeleteImageIds"].Select(int.Parse).ToList();
+            if (deleteImageIds.Any())
             {
-                existingProduct.Flavors = null;
+                var imgs = existingProduct.Images.Where(i => deleteImageIds.Contains(i.Id)).ToList();
+                _context.ProductImages.RemoveRange(imgs);
             }
-            else
+
+            // ADD NEW IMAGES
+            if (newImages != null)
             {
-                ProcessFlavors(existingProduct, flavorsList);
-            }
-            ProcessPriceReduced(existingProduct);
-
-
-            // === đồng bộ biến thể ===
-            VariantIds ??= new(); VariantNames ??= new(); VariantSkus ??= new();
-            VariantPriceOverrides ??= new(); VariantStocks ??= new(); VariantThresholds ??= new();
-
-            // KHÔNG tính theo checkbox để tránh rớt index
-            int n = new[]
-            {
-            VariantIds.Count, VariantNames.Count, VariantSkus.Count,
-            VariantPriceOverrides.Count, VariantStocks.Count, VariantThresholds.Count
-            }.Min();
-
-            await _context.Entry(existingProduct).Collection(p => p.Variants).LoadAsync();
-            var byId = existingProduct.Variants.ToDictionary(v => v.Id);
-            var seen = new HashSet<int>();
-
-            await using var tx = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                for (int i = 0; i < n; i++)
+                foreach (var f in newImages)
                 {
-                    int vid = VariantIds[i];
-                    string name = (VariantNames[i] ?? "").Trim();
-                    string sku = (VariantSkus[i] ?? "").Trim();
-                    int stock = Math.Max(0, VariantStocks[i]);
-                    int threshold = Math.Max(0, VariantThresholds[i]);
-                    decimal? priceOverride = VariantPriceOverrides[i];
-
-                    // ⬇️ lấy giá trị cuối cùng của checkbox (hidden "false" + checkbox "true" nếu được tích)
-                    var raw = form[$"VariantIsActives[{i}]"]; // ["false"] hoặc ["false","true"]
-                    bool isActive = raw.Count > 0 &&
-                                    string.Equals(raw[raw.Count - 1], "true", StringComparison.OrdinalIgnoreCase);
-
-                    if (string.IsNullOrWhiteSpace(name)) continue;
-
-                    if (vid > 0 && byId.TryGetValue(vid, out var v))
+                    if (f.Length > 0)
                     {
-                        seen.Add(vid);
-
-                        int delta = stock - v.StockQuantity;
-
-                        v.Name = name;
-                        v.Sku = string.IsNullOrWhiteSpace(sku)
-                            ? (string.IsNullOrWhiteSpace(v.Sku)
-                                ? $"P{existingProduct.Id}-V{vid}-{Guid.NewGuid().ToString("N")[..4]}"
-                                : v.Sku)
-                            : sku; // đảm bảo không null
-
-                        v.PriceOverride = priceOverride;
-                        v.LowStockThreshold = threshold;
-                        v.IsActive = isActive;
-
-                        if (delta != 0)
+                        var url = await SaveImage(f);
+                        existingProduct.Images.Add(new ProductImage
                         {
-                            v.StockQuantity += delta;
+                            ProductId = id,
+                            Url = url
+                        });
+                    }
+                }
+            }
+            // =====================================================================
+            // 1️⃣ UPDATE HOẶC TẠO MỚI GROUP + VALUE (khớp đúng View hiện tại)
+            // =====================================================================
+            int g = 0;
 
-                            _context.InventoryLogs.Add(new InventoryLog
-                            {
-                                ProductId = existingProduct.Id,
-                                VariantId = v.Id,
-                                QuantityChange = delta,
-                                Reason = delta > 0 ? "ManualImport" : "ManualExport",
-                                ReferenceId = $"Product:{existingProduct.Id}",
-                                PerformedByUserId = _userManager.GetUserId(User),
-                                Note = "Điều chỉnh tồn ở màn Update sản phẩm",
-                                CreatedAt = DateTime.UtcNow
-                            });
-                        }
+            // Lặp cho đến khi không còn tìm thấy khóa OptionGroupIds[g]
+             while (form.Keys.Contains($"OptionGroupIds[{g}]"))
+            {
+                // --- Lấy dữ liệu Group ---
+                string groupIdString = form[$"OptionGroupIds[{g}]"].ToString().Trim();
+                string gName = form[$"OptionGroupNames[{g}]"].ToString().Trim();
+
+                if (string.IsNullOrWhiteSpace(gName))
+                {
+                    g++;
+                    continue; // Bỏ qua nếu tên Group rỗng
+                }
+
+                // --- Xử lý Group (Cũ/Mới) ---
+                ProductOptionGroup group;
+                int groupId = int.Parse(groupIdString);
+
+                if (groupId > 0)
+                {
+                    // nhóm cũ
+                    group = existingProduct.OptionGroups.First(x => x.Id == groupId);
+                    group.Name = gName;
+                }
+                else
+                {
+                    // kiểm tra nhóm trùng tên
+                    var existed = existingProduct.OptionGroups
+                        .FirstOrDefault(x => x.Name.ToLower() == gName.ToLower());
+
+                    if (existed != null)
+                    {
+                        group = existed;
                     }
                     else
                     {
-                        var nv = new ProductVariant
+                        group = new ProductOptionGroup
                         {
-                            ProductId = existingProduct.Id,
-                            Name = name,
-                            Sku = string.IsNullOrWhiteSpace(sku)
-                                ? $"P{existingProduct.Id}-V{existingProduct.Variants.Count + 1}-{Guid.NewGuid().ToString("N")[..4]}"
-                                : sku,
-                            PriceOverride = priceOverride,
-                            StockQuantity = stock,
-                            ReservedQuantity = 0,
-                            SoldQuantity = 0,
-                            LowStockThreshold = threshold,
-                            IsActive = isActive,
-                            CreatedAt = DateTime.UtcNow
+                            ProductId = id,
+                            Name = gName
                         };
-                        _context.ProductVariants.Add(nv);
-                        await _context.SaveChangesAsync(); // cần Id để log
-
-                        if (stock > 0)
-                        {
-                            _context.InventoryLogs.Add(new InventoryLog
-                            {
-                                ProductId = existingProduct.Id,
-                                VariantId = nv.Id,
-                                QuantityChange = stock,
-                                Reason = "InitialImport",
-                                ReferenceId = $"Product:{existingProduct.Id}",
-                                PerformedByUserId = _userManager.GetUserId(User),
-                                Note = "Khởi tạo tồn kho biến thể (thêm mới ở Update)",
-                                CreatedAt = DateTime.UtcNow
-                            });
-                        }
+                        _context.ProductOptionGroups.Add(group);
+                        await _context.SaveChangesAsync();
                     }
                 }
 
-                // Biến thể không xuất hiện trong form → ngừng hoạt động (không xoá)
-                foreach (var v in existingProduct.Variants)
-                    if (!seen.Contains(v.Id))
-                        v.IsActive = false;
 
-                // ✅ CHỈ khi có biến thể thì mới ghi đè tồn kho
-                if (existingProduct.Variants != null && existingProduct.Variants.Any())
+                // --- Xử lý Values bên trong Group ---
+                int v = 0;
+                // Lặp cho đến khi không còn tìm thấy khóa OptionValueIds[g][v]
+                while (form.Keys.Contains($"OptionValueIds[{g}][{v}]"))
                 {
-                    existingProduct.StockQuantity = existingProduct.Variants
-                        .Where(v => v.IsActive)
-                        .Sum(v => v.StockQuantity);
+                    string valueIdString = form[$"OptionValueIds[{g}][{v}]"].ToString().Trim();
+                    string txt = form[$"OptionValueNames[{g}][{v}]"].ToString().Trim();
+
+                    if (!string.IsNullOrWhiteSpace(txt))
+                    {
+                        int vid = int.Parse(valueIdString);
+
+                        if (vid > 0)
+                        {
+                            // Value cũ → update
+                            var existing = group.Values.First(x => x.Id == vid);
+                            existing.Value = txt;
+                        }
+                        else
+                        {
+                            // Value mới → tạo và lấy ID
+                            var newVal = new ProductOptionValue
+                            {
+                                ProductOptionGroupId = group.Id,
+                                Value = txt
+                            };
+                            _context.ProductOptionValues.Add(newVal);
+                            await _context.SaveChangesAsync(); // Cần SaveChanges để có Value.Id
+                        }
+                    }
+                    v++;
+                }           
+                g++; 
+            }
+            await _context.SaveChangesAsync();
+            // =====================================================================
+            // 2️⃣ ĐỌC PREVIEW VARIANT → CHUYỂN TEXT THÀNH ID (LOGIC ĐÃ SỬA)
+            // =====================================================================
+            List<List<int>> previewCombos = new();
+
+            int row = 0;
+            while (true)
+            {
+                List<int> idList = new();
+                int col = 0;
+                bool rowHasData = false; // Cờ để kiểm tra xem hàng có dữ liệu hay không
+
+                // Lặp qua CỘT (col) cho HÀNG (row) hiện tại
+                while (form.Keys.Contains($"GeneratedVariantValueNames[{row}][{col}]"))
+                {
+                    // Đọc giá trị tại [row][col]
+                    string text = form[$"GeneratedVariantValueNames[{row}][{col}]"].ToString().Trim();
+
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        rowHasData = true;
+
+                        // --- LOGIC TÌM KIẾM/TẠO VALUE CŨ CỦA BẠN (vẫn giữ nguyên) ---
+                        var exists = await _context.ProductOptionValues
+                            .Include(v => v.Group)
+                            .FirstOrDefaultAsync(v => v.Group.ProductId == id && v.Value.ToLower() == text.ToLower());
+
+                        int vid;
+                        if (exists != null)
+                        {
+                            vid = exists.Id;
+                        }
+                        else
+                        {
+                            // ... (Logic tạo Value mới và SaveChangesAsync) ...
+                            var targetGroup = existingProduct.OptionGroups.OrderBy(g => g.Id).ElementAt(col);
+                            var newVal = new ProductOptionValue { Value = text, ProductOptionGroupId = targetGroup.Id };
+                            _context.ProductOptionValues.Add(newVal);
+                            await _context.SaveChangesAsync();
+                            vid = newVal.Id;
+                        }
+                        idList.Add(vid);
+                    }
+                    col++; // Tăng cột
                 }
 
-                await _context.SaveChangesAsync();
-                await tx.CommitAsync();
-            }
-            catch
+                if (!rowHasData) break; // Thoát nếu hàng không có dữ liệu
+
+                previewCombos.Add(idList);
+                row++;
+            }   
+            
+            //MERGE OPTIONVALUE CU  + MOI 
+            // Lấy toàn bộ combos hiện có từ các biến thể cũ
+            var oldVariantCombos = existingProduct.Variants
+                .Select(v => v.OptionValues
+                    .OrderBy(o => o.ProductOptionValueId)
+                    .Select(o => o.ProductOptionValueId)
+                    .ToList())
+                .ToList();
+
+            //Nếu có preview → gộp oldCombos +previewCombos
+            if (previewCombos.Count > 0 && oldVariantCombos.Count > 0)
             {
-                await tx.RollbackAsync();
-                throw;
+                var merged = new List<List<int>>();
+
+                foreach (var oldCombo in oldVariantCombos)
+                {
+                    foreach (var newCombo in previewCombos)
+                    {
+                        var combo = new List<int>();
+                        combo.AddRange(oldCombo);
+                        combo.AddRange(newCombo);
+                        merged.Add(combo);
+                    }
+                }
+
+                previewCombos = merged;
             }
+            // TỰ ĐỘNG TẠO COMBO ĐẦY ĐỦ NẾU KHÔNG CÓ PREVIEW           
+            //if (previewCombos.Count == 0)
+            //{
+            //    // Lấy tất cả value của tất cả group
+            //    var allGroups = existingProduct.OptionGroups
+            //        .OrderBy(g => g.Id)
+            //        .Select(g => g.Values.Select(v => v.Id).ToList())
+            //        .ToList();
+
+            //    // Sinh toàn bộ combo mới
+            //    previewCombos = GenerateCartesian(allGroups);
+            //}
+
+            // =====================================================================
+            // 3️ XỬ LÝ VARIANT (tạo mới / cập nhật)
+            // =====================================================================
+            var existingDict = existingProduct.Variants
+                .ToDictionary(
+                    v => string.Join(",", v.OptionValues.OrderBy(x => x.ProductOptionValueId).Select(x => x.ProductOptionValueId)),
+                    v => v
+                );
+
+            // HashSet để lưu trữ key (chuỗi ID Value) của tất cả các biến thể hợp lệ (mới tạo HOẶC cũ được cập nhật)
+            HashSet<string> validKeys = new();
+
+           
+            // XỬ LÝ CÁC BIẾN THỂ TỪ PREVIEW (Tạo mới / Cập nhật)         
+            for (int r = 0; r < previewCombos.Count; r++)
+            {
+                var combo = previewCombos[r].OrderBy(x => x).ToList();
+                string key = string.Join(",", combo);
+
+                // Thêm key của các combo được tạo mới hoặc cập nhật vào danh sách hợp lệ
+                validKeys.Add(key);
+
+                // Lấy dữ liệu từ bảng Preview mới
+                string? stockStr = form[$"GeneratedStocks[{r}]"];
+                string? thresholdStr = form[$"GeneratedThresholds[{r}]"];
+
+                int stock = string.IsNullOrWhiteSpace(stockStr) ? 0 : int.Parse(stockStr);
+                int threshold = string.IsNullOrWhiteSpace(thresholdStr) ? 0 : int.Parse(thresholdStr);
+
+
+                if (existingDict.TryGetValue(key, out var variant))
+                {
+                    // 🚀 CẬP NHẬT variant CŨ (nếu nó khớp với 1 combo trong Preview)
+                    variant.StockQuantity = stock;
+                    variant.LowStockThreshold = threshold;
+                    variant.IsActive = true;
+                    // Note: Không cập nhật PriceOverride ở đây vì Preview không có input PriceOverride
+                }
+                else
+                {
+                    // 🆕 TẠO MỚI VARIANT
+                    var newVariant = new ProductVariant
+                    {
+                        ProductId = id,
+                        Sku = $"P{id}-V{Guid.NewGuid().ToString("N")[..5]}",
+                        StockQuantity = stock,
+                        LowStockThreshold = threshold,
+                        PriceOverride = null,
+                        CreatedAt = DateTime.UtcNow,
+                        IsActive = true
+                    };
+
+                    _context.ProductVariants.Add(newVariant);
+                    await _context.SaveChangesAsync(); // LƯU để có newVariant.Id
+
+                    // Gắn OptionValues
+                    foreach (var vid in combo)
+                    {
+                        _context.ProductVariantOptionValues.Add(new ProductVariantOptionValue
+                        {
+                            ProductVariantId = newVariant.Id,
+                            ProductOptionValueId = vid
+                        });
+                    }
+                    await _context.SaveChangesAsync();
+
+
+                    // Build name (Cần Load Options sau khi Save để có dữ liệu Value Text)
+                    await _context.Entry(newVariant)
+                    .Collection(v => v.OptionValues)
+                    .Query()
+                    .Include(v => v.OptionValue)   
+                    .LoadAsync();
+
+                    newVariant.Name = string.Join(" - ",
+                        newVariant.OptionValues
+                            .OrderBy(v => v.ProductOptionValueId)
+                            .Select(v => v.OptionValue!.Value) // lúc này chắc chắn không null
+                    );
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // =====================================================================
+            // 💡 3.2 BỔ SUNG LOGIC: CẬP NHẬT VÀ BẢO TỒN BIẾN THỂ CŨ
+            // =====================================================================
+
+            //Đọc dữ liệu từ bảng Biến thể hiện có(Existing Variant Body)
+            var existingVariantIds = form["VariantIds"].Select(int.Parse).ToList();
+            var existingVariantStocks = form["VariantStocks"].Select(int.Parse).ToList();
+            var existingVariantThresholds = form["VariantThresholds"].Select(int.Parse).ToList();
+            var existingVariantSkus = form["VariantSkus"].ToList();
+            var existingVariantPrices = form["VariantPriceOverrides"].ToList();
+
+            for (int i = 0; i < existingVariantIds.Count; i++)
+            {
+                var variantId = existingVariantIds[i];
+                var variantToUpdate = existingProduct.Variants.FirstOrDefault(v => v.Id == variantId);
+
+                if (variantToUpdate != null)
+                {
+                    // 1. Tạo Key của biến thể cũ (dùng OptionValue ID trong DB)
+                    string oldVariantKey = string.Join(",", variantToUpdate.OptionValues
+                        .OrderBy(x => x.ProductOptionValueId)
+                        .Select(x => x.ProductOptionValueId));
+
+                    // 2. KIỂM TRA: Nếu biến thể cũ này KHÔNG CÓ trong danh sách Preview (validKeys)
+                    if (!validKeys.Contains(oldVariantKey))
+                    {
+                        // Cập nhật các trường có thể chỉnh sửa của biến thể cũ bằng dữ liệu Post từ bảng Existing
+                        variantToUpdate.Sku = existingVariantSkus[i];
+
+                        // Xử lý PriceOverride
+                        variantToUpdate.PriceOverride = decimal.TryParse(existingVariantPrices[i], out decimal price)
+                                                        ? (decimal?)price : null;
+
+                        variantToUpdate.StockQuantity = existingVariantStocks[i];
+                        variantToUpdate.LowStockThreshold = existingVariantThresholds[i];
+
+
+                        bool isActive = form[$"VariantIsActives[{i}]"] == "true";
+                        variantToUpdate.IsActive = isActive;
+
+                        // Ngăn biến thể này bị vô hiệu hóa ở bước 4.
+                        validKeys.Add(oldVariantKey);
+                    }
+                }
+            }
+
+
+            // =====================================================================
+            // 4️⃣ DISABLE VARIANT KHÔNG CÒN TRONG PREVIEW
+            // =====================================================================
+            //foreach (var v in existingProduct.Variants)
+            //{
+            //    string vk = string.Join(",", v.OptionValues
+            //        .OrderBy(x => x.ProductOptionValueId)
+            //        .Select(x => x.ProductOptionValueId));
+
+            //    if (!validKeys.Contains(vk))
+            //    {
+            //        v.IsActive = false;
+            //        v.StockQuantity = 0;
+            //    }
+            //}
+
+
+            // =====================================================================
+            // 5️⃣ UPDATE TỔNG TỒN
+            // =====================================================================
+            existingProduct.StockQuantity = existingProduct.Variants
+                .Where(v => v.IsActive)
+                .Sum(v => v.StockQuantity);
+
+
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
+        private List<List<int>> GenerateCartesian(List<List<int>> lists)
+        {
+            var result = new List<List<int>> { new List<int>() };
+
+            foreach (var list in lists)
+            {
+                var temp = new List<List<int>>();
+
+                foreach (var r in result)
+                    foreach (var item in list)
+                        temp.Add(r.Concat(new List<int> { item }).ToList());
+
+                result = temp;
+            }
+
+            return result;
+        }
 
 
+        [HttpPost]
+        public IActionResult PreviewVariantOptions([FromBody] PreviewOptionRequest req)
+        {
+            var result = new List<PreviewOptionGroupResult>();
 
-        //public async Task<IActionResult> Delete(int id)
+            foreach (var g in req.Groups)
+            {
+                if (string.IsNullOrWhiteSpace(g.Name)) continue;
+
+                var group = new PreviewOptionGroupResult
+                {
+                    GroupId = g.GroupId,  // giữ lại ID cũ nếu có
+                    Name = g.Name.Trim(),
+                    Values = new List<PreviewOptionValueResult>()
+                };
+
+
+                foreach (var v in g.Values)
+                {
+                    if (string.IsNullOrWhiteSpace(v.Text))
+                        continue;
+
+                    group.Values.Add(new PreviewOptionValueResult
+                    {
+                        Id = v.Id,                 // id cũ nếu có, id = 0 nếu value mới
+                        Text = v.Text.Trim()
+                    });
+                }
+
+                if (group.Values.Any())
+                    result.Add(group);
+            }
+
+            return Json(result);
+        }      
+
+        //private List<List<int>> GenerateCombinations(List<List<int>> source)
         //{
-        //    var product = await _productRepository.GetByIdAsync(id);
-        //    if (product == null) return NotFound();
-        //    return View(product);
-        //}
+        //    var result = new List<List<int>> { new List<int>() };
 
-        //[HttpPost, ActionName("DeleteConfirmed")]
-        //public async Task<IActionResult> DeleteConfirmed(int id)
-        //{
-        //    var product = await _context.Products
-        //       .Include(p => p.Variants)
-        //       .FirstOrDefaultAsync(p => p.Id == id);
-
-        //    if (product == null) return NotFound();
-
-        //    // chuyển sang ẩn mềm
-        //    product.IsDeleted = true;
-        //    product.IsActive = false;
-        //    product.DeletedAt = DateTime.UtcNow;
-        //    product.DeletedBy = _userManager.GetUserId(User);
-        //    product.DeletedReason = string.IsNullOrWhiteSpace(product.DeletedReason)
-        //        ? "Ẩn bởi Admin"
-        //        : product.DeletedReason;
-
-        //    // tắt toàn bộ biến thể để ngăn AddToCart/BuyNow
-        //    if (product.Variants != null)
+        //    foreach (var group in source)
         //    {
-        //        foreach (var v in product.Variants)
-        //            v.IsActive = false;
+        //        var temp = new List<List<int>>();
+
+        //        foreach (var prefix in result)
+        //        {
+        //            foreach (var value in group)
+        //            {
+        //                var combo = new List<int>(prefix) { value };
+        //                temp.Add(combo);
+        //            }
+        //        }
+
+        //        result = temp;
         //    }
 
-        //    await _context.SaveChangesAsync();
-        //    TempData["SuccessMessage"] = $"Đã ẩn sản phẩm #{product.Id} - {product.Name}.";
-        //    return RedirectToAction(nameof(Index));
+        //    return result;
         //}
+
+        //private Dictionary<int, string>? _valueCache;
+
+        //private string BuildVariantName(IEnumerable<ProductVariantOptionValue> values, ApplicationDbContext ctx)
+        //{
+        //    // Cache tất cả ValueId -> Value trong 1 lần update
+        //    if (_valueCache == null)
+        //    {
+        //        _valueCache = ctx.ProductOptionValues
+        //            .ToDictionary(v => v.Id, v => v.Value);
+        //    }
+
+        //    return string.Join(" - ", values.Select(v => _valueCache[v.ProductOptionValueId]));
+        //}
+
+
+
+
+       
 
         [HttpPost]
         [ValidateAntiForgeryToken]

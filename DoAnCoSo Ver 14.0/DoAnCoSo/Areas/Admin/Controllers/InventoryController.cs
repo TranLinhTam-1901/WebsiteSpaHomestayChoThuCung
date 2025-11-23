@@ -253,5 +253,24 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             return RedirectToAction(nameof(Variants), new { productId = v.ProductId });
         }
 
+        public async Task<IActionResult> LogDetails(int id)
+        {
+            var log = await _context.InventoryLogs
+                .Include(l => l.Product)
+                .Include(l => l.Variant)
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            var user = await _context.Users
+             .Where(u => u.Id == log.PerformedByUserId)
+             .Select(u => new { u.FullName })
+             .FirstOrDefaultAsync();
+
+            ViewBag.ActorName = user?.FullName ?? "Không rõ";
+
+            if (log == null) return NotFound();
+
+            return PartialView("_LogDetailsPartial", log);
+        }
+
     }
 }

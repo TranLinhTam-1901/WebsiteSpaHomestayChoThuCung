@@ -247,7 +247,8 @@ namespace DoAnCoSo.Controllers
 
             var lowerSearchTerm = searchTerm.ToLower();
 
-            var joinedResultsInMemory = _context.Products
+            var joinedResultsInMemory = _context.Products   
+                .Where(p => p.IsActive && !p.IsDeleted)   
                 .Join(
                     _context.Categories, // Bảng Categories
                     product => product.CategoryId, // Khóa ngoại trong bảng Products

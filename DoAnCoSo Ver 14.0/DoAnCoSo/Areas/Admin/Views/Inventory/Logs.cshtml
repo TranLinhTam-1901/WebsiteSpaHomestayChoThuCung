@@ -24,11 +24,11 @@
                             <th>Sản phẩm</th>
                             <th>Thay đổi (SL)</th>
                             <th>Lý do</th>
-                            <th>Tham chiếu</th>
+                            @* <th>Tham chiếu</th> *@
                             <th>Người thực hiện</th>
                             <th>Thời gian</th>
-                            <th>Ghi chú</th>
-                            <th>Phân loại</th>
+                            @* <th>Ghi chú</th> *@
+                            @* <th>Phân loại</th> *@
                         </tr>
                     </thead>
                     <tbody>
@@ -52,7 +52,9 @@
                                     : log.PerformedByUserId;
                                 }
 
-                                <tr class="@(log.QuantityChange < 0 ? "row-export" : "row-import")">
+                                <tr class="log-row @(log.QuantityChange < 0 ? "row-export" : "row-import")"
+                                    data-id="@log.Id"
+                                    style="cursor:pointer;">
                                     <td>@i</td>
                                     <td>@log.Product?.Name</td>
                                     <td>@log.QuantityChange</td>
@@ -84,12 +86,18 @@
                                             case "InitialImport":
                                                 @:Khởi tạo tồn kho ban đầu
                                                 break;
+                                            case "ImportStockVariant":
+                                                @:Nhập kho theo biến thể
+                                                break;
+                                            case "ExportStockVariant":
+                                                @:Xuất kho theo biến thể
+                                                break;
                                             default:
                                                 @log.Reason
                                                 break;
                                         }
                                     </td>
-                                    <td>
+                                    @* <td>
                                         @{
                                             string raw = log.ReferenceId ?? ""; // <-- tên property bạn đang dùng
                                             string refText = "";
@@ -114,10 +122,10 @@
                                             }
                                         }
                                         @refText
-                                    </td>                                 
+                                    </td>                                  *@
                                     <td title="@log.PerformedByUserId">@actor</td>
                                     <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td class="note">
+                                    @* <td class="note">
                                         @switch (log.Reason)
                                         {
                                             case "OrderReserved":
@@ -156,15 +164,24 @@
                                                 @log.Note
                                                 break;
                                         }
-                                    </td>
+                                    </td> *@
 
-                                    <td>@(!string.IsNullOrWhiteSpace(log.Variant?.Name) ? log.Variant!.Name : "—")</td>
+                                    @* <td>@(!string.IsNullOrWhiteSpace(log.Variant?.Name) ? log.Variant!.Name : "—")</td> *@
                                 </tr>
                                 i++;
                             }
                         }
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi Tiết Log -->
+    <div class="modal fade" id="logDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content p-3" id="logDetailContainer">
+                <!-- HTML chi tiết sẽ được load ở đây -->
             </div>
         </div>
     </div>
@@ -265,3 +282,23 @@
         color: #777;
     }
 </style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.querySelectorAll('.log-row').forEach(row => {
+            row.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+
+                fetch(`/Admin/Inventory/LogDetails/${id}`)
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById("logDetailContainer").innerHTML = html;
+                        let modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                        modal.show();
+                    })
+                    .catch(err => console.error('Error loading details:', err));
+            });
+        });
+
+    });
+</script>

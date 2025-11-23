@@ -1,0 +1,91 @@
+﻿@model DoAnCoSo.Models.InventoryLog
+
+<div class="p-3">
+    <h5 class="fw-bold text-pink mb-3">📄 Chi tiết giao dịch kho</h5>
+
+    <table class="table table-bordered">
+        <tr>
+            <th>Sản phẩm</th>
+            <td>@Model.Product?.Name</td>
+        </tr>
+
+        <tr>
+            <th>Biến thể</th>
+            <td>@(Model.Variant?.Name ?? "—")</td>
+        </tr>
+
+        <tr>
+            <th>Thay đổi (SL)</th>
+            <td>@Model.QuantityChange</td>
+        </tr>
+
+        <tr>
+            <th>Lý do</th>
+            <td>
+                @{
+                    string reason = Model.Reason;
+                    string reasonDisplay = reason switch
+                    {
+                        "OrderReserved" => "Giữ hàng cho đơn hàng",
+                        "OrderUnreserved" => "Bỏ giữ hàng cho đơn hàng",
+                        "OrderConfirmed" => "Xuất kho cho đơn hàng",
+                        "OrderCanceledRestock" => "Hoàn kho từ đơn hàng",
+                        "AdjustStock" => "Điều chỉnh tồn kho",
+                        "ExportStock" => "Xuất kho",
+                        "ImportStock" => "Nhập kho",
+                        "InitialImport" => "Khởi tạo tồn kho ban đầu",
+                        "ImportStockVariant" => "Nhập kho theo biến thể",
+                        "ExportStockVariant" => "Xuất kho theo biến thể",
+                        _ => reason
+                    };
+                }
+                @reasonDisplay
+            </td>
+        </tr>
+
+        <tr>
+            <th>Tham chiếu</th>
+            <td>
+                @{
+                    string raw = Model.ReferenceId ?? "";
+                    string refText = "";
+
+                    if (int.TryParse(raw, out int idOnly))
+                    {
+                        refText = $"Đơn hàng #{idOnly}";
+                    }
+                    else if (raw.StartsWith("Order:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var id = raw.Split(':')[1];
+                        refText = $"Đơn hàng #{id}";
+                    }
+                    else if (raw.StartsWith("Product:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var id = raw.Split(':')[1];
+                        refText = $"Sản phẩm #{id}";
+                    }
+                    else
+                    {
+                        refText = raw;
+                    }
+                }
+                @refText
+            </td>
+        </tr>
+
+        <tr>
+            <th>Người thực hiện</th>
+            <td>@ViewBag.ActorName</td>
+        </tr>
+
+        <tr>
+            <th>Ghi chú</th>
+            <td>@(string.IsNullOrWhiteSpace(Model.Note) ? "—" : Model.Note)</td>
+        </tr>
+
+        <tr>
+            <th>Thời gian</th>
+            <td>@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+        </tr>
+    </table>
+</div>

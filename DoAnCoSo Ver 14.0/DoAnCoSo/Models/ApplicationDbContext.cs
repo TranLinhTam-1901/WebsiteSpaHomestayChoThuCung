@@ -228,6 +228,11 @@ namespace DoAnCoSo.Models
                     .OnDelete(DeleteBehavior.NoAction); 
             });
 
+            modelBuilder.Entity<ProductVariant>()
+            .Property(v => v.Name)
+            .IsRequired(false);
+
+
         }
     }
 }
