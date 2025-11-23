@@ -30,5 +30,7 @@ namespace DoAnCoSo.Models.Blockchain
         public DateTime Timestamp { get; set; } = DateTime.Now;
 
         public string PerformedBy { get; set; }
+
+        public string? TransactionHash { get; set; } // optional
     }
 }

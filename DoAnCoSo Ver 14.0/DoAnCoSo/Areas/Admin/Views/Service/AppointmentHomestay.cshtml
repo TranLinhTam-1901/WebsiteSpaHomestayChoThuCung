@@ -200,24 +200,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Flatpickr
     const startPicker = flatpickr("#startPicker", {
-        dateFormat: "d/m/Y",
+        dateFormat: "Y/m/d",
         altInput: true,
         altFormat: "d/m/Y",
         locale: "vn",
         disableMobile: true,
-        defaultDate: "@(Model.StartDate.ToString("dd/MM/yyyy"))",
+        minDate: "today",
+        defaultDate: "@(Model.StartDate.ToString("yyyy/MM/dd"))",
         onChange: function(selectedDates) {
             if (selectedDates.length > 0) endPicker.set('minDate', selectedDates[0]);
         }
     });
 
     const endPicker = flatpickr("#endPicker", {
-        dateFormat: "d/m/Y",
+        dateFormat: "Y/m/d",
         altInput: true,
         altFormat: "d/m/Y",
         locale: "vn",
         disableMobile: true,
-        defaultDate: "@(Model.EndDate.ToString("dd/MM/yyyy"))",
+        minDate: "today",
+        defaultDate: "@(Model.EndDate.ToString("yyyy/MM/dd"))",
         onChange: function(selectedDates) {
             if (selectedDates.length > 0) startPicker.set('maxDate', selectedDates[0]);
         }
