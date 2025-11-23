@@ -22,6 +22,46 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             _userManager = userManager;
         }
 
+        private object GetAppointmentBlockchainRecord(Appointment appointment, string performedBy)
+        {
+            if (appointment.Service?.Category == ServiceCategory.Homestay)
+            {
+                return new
+                {
+                    appointment.AppointmentId,
+                    appointment.Status,
+                    StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
+                    EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
+                    PetId = appointment.PetId,
+                    PetName = appointment.Pet?.Name,
+                    PetType = appointment.Pet?.Type,
+                    PetBreed = appointment.Pet?.Breed,
+                    ServiceId = appointment.ServiceId,
+                    ServiceName = appointment.Service?.Name,
+                    UserId = appointment.UserId,
+                    UserName = appointment.User?.FullName ?? performedBy
+                };
+            }
+            else // Spa hoặc Vet
+            {
+                return new
+                {
+                    appointment.AppointmentId,
+                    appointment.Status,
+                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
+                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
+                    PetId = appointment.PetId,
+                    PetName = appointment.Pet?.Name,
+                    PetType = appointment.Pet?.Type,
+                    PetBreed = appointment.Pet?.Breed,
+                    ServiceId = appointment.ServiceId,
+                    ServiceName = appointment.Service?.Name,
+                    UserId = appointment.UserId,
+                    UserName = appointment.User?.FullName ?? performedBy
+                };
+            }
+        }
+
         // =================== APPOINTMENT ===================
 
         public async Task<IActionResult> PendingAppointments()
@@ -87,45 +127,11 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
                 if (_blockchainService != null)
                 {
-                    string recordType = appointment.Service.Category.ToString(); // Spa / Homestay / Vet
-
-                    string jsonData;
-
-                    if (appointment.Service.Category == ServiceCategory.Spa || appointment.Service.Category == ServiceCategory.Vet)
-                    {
-                        jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                        {
-                            appointment.AppointmentId,
-                            appointment.Status,
-                            AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                            AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                            PetName = appointment.Pet.Name,
-                            PetType = appointment.Pet.Type,
-                            ServiceName = appointment.Service.Name,
-                            UserName = appointment.User.FullName
-                        });
-                    }
-                    else
-                    {
-                        jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                        {
-                            appointment.AppointmentId,
-                            appointment.Status,
-                            StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
-                            EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
-                            PetName = appointment.Pet.Name,
-                            PetType = appointment.Pet.Type,
-                            ServiceName = appointment.Service.Name,
-                            UserName = appointment.User.FullName
-                        });
-                    }
-
+                    var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                     await _blockchainService.AddAppointmentBlockAsync(
-                        appointment.PetId.GetValueOrDefault(), 
-                        appointment.AppointmentId,
-                        recordType,
+                        record,
+                        appointment.Service.Category.ToString(),
                         "ADMIN_CONFIRM",
-                        jsonData,
                         performedBy
                     );
                 }
@@ -153,45 +159,11 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
                 if (_blockchainService != null)
                 {
-                    string recordType = appointment.Service.Category.ToString(); // Spa / Homestay / Vet
-
-                    string jsonData;
-
-                    if (appointment.Service.Category == ServiceCategory.Spa || appointment.Service.Category == ServiceCategory.Vet)
-                    {
-                        jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                        {
-                            appointment.AppointmentId,
-                            appointment.Status,
-                            AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                            AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                            PetName = appointment.Pet.Name,
-                            PetType = appointment.Pet.Type,
-                            ServiceName = appointment.Service.Name,
-                            UserName = appointment.User.FullName
-                        });
-                    }
-                    else
-                    {
-                        jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                        {
-                            appointment.AppointmentId,
-                            appointment.Status,
-                            StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
-                            EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
-                            PetName = appointment.Pet.Name,
-                            PetType = appointment.Pet.Type,
-                            ServiceName = appointment.Service.Name,
-                            UserName = appointment.User.FullName
-                        });
-                    }
-
+                    var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                     await _blockchainService.AddAppointmentBlockAsync(
-                        appointment.PetId.GetValueOrDefault(), 
-                        appointment.AppointmentId,
-                        recordType,
+                        record,
+                        appointment.Service.Category.ToString(),
                         "ADMIN_CANCEL",
-                        jsonData,
                         performedBy
                     );
                 }
@@ -247,25 +219,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AppointmentSpa(SpaBookingViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                ViewBag.Users = await _context.Users
-                    .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
-                    .ToListAsync();
-
-                ViewBag.Pets = await _context.Pets
-                    .Where(p => p.UserId == model.UserId)
-                    .ToListAsync();
-
-                ViewBag.SpaServices = await _context.Services
-                    .Where(s => s.Category == ServiceCategory.Spa)
-                    .ToListAsync();
-
-                ViewBag.SpaPricings = await _context.SpaPricings.ToListAsync();
-
-                return View(model);
-            }
-
             // ✅ Lấy thông tin user khách
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.UserId);
             if (user == null) return NotFound();
@@ -317,27 +270,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
+
             // ✅ Lưu Blockchain
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                    PetName = appointment.Pet.Name,
-                    PetType = appointment.Pet.Type,
-                    ServiceName = appointment.Service.Name,
-                    UserName = appointment.User.FullName
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(), 
-                    appointment.AppointmentId, // ✅ sửa đúng theo Spa/Homestay
-                    "Spa",
+                    record,
+                    appointment.Service.Category.ToString(),
                     "ADMIN_ADD",
-                    jsonData,
                     performedBy
                 );
             }
@@ -410,7 +354,12 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             if (appointment == null) return NotFound();
 
-            if ((appointment.AppointmentDate.Date - DateTime.Today).TotalDays < 1)
+            var today = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+            ).Date;
+
+            if ((appointment.AppointmentDate.Date - today).TotalDays < 1)
             {
                 TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 1 ngày.";
                 return RedirectToAction("PendingAppointments");
@@ -418,7 +367,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Users = await _context.Users.Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result).ToListAsync();
+                var adminRoleId = await _context.Roles
+                    .Where(r => r.Name == "Admin")
+                    .Select(r => r.Id)
+                    .FirstOrDefaultAsync();
+
+                var nonAdminUsers = await _context.Users
+                    .Where(u => !_context.UserRoles
+                        .Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
+                    .ToListAsync();
+
+                ViewBag.Users = nonAdminUsers;
+
                 ViewBag.Pets = await _context.Pets.Where(p => p.UserId == model.UserId).ToListAsync();
                 ViewBag.SpaServices = await _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToListAsync();
                 ViewBag.SpaPricings = await _context.SpaPricings.ToListAsync();
@@ -463,27 +423,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             await _context.SaveChangesAsync();
 
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
+
             // Blockchain
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                    PetName = pet?.Name ?? "[Đã xóa]",
-                    PetType = pet?.Type ?? "-",
-                    ServiceName = appointment.Service?.Name ?? "-",
-                    UserName = appointment.User?.FullName ?? "-"
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(), 
-                    appointment.AppointmentId,
-                    "Spa",
+                    record,
+                    appointment.Service.Category.ToString(),
                     "ADMIN_UPDATE",
-                    jsonData,
                     performedBy
                 );
             }
@@ -557,23 +508,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AppointmentHomestay(HomestayBookingViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                ViewBag.Users = await _context.Users
-                    .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
-                    .ToListAsync();
-
-                ViewBag.Pets = await _context.Pets
-                    .Where(p => p.UserId == model.UserId)
-                    .ToListAsync();
-
-                ViewBag.HomestayServices = await _context.Services
-                    .Where(s => s.Category == ServiceCategory.Homestay)
-                    .ToListAsync();
-
-                return View(model);
-            }
-
             // ✅ Lấy thông tin user khách
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.UserId);
             if (user == null) return NotFound();
@@ -626,27 +560,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
+
             // ✅ Lưu Blockchain
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
-                    EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
-                    PetName = appointment.Pet.Name,
-                    PetType = appointment.Pet.Type,
-                    ServiceName = appointment.Service.Name,
-                    UserName = appointment.User.FullName
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(), 
-                    appointment.AppointmentId,  // ✅ sửa giống Spa
-                    "Homestay",
+                    record,
+                    appointment.Service.Category.ToString(),
                     "ADMIN_ADD",
-                    jsonData,
                     performedBy
                 );
             }
@@ -721,7 +646,12 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             if (appointment == null) return NotFound();
 
-            if ((appointment.StartDate.Date - DateTime.Today).TotalDays < 1)
+            var today = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+            ).Date;
+
+            if ((appointment.StartDate.Date - today).TotalDays < 1)
             {
                 TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 1 ngày.";
                 return RedirectToAction("PendingAppointments");
@@ -770,27 +700,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             await _context.SaveChangesAsync();
 
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
+
             // Blockchain
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
-                    EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
-                    PetName = pet?.Name ?? "[Đã xóa]",
-                    PetType = pet?.Type ?? "-",
-                    ServiceName = appointment.Service?.Name ?? "-",
-                    UserName = appointment.User?.FullName ?? "-"
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(), 
-                    appointment.AppointmentId,
-                    "Homestay",
+                    record,
+                    appointment.Service.Category.ToString(),
                     "ADMIN_UPDATE",
-                    jsonData,
                     performedBy
                 );
             }
@@ -861,9 +782,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             if (selectedService == null)
             {
                 ModelState.AddModelError("", "Chọn dịch vụ khám không hợp lệ.");
-                ViewBag.Users = await _context.Users
-                    .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+                var adminRoleId = await _context.Roles
+                    .Where(r => r.Name == "Admin")
+                    .Select(r => r.Id)
+                    .FirstOrDefaultAsync();
+
+                var nonAdminUsers = await _context.Users
+                    .Where(u => !_context.UserRoles
+                        .Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
                     .ToListAsync();
+
+                ViewBag.Users = nonAdminUsers;
+
                 ViewBag.VetServices = await _context.Services
                     .Where(s => s.Category == ServiceCategory.Vet)
                     .ToListAsync();
@@ -879,9 +809,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 if (pet == null)
                 {
                     ModelState.AddModelError("", "Chọn thú cưng không hợp lệ.");
-                    ViewBag.Users = await _context.Users
-                        .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+                    var adminRoleId = await _context.Roles
+                        .Where(r => r.Name == "Admin")
+                        .Select(r => r.Id)
+                        .FirstOrDefaultAsync();
+
+                    var nonAdminUsers = await _context.Users
+                        .Where(u => !_context.UserRoles
+                            .Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
                         .ToListAsync();
+
+                    ViewBag.Users = nonAdminUsers;
+
                     ViewBag.VetServices = await _context.Services
                         .Where(s => s.Category == ServiceCategory.Vet)
                         .ToListAsync();
@@ -935,25 +874,11 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             // --- Ghi vào Blockchain ---
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                    PetName = appointment.Pet?.Name,
-                    PetType = appointment.Pet?.Type,
-                    ServiceName = appointment.Service?.Name,
-                    UserName = appointment.User?.FullName ?? performedBy,
-                    Note = appointment.Note ?? ""
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(),
-                    appointment.AppointmentId,
-                    "Vet",
+                    record,
+                    appointment.Service.Category.ToString(),
                     "ADMIN_ADD",
-                    jsonData,
                     performedBy
                 );
             }
@@ -1032,9 +957,17 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.AppointmentId == model.AppointmentId);
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            var performedBy = currentUser?.FullName ?? "Hệ thống";
+
             if (appointment == null) return NotFound();
 
-            if ((appointment.AppointmentDate - DateTime.Now).TotalDays < 1)
+            var today = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+            ).Date;
+
+            if ((appointment.AppointmentDate.Date - today).TotalDays < 1)
             {
                 TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 1 ngày.";
                 return RedirectToAction("PendingAppointments");
@@ -1050,9 +983,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 if (pet == null)
                 {
                     ModelState.AddModelError("", "Chọn thú cưng không hợp lệ.");
-                    ViewBag.Users = await _context.Users
-                        .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+                    var adminRoleId = await _context.Roles
+                        .Where(r => r.Name == "Admin")
+                        .Select(r => r.Id)
+                        .FirstOrDefaultAsync();
+
+                    var nonAdminUsers = await _context.Users
+                        .Where(u => !_context.UserRoles
+                            .Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
                         .ToListAsync();
+
+                    ViewBag.Users = nonAdminUsers;
+
                     ViewBag.UserPets = await _context.Pets.Where(p => p.UserId == model.UserId).ToListAsync();
                     ViewBag.VetServices = await _context.Services
                         .Where(s => s.Category == ServiceCategory.Vet)
@@ -1095,28 +1037,11 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             // Blockchain
             if (_blockchainService != null)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-                var performedBy = currentUser?.FullName ?? "Hệ thống";
-
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                    PetName = appointment.Pet?.Name ?? model.PetName,
-                    PetType = appointment.Pet?.Type ?? model.PetType,
-                    ServiceName = appointment.Service?.Name ?? "",
-                    UserName = appointment.User?.FullName ?? performedBy,
-                    Note = appointment.Note ?? ""
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(),
-                    appointment.AppointmentId,
-                    "Vet",
+                    record,
+                    appointment.Service.Category.ToString(),
                     "ADMIN_UPDATE",
-                    jsonData,
                     performedBy
                 );
             }
