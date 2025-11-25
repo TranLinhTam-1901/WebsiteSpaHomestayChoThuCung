@@ -125,6 +125,35 @@ namespace DoAnCoSo.Data
                     context.SystemStates.Add(new SystemState { CurrentAdminIndex = 0 });
                     context.SaveChanges();
                 }
+
+                // ====== TẠO TRIGGER BLOCKCHAIN NẾU CHƯA TỒN TẠI ======
+                try
+                {
+                    var triggerSql = @"
+                        IF NOT EXISTS (SELECT * FROM sys.triggers WHERE name = 'TR_BlockchainRecords_Protect')
+                        BEGIN
+                            EXEC('
+                                CREATE TRIGGER TR_BlockchainRecords_Protect
+                                ON BlockchainRecords
+                                AFTER UPDATE, DELETE
+                                AS
+                                BEGIN
+                                    RAISERROR(''Không được sửa dữ liệu blockchain'', 16, 1);
+                                    ROLLBACK TRANSACTION;
+                                END
+                            ')
+                        END
+                    ";
+
+                    context.Database.ExecuteSqlRaw(triggerSql);
+                    Console.WriteLine("Trigger BlockchainRecords đã tồn tại hoặc tạo thành công.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Lỗi khi tạo trigger BlockchainRecords: " + ex.Message);
+                }
+
+                context.SaveChanges(); // Lưu các thay đổi
             }
             Console.WriteLine("Phương thức SeedData.Initialize() kết thúc.");
         }

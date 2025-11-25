@@ -198,15 +198,15 @@
                         {
                             if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
                             {
-                                @(item.StartDate.ToShortDateString() + " - " + item.EndDate.ToShortDateString())
+                                @(item.StartDate.ToString("dd/MM/yyyy") + " - " + item.EndDate.ToString("dd/MM/yyyy"))
                             }
                             else if (item.StartDate != default(DateTime))
                             {
-                                @(item.StartDate.ToShortDateString() + " - N/A")
+                                @(item.StartDate.ToString("dd/MM/yyyy") + " - N/A")
                             }
                             else if (item.EndDate != default(DateTime))
                             {
-                                @("N/A - " + item.EndDate.ToShortDateString())
+                                @("N/A - " + item.EndDate.ToString("dd/MM/yyyy"))
                             }
                             else
                             {
@@ -215,8 +215,13 @@
                         }
                         else
                         {
-                            string dateDisplay = item.AppointmentDate != default(DateTime) ? item.AppointmentDate.ToShortDateString() : "N/A";
-                            string timeDisplay = item.AppointmentTime != TimeSpan.Zero ? item.AppointmentTime.ToString("hh\\:mm") : "N/A";
+                            string dateDisplay = item.AppointmentDate != default(DateTime)
+                            ? item.AppointmentDate.ToString("dd/MM/yyyy")
+                            : "N/A";
+                            string timeDisplay = item.AppointmentTime != TimeSpan.Zero
+                            ? item.AppointmentTime.ToString("hh\\:mm")
+                            : "N/A";
+
                             if (dateDisplay == "N/A" && timeDisplay == "N/A")
                             {
                                 @:N/A
@@ -250,17 +255,17 @@
                         if (item.Service.Category == ServiceCategory.Homestay)
                         {
                             canEditOrCancel = item.Status == AppointmentStatus.Pending &&
-                            (item.StartDate - DateTime.Today).TotalDays >= 2; // trước 2 ngày
+                            (item.StartDate - DateTime.Now).TotalDays >= 2; // trước 2 ngày
                         }
                         else if (item.Service.Category == ServiceCategory.Spa)
                         {
                             canEditOrCancel = item.Status == AppointmentStatus.Pending &&
-                            (item.AppointmentDate - DateTime.Today).TotalDays >= 1; // trước 1 ngày
+                            (item.AppointmentDate - DateTime.Now).TotalDays >= 1; // trước 1 ngày
                         }
                         else if (item.Service.Category == ServiceCategory.Vet)
                         {
                             canEditOrCancel = item.Status == AppointmentStatus.Pending &&
-                            (item.AppointmentDate - DateTime.Today).TotalDays >= 1; // trước 1 ngày
+                            (item.AppointmentDate - DateTime.Now).TotalDays >= 1; // trước 1 ngày
                         }
                     }
 
