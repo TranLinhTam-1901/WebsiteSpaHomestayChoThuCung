@@ -49,29 +49,35 @@
                 @{
                     string raw = Model.ReferenceId ?? "";
                     string refText = "";
+                    string badgeClass = "bg-secondary";
 
-                    if (int.TryParse(raw, out int idOnly))
-                    {
-                        refText = $"Đơn hàng #{idOnly}";
-                    }
-                    else if (raw.StartsWith("Order:", StringComparison.OrdinalIgnoreCase))
+                    if (raw.StartsWith("Order:", StringComparison.OrdinalIgnoreCase))
                     {
                         var id = raw.Split(':')[1];
                         refText = $"Đơn hàng #{id}";
+                        badgeClass = "bg-primary";
                     }
                     else if (raw.StartsWith("Product:", StringComparison.OrdinalIgnoreCase))
                     {
                         var id = raw.Split(':')[1];
                         refText = $"Sản phẩm #{id}";
+                        badgeClass = "bg-purple";
+                    }
+                    else if (Guid.TryParse(raw, out _))
+                    {
+                        refText = "Giao dịch nội bộ";
+                        badgeClass = "bg-secondary";
                     }
                     else
                     {
                         refText = raw;
                     }
                 }
-                @refText
+
+                <span class="badge @badgeClass">@refText</span>
             </td>
         </tr>
+
 
         <tr>
             <th>Người thực hiện</th>

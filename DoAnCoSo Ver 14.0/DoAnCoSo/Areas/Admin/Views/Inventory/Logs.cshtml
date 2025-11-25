@@ -15,7 +15,75 @@
             </a>
         </div>
 
+     
         <div class="card-body">
+
+            <div class="d-flex justify-content-end align-items-center gap-3 mb-3">
+                <!-- FORM TÌM KIẾM -->
+                <form method="get" asp-action="Logs" class="d-flex align-items-center gap-2">
+
+                    <input type="text"
+                           name="search"
+                           value="@Context.Request.Query["search"]"
+                           class="form-control"
+                           style="width: 260px;"
+                           placeholder="Tìm theo tên SP, người thực hiện, lý do..." />
+
+                    <!-- GIỮ TRẠNG THÁI TICK KHI TÌM -->
+                    <input type="hidden" name="showAll" value="@(ViewBag.ShowAll ? "true" : "false")" />
+
+                    <button type="submit" class="btn btn-pink">Tìm</button>
+                </form>
+
+
+                <!-- FORM TICK HIỆN LOG ẨN -->
+                <form method="get" asp-action="Logs" class="d-flex align-items-center">
+
+                    <!-- GIỮ LẠI SEARCH KHI TICK -->
+                    <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+
+                    <label class="me-2 fw-bold">Hiện log ẩn:</label>
+
+                    <input type="checkbox"
+                           name="showAll"
+                           value="true"
+                           class="form-check-input"
+                           @(ViewBag.ShowAll ? "checked" : "")
+                           onchange="this.form.submit()" />
+                </form>
+
+                <!-- FORM LỌC THEO KHOẢNG NGÀY -->
+                <form method="get" asp-action="Logs" class="d-flex align-items-center gap-2 mb-3">
+
+                    <!-- GIỮ LẠI SEARCH & SHOWALL KHI LỌC NGÀY -->
+                    <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+                    <input type="hidden" name="showAll" value="@(ViewBag.ShowAll ? "true" : "false")" />
+
+                    <!-- From -->
+                    <input type="date"
+                           name="fromDate"
+                           value="@(ViewBag.FromDate != null
+                                               ? ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd")
+                                               : "")"
+                           class="form-control"
+                           style="width: 180px;" />
+
+                    <!-- To -->
+                    <input type="date"
+                           name="toDate"
+                           value="@(ViewBag.ToDate != null
+                                               ? ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd")
+                                               : "")"
+                           class="form-control"
+                           style="width: 180px;" />
+
+                    <button type="submit" class="btn btn-pink">Lọc ngày</button>
+                </form>
+
+
+
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered align-middle text-center inventory-table">
                     <thead class="table-pink">
@@ -24,11 +92,8 @@
                             <th>Sản phẩm</th>
                             <th>Thay đổi (SL)</th>
                             <th>Lý do</th>
-                            @* <th>Tham chiếu</th> *@
                             <th>Người thực hiện</th>
                             <th>Thời gian</th>
-                            @* <th>Ghi chú</th> *@
-                            @* <th>Phân loại</th> *@
                         </tr>
                     </thead>
                     <tbody>
@@ -281,6 +346,40 @@
         padding: 20px;
         color: #777;
     }
+
+    
+    /* Làm dòng có thể click */
+    .log-row {
+        transition: background-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+    }
+
+        /* Hover nhẹ nhàng – không transform, không scale */
+        .log-row:hover {
+            background-color: #FFE6EF !important; /* pastel nhẹ */
+            box-shadow: inset 0 0 0 9999px rgba(255, 230, 239, 0.35); /* hiệu ứng "highlight" nhẹ */
+        }
+
+            /* Chỉ đổi màu chữ, KHÔNG đổi font-weight */
+            .log-row:hover td {
+                color: #FF6185;
+            }
+
+    
+
+    /* nút tiềm kiếm  */
+    .btn-pink {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        border-radius: 20px;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF406A;
+            color: white;
+        }
+        
+
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', function () {

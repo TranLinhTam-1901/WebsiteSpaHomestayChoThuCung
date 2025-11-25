@@ -412,7 +412,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 }
             }
             // =====================================================================
-            // 1️⃣ UPDATE HOẶC TẠO MỚI GROUP + VALUE (khớp đúng View hiện tại)
+            // UPDATE HOẶC TẠO MỚI GROUP + VALUE (khớp đúng View hiện tại)
             // =====================================================================
             int g = 0;
 
@@ -498,7 +498,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
             await _context.SaveChangesAsync();
             // =====================================================================
-            // 2️⃣ ĐỌC PREVIEW VARIANT → CHUYỂN TEXT THÀNH ID (LOGIC ĐÃ SỬA)
+            // ĐỌC PREVIEW VARIANT → CHUYỂN TEXT THÀNH ID (LOGIC ĐÃ SỬA)
             // =====================================================================
             List<List<int>> previewCombos = new();
 
@@ -576,21 +576,9 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
                 previewCombos = merged;
             }
-            // TỰ ĐỘNG TẠO COMBO ĐẦY ĐỦ NẾU KHÔNG CÓ PREVIEW           
-            //if (previewCombos.Count == 0)
-            //{
-            //    // Lấy tất cả value của tất cả group
-            //    var allGroups = existingProduct.OptionGroups
-            //        .OrderBy(g => g.Id)
-            //        .Select(g => g.Values.Select(v => v.Id).ToList())
-            //        .ToList();
-
-            //    // Sinh toàn bộ combo mới
-            //    previewCombos = GenerateCartesian(allGroups);
-            //}
-
+            
             // =====================================================================
-            // 3️ XỬ LÝ VARIANT (tạo mới / cập nhật)
+            // XỬ LÝ VARIANT (tạo mới / cập nhật)
             // =====================================================================
             var existingDict = existingProduct.Variants
                 .ToDictionary(
@@ -621,7 +609,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
                 if (existingDict.TryGetValue(key, out var variant))
                 {
-                    // 🚀 CẬP NHẬT variant CŨ (nếu nó khớp với 1 combo trong Preview)
+                    // CẬP NHẬT variant CŨ (nếu nó khớp với 1 combo trong Preview)
                     variant.StockQuantity = stock;
                     variant.LowStockThreshold = threshold;
                     variant.IsActive = true;
@@ -629,7 +617,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 }
                 else
                 {
-                    // 🆕 TẠO MỚI VARIANT
+                    // TẠO MỚI VARIANT
                     var newVariant = new ProductVariant
                     {
                         ProductId = id,
@@ -674,7 +662,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
 
             // =====================================================================
-            // 💡 3.2 BỔ SUNG LOGIC: CẬP NHẬT VÀ BẢO TỒN BIẾN THỂ CŨ
+            // BỔ SUNG LOGIC: CẬP NHẬT VÀ BẢO TỒN BIẾN THỂ CŨ
             // =====================================================================
 
             //Đọc dữ liệu từ bảng Biến thể hiện có(Existing Variant Body)
@@ -720,25 +708,10 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
 
 
-            // =====================================================================
-            // 4️⃣ DISABLE VARIANT KHÔNG CÒN TRONG PREVIEW
-            // =====================================================================
-            //foreach (var v in existingProduct.Variants)
-            //{
-            //    string vk = string.Join(",", v.OptionValues
-            //        .OrderBy(x => x.ProductOptionValueId)
-            //        .Select(x => x.ProductOptionValueId));
-
-            //    if (!validKeys.Contains(vk))
-            //    {
-            //        v.IsActive = false;
-            //        v.StockQuantity = 0;
-            //    }
-            //}
-
+          
 
             // =====================================================================
-            // 5️⃣ UPDATE TỔNG TỒN
+            // UPDATE TỔNG TỒN
             // =====================================================================
             existingProduct.StockQuantity = existingProduct.Variants
                 .Where(v => v.IsActive)
@@ -804,47 +777,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             return Json(result);
         }      
 
-        //private List<List<int>> GenerateCombinations(List<List<int>> source)
-        //{
-        //    var result = new List<List<int>> { new List<int>() };
-
-        //    foreach (var group in source)
-        //    {
-        //        var temp = new List<List<int>>();
-
-        //        foreach (var prefix in result)
-        //        {
-        //            foreach (var value in group)
-        //            {
-        //                var combo = new List<int>(prefix) { value };
-        //                temp.Add(combo);
-        //            }
-        //        }
-
-        //        result = temp;
-        //    }
-
-        //    return result;
-        //}
-
-        //private Dictionary<int, string>? _valueCache;
-
-        //private string BuildVariantName(IEnumerable<ProductVariantOptionValue> values, ApplicationDbContext ctx)
-        //{
-        //    // Cache tất cả ValueId -> Value trong 1 lần update
-        //    if (_valueCache == null)
-        //    {
-        //        _valueCache = ctx.ProductOptionValues
-        //            .ToDictionary(v => v.Id, v => v.Value);
-        //    }
-
-        //    return string.Join(" - ", values.Select(v => _valueCache[v.ProductOptionValueId]));
-        //}
-
-
-
-
-       
 
         [HttpPost]
         [ValidateAntiForgeryToken]
