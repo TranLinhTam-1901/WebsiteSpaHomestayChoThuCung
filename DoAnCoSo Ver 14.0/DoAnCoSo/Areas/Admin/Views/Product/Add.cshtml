@@ -83,22 +83,25 @@
                 </div>
             </div>
 
-            <!-- Bảng biến thể -->
-            <div id="blockVariants" class="mb-3 mt-3" style="display:none;">
-                <label class="form-label">Biến thể & tồn kho</label>
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Tên biến thể</th>
-                            <th>Tồn kho</th>
-                            <th>Ngưỡng cảnh báo</th>
-                            <th>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody id="variantRows"></tbody>
-                </table>
-                <a class="btn btn-detail" id="btnAddVariant">+ Thêm biến thể</a>
+            <!-- Cấu hình nhóm biến thể -->
+            <div id="blockOptionGroups" class="mb-3 mt-3" style="display:none;">
+                <label class="form-label">Nhóm biến thể cho sản phẩm</label>
+
+                <div id="optionGroupContainer"></div>
+
+                <button type="button" class="btn btn-detail mt-2" id="btnAddOptionGroup">
+                    + Thêm loại biến thể
+                </button>
+                <div class="form-text">
+                    Ví dụ: Hương vị (Bò, Gà, Cá hồi), Size (S, M, L), Khối lượng (500g, 1kg)...
+                </div>
+
+                <button type="button" class="btn btn-pink mt-3" onclick="generateVariants()">
+                    ✨ Tạo biến thể
+                </button>
+
             </div>
+
 
             <div class="mb-3 mt-3">
                 <label asp-for="Description" class="form-label">Mô tả sản phẩm</label>
@@ -206,59 +209,147 @@
         const hasVariants = document.getElementById('hasVariants');
         const blockStockTotal = document.getElementById('blockStockTotal');
         const stockInput = blockStockTotal.querySelector('input[name="StockQuantity"]');
-        const stockHidden = document.getElementById('stockHiddenWhenVariant');
-        const blockVariants = document.getElementById('blockVariants');
-        const variantRows = document.getElementById('variantRows');
-        const btnAddVariant = document.getElementById('btnAddVariant');
 
-        function addVariantRow(name = '', stock = 0, threshold = 0) {
-            const idx = variantRows.children.length;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input name="VariantNames[${idx}]" class="form-control border-pink" value="${name}" /></td>
-                <td><input name="VariantStocks[${idx}]" type="number" min="0" class="form-control border-pink" value="${stock}" /></td>
-                <td><input name="VariantThresholds[${idx}]" type="number" min="0" class="form-control border-pink" value="${threshold}" /></td>
-                <td class="text-center"><button type="button" class="btn-delete btn-sm" onclick="this.closest('tr').remove(); renumberRows();">Xóa</button></td>
+        const blockOptionGroups = document.getElementById('blockOptionGroups');
+        const optionGroupContainer = document.getElementById('optionGroupContainer');
+
+        // 👉 NEW: Khối danh sách biến thể sinh ra
+        const blockGeneratedVariants = document.createElement("div");
+        blockGeneratedVariants.id = "blockGeneratedVariants";
+        blockGeneratedVariants.style.display = "none";
+        blockGeneratedVariants.innerHTML = `
+            <h6 class="mt-3 fw-bold">Danh sách biến thể được tạo</h6>
+            <table class="table table-bordered mt-2">
+                <thead>
+                    <tr>
+                        <th>Biến thể</th>
+                        <th style="width:120px">Tồn kho</th>
+                        <th style="width:120px">Ngưỡng cảnh báo</th>
+                    </tr>
+                </thead>
+                <tbody id="variantGeneratedRows"></tbody>
+            </table>
+        `;
+        blockOptionGroups.insertAdjacentElement("afterend", blockGeneratedVariants);
+
+        const variantGeneratedRows = document.getElementById("variantGeneratedRows");
+
+        /* Toggle UI */
+        function toggleVariantUI() {
+            const enabled = hasVariants.checked;
+            if (enabled) stockInput.setAttribute("disabled", "disabled");
+            else stockInput.removeAttribute("disabled");
+
+            blockOptionGroups.style.display = enabled ? 'block' : 'none';
+            blockGeneratedVariants.style.display = enabled ? 'block' : 'none';
+        }
+        hasVariants.addEventListener("change", toggleVariantUI);
+
+
+        /* Thêm nhóm biến thể */
+        function addOptionGroup(name = "", values = [""]) {
+            const groupIdx = optionGroupContainer.children.length;
+            const groupHtml = `
+                <div class="card border-pink p-3 mb-3" data-group-idx="${groupIdx}">
+                    <div class="d-flex justify-content-between mb-2">
+                        <input class="form-control fw-bold" placeholder="Tên nhóm (VD: Hương vị, Size)"
+                            name="OptionGroupNames[${groupIdx}]" value="${name}" />
+                        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeOptionGroup(this)">X</button>
+                    </div>
+                    <label>Giá trị biến thể</label>
+                    <div class="option-values"></div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addOptionValue(this)">+ Giá trị</button>
+                </div>
             `;
-            variantRows.appendChild(tr);
+            optionGroupContainer.insertAdjacentHTML("beforeend", groupHtml);
+            const container = optionGroupContainer.lastElementChild.querySelector(".option-values");
+            values.forEach(v => addOptionValue(container, v));
+            renumberAll();
         }
 
-        function renumberRows() {
-            [...variantRows.children].forEach((tr, i) => {
-                const inputs = tr.querySelectorAll('input');
-                inputs[0].name = `VariantNames[${i}]`;
-                inputs[1].name = `VariantStocks[${i}]`;
-                inputs[2].name = `VariantThresholds[${i}]`;
+        function addOptionValue(containerOrBtn, value = "") {
+            const container = containerOrBtn.classList.contains("option-values")
+                ? containerOrBtn
+                : containerOrBtn.closest(".card").querySelector(".option-values");
+
+            container.insertAdjacentHTML("beforeend", `
+                <div class="d-flex align-items-center mb-2">
+                    <input class="form-control me-2" value="${value}" placeholder="VD: Gà, Bò, Heo..." />
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeOptionValue(this)">×</button>
+                </div>
+            `);
+            renumberAll();
+        }
+
+        function removeOptionGroup(btn) {
+            btn.closest(".card").remove();
+            renumberAll();
+        }
+
+        function removeOptionValue(btn) {
+            btn.closest(".d-flex").remove();
+            renumberAll();
+        }
+
+
+        /* Cập nhật name[] sau mỗi thao tác */
+        function renumberAll() {
+            [...optionGroupContainer.children].forEach((group, gIdx) => {
+                const groupName = group.querySelector('input[name^="OptionGroupNames"]');
+                groupName.name = `OptionGroupNames[${gIdx}]`;
+
+                const valueInputs = group.querySelectorAll(".option-values input");
+                valueInputs.forEach((inp, vIdx) => {
+                    inp.name = `OptionGroupValues[${gIdx}][${vIdx}]`;
+                });
             });
         }
 
-        function toggleVariantUI() {
-            const useVariant = hasVariants.checked;
-            const stockInput = document.querySelector('#blockStockTotal input[name="StockQuantity"]');
 
-            if (useVariant) stockInput.setAttribute("disabled", "disabled");
-            else stockInput.removeAttribute("disabled");
+        /* 🌟 TẠO BIẾN THỂ KHI NHẤN NÚT */
+        function generateVariants() {
+            variantGeneratedRows.innerHTML = "";
 
-            blockVariants.style.display = useVariant ? 'block' : 'none';
+            let groups = [...optionGroupContainer.children]
+                .map(card => {
+                    let name = card.querySelector('input[name^="OptionGroupNames"]').value.trim();
+                    let values = [...card.querySelectorAll(".option-values input")]
+                        .map(v => v.value.trim())
+                        .filter(v => v.length > 0);
+                    return { name, values };
+                })
+                .filter(g => g.name.length > 0 && g.values.length > 0);
 
-            if (useVariant && variantRows.children.length === 0) {
-                addVariantRow();
-                addVariantRow();
+            if (groups.length === 0) {
+                alert("Vui lòng nhập ít nhất 1 nhóm biến thể và giá trị!");
+                return;
             }
+
+            let combos = [[]];
+            groups.forEach(g => {
+                combos = combos.flatMap(c => g.values.map(v => [...c, v]));
+            });
+
+            combos.forEach((c, i) => {
+                variantGeneratedRows.insertAdjacentHTML("beforeend", `
+                    <tr>
+                        <td>
+                            <input name="VariantGeneratedNames[${i}]" class="form-control" value="${c.join(' - ')}" readonly />
+                        </td>
+                        <td><input name="VariantGeneratedStocks[${i}]" type="number" min="0" value="0" class="form-control" /></td>
+                        <td><input name="VariantGeneratedThresholds[${i}]" type="number" min="0" value="0" class="form-control" /></td>
+                    </tr>
+                `);
+            });
+
+            blockGeneratedVariants.style.display = "block";
+            alert("Đã tạo " + combos.length + " biến thể!");
         }
 
-        hasVariants.addEventListener('change', toggleVariantUI);
-
-        // Load previously posted variants
-        const postedNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vNames));
-        const postedStocks = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vStocks));
-        const postedThresholds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(vThresholds));
-        if (hasVariants && postedNames.length > 0) {
-            variantRows.innerHTML = '';
-            for (let i=0;i<postedNames.length;i++) addVariantRow(postedNames[i],postedStocks[i],postedThresholds[i]);
-        }
-
+        const btnAddOptionGroup = document.getElementById('btnAddOptionGroup');
+        btnAddOptionGroup.addEventListener("click", () => {
+            addOptionGroup("", [""]);
+        });
         toggleVariantUI();
-        btnAddVariant?.addEventListener('click', () => addVariantRow());
     </script>
 }

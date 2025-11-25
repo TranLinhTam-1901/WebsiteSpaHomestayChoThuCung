@@ -15,16 +15,65 @@
         </div>
 
         <div class="card-body">
-            @* @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-            } *@
+           
 
             <div class="table-responsive">
+
+                <div class="d-flex justify-content-end align-items-center gap-3 mb-3">
+
+                    <form asp-action="Index" method="get" class="d-flex align-items-center gap-2">
+                       
+                    <!-- Dropdown danh mục -->
+                        <select name="categoryId" class="form-select" style="width:180px;">
+                            <option value="">— Tất cả danh mục —</option>
+
+                            @foreach (var cat in ViewBag.Categories)
+                            {
+                                if (ViewBag.CategoryId == cat.Id)
+                                {
+                                    <option value="@cat.Id" selected="selected">@cat.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            }
+                        </select>
+
+
+                    <input type="text" name="search"
+                           value="@Context.Request.Query["search"]"
+                           class="form-control w-auto"
+                           placeholder="Tìm theo tên, category, tồn kho, thương hiệu, biến thể..."
+                    value="@Context.Request.Query["search"]" />
+
+                    <input type="hidden" name="showHidden" value="@(ViewBag.ShowHidden ? "true" : "false")" />
+
+                    <button type="submit" class="btn btn-pink ms-2">Tìm</button>
+                </form>
+
+                    <form method="get" asp-action="Index" class="d-flex align-items-center gap-2">
+                    <!-- GIỮ LẠI SEARCH -->
+                    <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+
+                    <!-- GIỮ LẠI CATEGORY -->
+                    <input type="hidden" name="categoryId" value="@Context.Request.Query["categoryId"]" />
+
+                    <label for="chkHidden" class="me-2 fw-bold">Hiện sản phẩm ẩn:</label>
+              
+                    <input type="checkbox"
+                           id="chkHidden"
+                           name="showHidden"
+                           value="true"
+                           class="form-check-input"
+                           @(ViewBag.ShowHidden ? "checked" : "")
+                           onchange="this.form.submit()" />
+
+                </form> 
+
+                </div>
+
+
                 <table class="table table-bordered align-middle text-center inventory-table">
                     <thead class="table-pink">
                         <tr>
@@ -246,4 +295,18 @@
     .note {
         width: 200px;
     }
+
+    /* nút tiềm kiếm  */
+    .btn-pink {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        border-radius: 20px;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF406A;
+            color: white;
+        }
+
 </style>

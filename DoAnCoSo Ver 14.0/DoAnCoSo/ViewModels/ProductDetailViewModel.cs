@@ -40,5 +40,28 @@ namespace DoAnCoSo.ViewModels
         // Thêm property để View dùng thay vì gọi Content trực tiếp
         public List<string> ReviewComments =>
             Reviews.Select(r => r.Comment).ToList(); // giả sử property trong Review là Comment
+
+        public List<OptionGroupVM> OptionGroups { get; set; } = new();
+
+        // Value theo nhóm: Dictionary<GroupId, List<Value>>
+        public Dictionary<int, List<ProductOptionValue>> GroupValues { get; set; } = new();
+
+        // Biến thể đầy đủ để check tồn kho
+        public List<ProductVariant> Variants { get; set; } = new();
+
+        public class OptionGroupVM
+        {
+            public string GroupName { get; set; } = "";
+            public List<OptionValueVM> Values { get; set; } = new();
+        }
+
+        public class OptionValueVM
+        {
+            public int OptionValueId { get; set; }
+            public string Value { get; set; } = "";
+            public bool IsAvailable { get; set; } // Còn tồn hay không
+        }
     }
+    
+
 }

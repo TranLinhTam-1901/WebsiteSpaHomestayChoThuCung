@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class AddNewModel1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -756,6 +756,32 @@ namespace DoAnCoSo.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProductOptionGroups",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ProductId1 = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductOptionGroups", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductOptionGroups_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProductOptionGroups_Products_ProductId1",
+                        column: x => x.ProductId1,
+                        principalTable: "Products",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ProductVariants",
                 columns: table => new
                 {
@@ -811,6 +837,26 @@ namespace DoAnCoSo.Migrations
                         column: x => x.ProductId,
                         principalTable: "Products",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductOptionValues",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProductOptionGroupId = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductOptionValues", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductOptionValues_ProductOptionGroups_ProductOptionGroupId",
+                        column: x => x.ProductOptionGroupId,
+                        principalTable: "ProductOptionGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -939,6 +985,28 @@ namespace DoAnCoSo.Migrations
                         principalTable: "Reviews",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProductVariantOptionValues",
+                columns: table => new
+                {
+                    ProductVariantId = table.Column<int>(type: "int", nullable: false),
+                    ProductOptionValueId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductVariantOptionValues", x => new { x.ProductVariantId, x.ProductOptionValueId });
+                    table.ForeignKey(
+                        name: "FK_ProductVariantOptionValues_ProductOptionValues_ProductOptionValueId",
+                        column: x => x.ProductOptionValueId,
+                        principalTable: "ProductOptionValues",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ProductVariantOptionValues_ProductVariants_ProductVariantId",
+                        column: x => x.ProductVariantId,
+                        principalTable: "ProductVariants",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -1141,9 +1209,29 @@ namespace DoAnCoSo.Migrations
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProductOptionGroups_ProductId",
+                table: "ProductOptionGroups",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductOptionGroups_ProductId1",
+                table: "ProductOptionGroups",
+                column: "ProductId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductOptionValues_ProductOptionGroupId",
+                table: "ProductOptionValues",
+                column: "ProductOptionGroupId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Products_CategoryId",
                 table: "Products",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductVariantOptionValues_ProductOptionValueId",
+                table: "ProductVariantOptionValues",
+                column: "ProductOptionValueId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductVariants_ProductId_Name",
@@ -1247,6 +1335,9 @@ namespace DoAnCoSo.Migrations
                 name: "ProductImages");
 
             migrationBuilder.DropTable(
+                name: "ProductVariantOptionValues");
+
+            migrationBuilder.DropTable(
                 name: "ReviewImages");
 
             migrationBuilder.DropTable(
@@ -1271,13 +1362,16 @@ namespace DoAnCoSo.Migrations
                 name: "Conversations");
 
             migrationBuilder.DropTable(
-                name: "ProductVariants");
-
-            migrationBuilder.DropTable(
                 name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "Pets");
+
+            migrationBuilder.DropTable(
+                name: "ProductOptionValues");
+
+            migrationBuilder.DropTable(
+                name: "ProductVariants");
 
             migrationBuilder.DropTable(
                 name: "Reviews");
@@ -1287,6 +1381,9 @@ namespace DoAnCoSo.Migrations
 
             migrationBuilder.DropTable(
                 name: "Promotions");
+
+            migrationBuilder.DropTable(
+                name: "ProductOptionGroups");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
