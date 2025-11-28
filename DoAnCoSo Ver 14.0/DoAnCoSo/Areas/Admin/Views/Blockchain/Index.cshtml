@@ -78,10 +78,20 @@
             </table>
         </div>
     </div>
+
+    <nav>
+        <ul id="pagination" class="pagination justify-content-center mt-4"></ul>
+    </nav>
 </div>
 
 <!-- CSS giữ nguyên như trước -->
 <style>
+    :root {
+        --pink-main: #ff7aa2;
+        --pink-light: #ffe3ec;
+        --pink-dark: #e74c7b;
+    }
+
     .pet-wrapper {
         max-width: 1300px;
         margin: auto;
@@ -172,4 +182,84 @@
         color: #777;
         padding: 20px 0;
     }
+
+    /* PAGINATION */
+    .pagination .page-link {
+        color: var(--pink-dark);
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination .page-link:hover {
+            background-color: #FFB6C1;
+            color: white;
+        }
+
+    .pagination .active .page-link {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        color: white;
+    }
+
+        /* 👉 BỎ FOCUS */
+        .pagination .page-link:focus,
+        .pagination .active .page-link:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ----------------- PAGINATION -----------------
+        const itemsPerPage = 10; // số lịch hẹn mỗi trang
+        const rows = document.querySelectorAll("table tbody tr");
+        const totalItems = rows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pagination = document.getElementById("pagination");
+
+        function showPage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? "" : "none";
+            });
+
+            document.querySelectorAll("#pagination li").forEach(li => li.classList.remove("active"));
+            const currentPage = document.querySelector(`#pagination li[data-page='${page}']`);
+            if (currentPage) currentPage.classList.add("active");
+
+            // cuộn lên đầu bảng
+            const card = document.querySelector(".pet-card");
+            if (card) {
+                const tableTop = card.offsetTop - 100;
+                window.scrollTo({ top: tableTop, behavior: "smooth" });
+            }
+        }
+
+        if (totalPages > 1) {
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.classList.add("page-item");
+                li.setAttribute("data-page", i);
+
+                const a = document.createElement("a");
+                a.classList.add("page-link");
+                a.href = "#";
+                a.textContent = i;
+
+                li.appendChild(a);
+                li.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    showPage(i);
+                });
+
+                pagination.appendChild(li);
+            }
+        }
+
+        // Hiển thị trang đầu tiên
+        showPage(1);
+    });
+</script>

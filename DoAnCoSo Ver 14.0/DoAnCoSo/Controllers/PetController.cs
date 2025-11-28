@@ -100,7 +100,7 @@ namespace DoAnCoSo.Controllers
                 await _context.SaveChangesAsync();
 
                 // Serialize dữ liệu an toàn
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                var petRecord = new
                 {
                     pet.PetId,
                     pet.Name,
@@ -111,9 +111,9 @@ namespace DoAnCoSo.Controllers
                     pet.Weight,
                     OwnerName = currentUser?.FullName ?? "Unknown",
                     pet.ImageUrl
-                });
+                };
 
-                await _blockchainService.AddPetBlockAsync(pet.PetId, "ADD", jsonData, performedBy);
+                await _blockchainService.AddPetBlockAsync(petRecord, "ADD", performedBy);
 
                 TempData["SuccessMessage"] = "🎉 Thêm hồ sơ thú cưng thành công!";
                 return RedirectToAction(nameof(Index));
@@ -185,7 +185,7 @@ namespace DoAnCoSo.Controllers
                 await _context.SaveChangesAsync();
 
                 // Serialize JSON an toàn
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                var petRecord = new
                 {
                     existingPet.PetId,
                     existingPet.Name,
@@ -196,9 +196,9 @@ namespace DoAnCoSo.Controllers
                     existingPet.Weight,
                     OwnerName = currentUser?.FullName ?? "Unknown",
                     existingPet.ImageUrl
-                });
+                };
 
-                await _blockchainService.AddPetBlockAsync(pet.PetId, "UPDATE", jsonData, performedBy);
+                await _blockchainService.AddPetBlockAsync(petRecord, "UPDATE", performedBy);
 
                 TempData["SuccessMessage"] = "✅ Cập nhật thông tin thành công!";
                 return RedirectToAction(nameof(Index));
@@ -271,6 +271,7 @@ namespace DoAnCoSo.Controllers
                     DeletedAt = DateTime.Now,
                     DeletedBy = performedBy
                 };
+
                 _context.DeletedPets.Add(deletedPet);
                 await _context.SaveChangesAsync(); // cần save để có Id
 
@@ -308,7 +309,7 @@ namespace DoAnCoSo.Controllers
                 // 5. Ghi log blockchain
                 try
                 {
-                    var jsonData = System.Text.Json.JsonSerializer.Serialize(new
+                    var deletedPetRecord = new
                     {
                         deletedPet.OriginalPetId,
                         deletedPet.Name,
@@ -317,10 +318,14 @@ namespace DoAnCoSo.Controllers
                         deletedPet.Gender,
                         deletedPet.Age,
                         deletedPet.Weight,
-                        deletedPet.User.FullName
-                    });
+                        deletedPet.UserId,
+                        deletedPet.ImageUrl,
+                        deletedPet.DeletedAt,
+                        deletedPet.DeletedBy
+                    };
+
                     var operation = isAdmin ? "ADMIN_DELETE" : "DELETE";
-                    await _blockchainService.AddPetBlockAsync(deletedPet.OriginalPetId, operation, jsonData, performedBy);
+                    await _blockchainService.AddPetBlockAsync(deletedPetRecord, operation, performedBy);
                 }
                 catch (Exception bcEx)
                 {

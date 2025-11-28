@@ -1,35 +1,78 @@
 ﻿using DoAnCoSo.Models;
 using DoAnCoSo.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DoAnCoSo.Controllers
 {
+    [Authorize]
     public class AppointmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly BlockchainService _blockchainService;
 
-        public AppointmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, BlockchainService blockchainService = null)
+        public AppointmentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, BlockchainService blockchainService)
         {
             _context = context;
             _userManager = userManager;
             _blockchainService = blockchainService;
         }
 
+        private object GetAppointmentBlockchainRecord(Appointment appointment, string performedBy)
+        {
+            if (appointment.Service?.Category == ServiceCategory.Homestay)
+            {
+                return new
+                {
+                    appointment.AppointmentId,
+                    appointment.Status,
+                    StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
+                    EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
+                    PetId = appointment.PetId,
+                    PetName = appointment.Pet?.Name,
+                    PetType = appointment.Pet?.Type,
+                    PetBreed = appointment.Pet?.Breed,
+                    ServiceId = appointment.ServiceId,
+                    ServiceName = appointment.Service?.Name,
+                    UserId = appointment.UserId,
+                    UserName = appointment.User?.FullName ?? performedBy
+                };
+            }
+            else // Spa hoặc Vet
+            {
+                return new
+                {
+                    appointment.AppointmentId,
+                    appointment.Status,
+                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
+                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
+                    PetId = appointment.PetId,
+                    PetName = appointment.Pet?.Name,
+                    PetType = appointment.Pet?.Type,
+                    PetBreed = appointment.Pet?.Breed,
+                    ServiceId = appointment.ServiceId,
+                    ServiceName = appointment.Service?.Name,
+                    UserId = appointment.UserId,
+                    UserName = appointment.User?.FullName ?? performedBy
+                };
+            }
+        }
+
         // --- SPA ---
-        public IActionResult BookAppointmentSpa()
+        [HttpGet]
+        public async Task <IActionResult> BookAppointmentSpa()
         {
             if (!User.Identity.IsAuthenticated)
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
 
             var userId = _userManager.GetUserId(User);
-            var user = _userManager.FindByIdAsync(userId).Result;
+            var user = await _userManager.FindByIdAsync(userId);
 
-            var spaServices = _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToList();
-            var spaPricings = _context.SpaPricings.ToList(); // phải tồn tại DbSet<SpaPricing> SpaPricings trong ApplicationDbContext
+            var spaServices = await _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToListAsync();
+            var spaPricings = await _context.SpaPricings.ToListAsync(); // phải tồn tại DbSet<SpaPricing> SpaPricings trong ApplicationDbContext
             var userPets = _context.Pets.Where(p => p.UserId == userId).ToList();
 
             var vm = new SpaBookingViewModel
@@ -47,6 +90,7 @@ namespace DoAnCoSo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> BookAppointmentSpa(SpaBookingViewModel model)
         {
             if (!User.Identity.IsAuthenticated)
@@ -120,26 +164,20 @@ namespace DoAnCoSo.Controllers
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
-            var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(new
-            {
-                appointment.AppointmentId,
-                appointment.Status,
-                AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                PetName = appointment.Pet.Name,
-                PetType = appointment.Pet.Type,
-                ServiceName = appointment.Service.Name,
-                UserName = appointment.User.FullName
-            });
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
 
+            if (_blockchainService != null)
+            {
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    pet.PetId,
-                    appointment.AppointmentId,
-                    "Spa",
+                    record,
+                    appointment.Service.Category.ToString(),
                     "ADD",
-                    jsonData,
                     performedBy
                 );
+            }
 
             TempData["ServiceName"] = "Spa";
             return RedirectToAction("AppointmentSuccess");
@@ -158,8 +196,8 @@ namespace DoAnCoSo.Controllers
             if (appointment == null) return NotFound();
 
             var userPets = await _context.Pets.Where(p => p.UserId == userId).ToListAsync();
-            var spaServices = _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToList();
-            var spaPricings = _context.SpaPricings.ToList();
+            var spaServices = await _context.Services.Where(s => s.Category == ServiceCategory.Spa).ToListAsync();
+            var spaPricings = await _context.SpaPricings.ToListAsync();
 
             var model = new SpaBookingViewModel
             {
@@ -200,7 +238,12 @@ namespace DoAnCoSo.Controllers
 
             if (appointment == null) return NotFound();
 
-            if ((appointment.AppointmentDate.Date - DateTime.Today).TotalDays < 1)
+            var today = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+            ).Date;
+
+            if ((appointment.AppointmentDate.Date - today).TotalDays < 1)
             {
                 TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 1 ngày.";
                 return RedirectToAction("CustomerAppointmentHistory");
@@ -250,24 +293,11 @@ namespace DoAnCoSo.Controllers
 
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                    PetName = appointment.Pet?.Name ?? model.PetName,
-                    PetType = appointment.Pet?.Type ?? model.PetType,
-                    ServiceName = appointment.Service?.Name ?? "",
-                    UserName = appointment.User?.FullName ?? performedBy
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(),
-                    appointment.AppointmentId,
-                    "Spa",
-                    "UPDATE",
-                    jsonData,
+                    record,
+                    appointment.Service.Category.ToString(),
+                    "UPDATE", // "ADD", "UPDATE", "CANCEL"
                     performedBy
                 );
             }
@@ -277,6 +307,7 @@ namespace DoAnCoSo.Controllers
         }
 
         // --- HOMESTAY ---
+        [HttpGet]
         public async Task<IActionResult> BookAppointmentHomestay()
         {
             if (!User.Identity.IsAuthenticated)
@@ -303,6 +334,7 @@ namespace DoAnCoSo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> BookAppointmentHomestay(HomestayBookingViewModel model)
         {
             if (!User.Identity.IsAuthenticated)
@@ -376,26 +408,20 @@ namespace DoAnCoSo.Controllers
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
-            var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(new
-            {
-                appointment.AppointmentId,
-                appointment.Status,
-                StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
-                EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
-                PetName = appointment.Pet.Name,
-                PetType = appointment.Pet.Type,
-                ServiceName = appointment.Service.Name,
-                UserName = appointment.User.FullName
-            });
+            await _context.Entry(appointment).Reference(a => a.Pet).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.Service).LoadAsync();
+            await _context.Entry(appointment).Reference(a => a.User).LoadAsync();
 
-            await _blockchainService.AddAppointmentBlockAsync(
-                pet.PetId,
-                appointment.AppointmentId,
-                "Homestay",
-                "ADD",
-                jsonData,
-                performedBy
-            );
+            if (_blockchainService != null)
+            {
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
+                await _blockchainService.AddAppointmentBlockAsync(
+                    record,
+                    appointment.Service.Category.ToString(),
+                    "ADD", // "ADD", "UPDATE", "CANCEL"
+                    performedBy
+                );
+            }
 
             TempData["ServiceName"] = "Homestay";
             return RedirectToAction("AppointmentSuccess");
@@ -469,7 +495,13 @@ namespace DoAnCoSo.Controllers
 
             if (appointment == null) return NotFound();
 
-            if ((appointment.StartDate - DateTime.Now).TotalDays < 2)
+            var today = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+            ).Date;
+
+            if ((appointment.StartDate.Date - today).TotalDays < 2)
+
             {
                 TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 2 ngày.";
                 return RedirectToAction("CustomerAppointmentHistory");
@@ -520,24 +552,11 @@ namespace DoAnCoSo.Controllers
 
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
-                    EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
-                    PetName = appointment.Pet?.Name ?? model.PetName,
-                    PetType = appointment.Pet?.Type ?? model.PetType,
-                    ServiceName = appointment.Service?.Name ?? "",
-                    UserName = appointment.User?.FullName ?? performedBy
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(),
-                    appointment.AppointmentId,
-                    "Homestay",
-                    "UPDATE",
-                    jsonData,
+                    record,
+                    appointment.Service.Category.ToString(),
+                    "UPDATE", // "ADD", "UPDATE", "CANCEL"
                     performedBy
                 );
             }
@@ -547,6 +566,7 @@ namespace DoAnCoSo.Controllers
         }
 
         // --- VET ---
+        [HttpGet]
         public async Task<IActionResult> BookAppointmentVet()
         {
             if (!User.Identity.IsAuthenticated)
@@ -575,6 +595,7 @@ namespace DoAnCoSo.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> BookAppointmentVet(VetBookingViewModel model)
         {
             if (!User.Identity.IsAuthenticated)
@@ -655,24 +676,11 @@ namespace DoAnCoSo.Controllers
             // --- Blockchain ---
             if (_blockchainService != null)
             {
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                    PetName = appointment.Pet?.Name,
-                    PetType = appointment.Pet?.Type,
-                    ServiceName = appointment.Service?.Name,
-                    UserName = appointment.User?.FullName ?? performedBy
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    pet.PetId,
-                    appointment.AppointmentId,
-                    "Vet",
-                    "ADD",
-                    jsonData,
+                    record,
+                    appointment.Service.Category.ToString(),
+                    "ADD", // "ADD", "UPDATE", "CANCEL"
                     performedBy
                 );
             }
@@ -743,11 +751,19 @@ namespace DoAnCoSo.Controllers
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.AppointmentId == model.AppointmentId && a.UserId == userId);
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            var performedBy = currentUser?.FullName ?? "Hệ thống";
+
             if (appointment == null)
                 return NotFound();
 
             // Chỉ được sửa trước 1 ngày
-            if ((appointment.AppointmentDate - DateTime.Now).TotalDays < 1)
+            var today = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+            ).Date;
+
+            if ((appointment.AppointmentDate.Date - today).TotalDays < 1)
             {
                 TempData["ErrorMessage"] = "❌ Chỉ được sửa trước 1 ngày.";
                 return RedirectToAction("CustomerAppointmentHistory");
@@ -801,26 +817,11 @@ namespace DoAnCoSo.Controllers
             // Ghi Blockchain
             if (_blockchainService != null)
             {
-                var performedBy = appointment.User?.FullName ?? "Hệ thống";
-
-                var jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    appointment.AppointmentId,
-                    appointment.Status,
-                    AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                    AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                    PetName = appointment.Pet?.Name ?? model.PetName,
-                    PetType = appointment.Pet?.Type ?? model.PetType,
-                    ServiceName = appointment.Service?.Name ?? "",
-                    UserName = performedBy
-                });
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(),
-                    appointment.AppointmentId,
-                    "Vet",
-                    "UPDATE",
-                    jsonData,
+                    record,
+                    appointment.Service.Category.ToString(),
+                    "UPDATE", // "ADD", "UPDATE", "CANCEL"
                     performedBy
                 );
             }
@@ -836,21 +837,22 @@ namespace DoAnCoSo.Controllers
             return View();
         }
 
-        public IActionResult CustomerAppointmentHistory()
+        public async Task<IActionResult> CustomerAppointmentHistory()
         {
             var userId = _userManager.GetUserId(User);
 
             // Lấy danh sách appointment của user, bao gồm Pet và Service
-            var appointments = _context.Appointments
+            var appointments = await _context.Appointments
                 .Include(a => a.Pet)
                 .Include(a => a.Service)
                 .Where(a => a.UserId == userId)
-                .ToList();
+                .OrderByDescending(a => a.CreatedDate)
+                .ToListAsync();
 
             // Lấy danh sách DeletedPets của user
-            var deletedPets = _context.DeletedPets
+            var deletedPets = await _context.DeletedPets
                 .Where(dp => dp.UserId == userId)
-                .ToList();
+                .ToListAsync();
 
             // Gán DeletedPet cho các appointment bị null Pet
             foreach (var appointment in appointments)
@@ -891,7 +893,7 @@ namespace DoAnCoSo.Controllers
         }
 
         // --- CANCEL ---
-
+        [HttpGet]
         public async Task<IActionResult> AppointmentCancel(int id)
         {
             var userId = _userManager.GetUserId(User);
@@ -925,10 +927,15 @@ namespace DoAnCoSo.Controllers
             if (appointment == null)
                 return NotFound();
 
+            var today = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+            ).Date;
+
             // Kiểm tra điều kiện hủy
             if (appointment.Service?.Category == ServiceCategory.Homestay)
             {
-                if ((appointment.StartDate.Date - DateTime.Now.Date).TotalDays < 2)
+                if ((appointment.StartDate.Date - today).TotalDays < 2)
                 {
                     TempData["ErrorMessage"] = "❌ Homestay chỉ có thể hủy trước 2 ngày.";
                     return RedirectToAction("CustomerAppointmentHistory");
@@ -936,7 +943,7 @@ namespace DoAnCoSo.Controllers
             }
             else if (appointment.Service?.Category == ServiceCategory.Spa)
             {
-                if ((appointment.AppointmentDate - DateTime.Now).TotalHours < 24)
+                if ((appointment.AppointmentDate.Date - today).TotalDays < 1)
                 {
                     TempData["ErrorMessage"] = "❌ Spa chỉ có thể hủy lịch trước 1 ngày.";
                     return RedirectToAction("CustomerAppointmentHistory");
@@ -944,7 +951,7 @@ namespace DoAnCoSo.Controllers
             }
             else if (appointment.Service?.Category == ServiceCategory.Vet)
             {
-                if ((appointment.AppointmentDate - DateTime.Now).TotalHours < 24)
+                if ((appointment.AppointmentDate.Date - today).TotalDays < 1)
                 {
                     TempData["ErrorMessage"] = "❌ Thú y chỉ có thể hủy lịch trước 1 ngày.";
                     return RedirectToAction("CustomerAppointmentHistory");
@@ -957,45 +964,11 @@ namespace DoAnCoSo.Controllers
             // Ghi blockchain
             if (_blockchainService != null)
             {
-                string recordType = appointment.Service.Category.ToString(); // Spa / Homestay / Vet
-
-                string jsonData;
-
-                if (appointment.Service.Category == ServiceCategory.Spa || appointment.Service.Category == ServiceCategory.Vet)
-                {
-                    jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                    {
-                        appointment.AppointmentId,
-                        appointment.Status,
-                        AppointmentDate = appointment.AppointmentDate.ToString("dd/MM/yyyy"),
-                        AppointmentTime = appointment.AppointmentTime.ToString(@"hh\:mm"),
-                        PetName = appointment.Pet.Name,
-                        PetType = appointment.Pet.Type,
-                        ServiceName = appointment.Service.Name,
-                        UserName = appointment.User.FullName
-                    });
-                }
-                else
-                {
-                    jsonData = System.Text.Json.JsonSerializer.Serialize(new
-                    {
-                        appointment.AppointmentId,
-                        appointment.Status,
-                        StartDate = appointment.StartDate.ToString("dd/MM/yyyy"),
-                        EndDate = appointment.EndDate.ToString("dd/MM/yyyy"),
-                        PetName = appointment.Pet.Name,
-                        PetType = appointment.Pet.Type,
-                        ServiceName = appointment.Service.Name,
-                        UserName = appointment.User.FullName
-                    });
-                }
-
+                var record = GetAppointmentBlockchainRecord(appointment, performedBy);
                 await _blockchainService.AddAppointmentBlockAsync(
-                    appointment.PetId.GetValueOrDefault(),
-                    appointment.AppointmentId,
-                    recordType,
-                    "CANCEL",
-                    jsonData,
+                    record,
+                    appointment.Service.Category.ToString(),
+                    "CANCEL", // "ADD", "UPDATE", "CANCEL"
                     performedBy
                 );
             }

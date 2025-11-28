@@ -190,13 +190,13 @@
         serviceSelect.addEventListener("change", updatePrice);
 
         flatpickr("#appointmentPicker", {
-            dateFormat: "d/m/Y",
+            dateFormat: "Y/m/d",
             altInput: true,
             altFormat: "d/m/Y",
             locale: "vn",
             disableMobile: true,
             minDate: "today",
-            defaultDate: "@(Model.AppointmentDate.ToString("dd/MM/yyyy"))"
+            defaultDate: "@(Model.AppointmentDate.ToString("yyyy/MM/dd")))"
         });
     });
 </script>
