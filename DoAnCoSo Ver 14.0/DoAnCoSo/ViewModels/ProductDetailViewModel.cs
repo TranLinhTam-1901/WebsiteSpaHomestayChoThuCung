@@ -46,6 +46,9 @@ namespace DoAnCoSo.ViewModels
         // Value theo nhóm: Dictionary<GroupId, List<Value>>
         public Dictionary<int, List<ProductOptionValue>> GroupValues { get; set; } = new();
 
+        public List<Product> RelatedProducts { get; set; } = new();
+
+
         // Biến thể đầy đủ để check tồn kho
         public List<ProductVariant> Variants { get; set; } = new();
 
