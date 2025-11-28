@@ -271,6 +271,7 @@ namespace DoAnCoSo.Controllers
                     DeletedAt = DateTime.Now,
                     DeletedBy = performedBy
                 };
+
                 _context.DeletedPets.Add(deletedPet);
                 await _context.SaveChangesAsync(); // cần save để có Id
 

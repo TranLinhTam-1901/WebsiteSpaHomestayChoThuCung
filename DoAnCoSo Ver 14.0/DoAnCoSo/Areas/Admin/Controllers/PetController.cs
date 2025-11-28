@@ -224,12 +224,48 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 };
 
                 _context.DeletedPets.Add(deletedPet);
+                await _context.SaveChangesAsync(); // cần save để có Id
+
+                // 2. Cập nhật Appointment liên quan
+                var appointments = await _context.Appointments
+                    .Where(a => a.PetId == PetId)
+                    .ToListAsync();
+
+                foreach (var a in appointments)
+                {
+                    a.DeletedPetId = deletedPet.Id; // gán DeletedPetId
+                    a.Status = AppointmentStatus.Deleted; // đánh dấu đã xóa
+                }
+                await _context.SaveChangesAsync(); // lưu Appointment trước khi xóa Pet
+
+                _context.DeletedPets.Add(deletedPet);
                 await _context.SaveChangesAsync();
 
                 _context.Pets.Remove(pet);
                 await _context.SaveChangesAsync();
 
-                var deletedPetRecord = new
+                // 5. Ghi log blockchain
+                try
+                {
+                    var deletedPetRecord = new
+                    {
+                        deletedPet.OriginalPetId,
+                        deletedPet.Name,
+                        deletedPet.Type,
+                        deletedPet.Breed,
+                        deletedPet.Gender,
+                        deletedPet.Age,
+                        deletedPet.Weight,
+                        deletedPet.UserId,
+                        deletedPet.ImageUrl,
+                        deletedPet.DeletedAt,
+                        deletedPet.DeletedBy
+                    };
+
+                    var operation = isAdmin ? "ADMIN_DELETE" : "DELETE";
+                    await _blockchainService.AddPetBlockAsync(deletedPetRecord, operation, performedBy);
+                }
+                catch (Exception bcEx)
                 {
                     deletedPet.OriginalPetId,
                     deletedPet.Name,
