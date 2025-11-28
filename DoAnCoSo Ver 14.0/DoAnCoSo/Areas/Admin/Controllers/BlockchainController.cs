@@ -27,7 +27,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         {
             // Lấy tất cả blockchain records
             var allRecords = _context.BlockchainRecords
-                                     .OrderBy(b => b.BlockNumber)
+                                     .OrderByDescending(b => b.BlockNumber)
                                      .ToList();
 
             // Parse ReferenceId sang int và lọc
@@ -71,7 +71,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             // Lọc trong memory: ReferenceId là string, convert sang int
             var records = _context.BlockchainRecords
-                                  .OrderBy(b => b.BlockNumber)
+                                  .OrderByDescending(b => b.BlockNumber)
                                   .AsEnumerable() // bắt buộc load memory
                                   .Where(b => int.TryParse(b.ReferenceId, out int id) && id == petId)
                                   .ToList();

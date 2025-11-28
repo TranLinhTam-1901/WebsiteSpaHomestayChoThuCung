@@ -56,11 +56,10 @@ builder.Services.AddRazorPages();
 //hien thi thong bao quyen han truy cap admin 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = $"/Identity/Account/Login";
-    options.LoginPath = $"/Identity/Account/Logout";
-    options.LoginPath = $"/Identity/Account/AccessDenied";
-}
-    );
+    options.LoginPath = "/Identity/Account/Login";
+    options.LogoutPath = "/Identity/Account/Logout";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
 
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
@@ -97,9 +96,7 @@ builder.Services.AddScoped<BlockchainService>();
 
 var app = builder.Build();
 
-app.UseRequestLocalization(); // Sử dụng Middleware cấu hình Culture
-
-var supportedCultures = new[] { new CultureInfo("vi-VN") };
+var supportedCultures = new[] { new CultureInfo("vi-VN"), new CultureInfo("en-US") };
 app.UseRequestLocalization(new RequestLocalizationOptions
 {
     DefaultRequestCulture = new RequestCulture("vi-VN"),
