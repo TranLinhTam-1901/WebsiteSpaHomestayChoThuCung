@@ -196,52 +196,18 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         }
 
         // 🗑️ Xóa
-        [HttpGet]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var pet = await _context.Pets
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.PetId == id);
-
-            if (pet == null)
-            {
-                TempData["ErrorMessage"] = "❌ Không tìm thấy hồ sơ thú cưng.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(pet);
-        }
-
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int PetId)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var performedBy = currentUser?.FullName ?? "Hệ thống";
-            var userId = _userManager.GetUserId(User);
-            bool isAdmin = User.IsInRole("Admin");
 
-            // Lấy pet kèm User
-            var pet = await _context.Pets
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.PetId == PetId);
-
-            if (pet == null)
-            {
-                TempData["ErrorMessage"] = "❌ Không tìm thấy hồ sơ thú cưng.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // Kiểm tra quyền
-            if (!isAdmin && pet.UserId != userId)
-            {
-                TempData["ErrorMessage"] = "❌ Bạn không có quyền xóa hồ sơ này.";
-                return RedirectToAction(nameof(Index));
-            }
+            var pet = await _context.Pets.Include(p => p.User).FirstOrDefaultAsync(p => p.PetId == PetId);
+            if (pet == null) return RedirectToAction(nameof(Index));
 
             try
             {
-                // 1. Tạo bản ghi DeletedPet
                 var deletedPet = new DeletedPets
                 {
                     OriginalPetId = pet.PetId,
@@ -272,22 +238,9 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 }
                 await _context.SaveChangesAsync(); // lưu Appointment trước khi xóa Pet
 
-                // 3. Xóa ảnh vật lý (nếu có)
-                if (!string.IsNullOrEmpty(pet.ImageUrl))
-                {
-                    try
-                    {
-                        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", pet.ImageUrl.TrimStart('/'));
-                        if (System.IO.File.Exists(fullPath))
-                            System.IO.File.Delete(fullPath);
-                    }
-                    catch (Exception fileEx)
-                    {
-                        Console.WriteLine("Lỗi xóa file ảnh: " + fileEx.Message);
-                    }
-                }
+                _context.DeletedPets.Add(deletedPet);
+                await _context.SaveChangesAsync();
 
-                // 4. Xóa Pet khỏi bảng chính
                 _context.Pets.Remove(pet);
                 await _context.SaveChangesAsync();
 
@@ -314,9 +267,20 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 }
                 catch (Exception bcEx)
                 {
-                    Console.WriteLine("Blockchain log lỗi (bỏ qua): " + bcEx.Message);
-                }
+                    deletedPet.OriginalPetId,
+                    deletedPet.Name,
+                    deletedPet.Type,
+                    deletedPet.Breed,
+                    deletedPet.Gender,
+                    deletedPet.Age,
+                    deletedPet.Weight,
+                    deletedPet.UserId,
+                    deletedPet.ImageUrl,
+                    deletedPet.DeletedAt,
+                    deletedPet.DeletedBy
+                };
 
+                await _blockchainService.AddPetBlockAsync(deletedPetRecord, "ADMIN_DELETE", performedBy);
                 TempData["SuccessMessage"] = "🗑️ Hồ sơ thú cưng đã được đánh dấu xóa!";
             }
             catch (Exception ex)

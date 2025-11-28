@@ -121,40 +121,64 @@ namespace DoAnCoSo.Controllers
             return Json(new { success = false, message = "Bạn cần đăng nhập để sử dụng chức năng này." });
         }
 
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, int currentPage = 1)
         {
-            var product = await _productRepository.GetProductWithReviewsAndImagesAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
+            var product = await _context.Products
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+                .ThenInclude(v => v.OptionValues)
+                    .ThenInclude(x => x.OptionValue)
+                        .ThenInclude(o => o.Group)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
-            // Lấy review kèm User (để hiển thị tên)
-            var productReviews = await _context.Reviews
+
+            if (product == null)
+                return NotFound();
+
+            var activeVariants = product.Variants
+                .Where(v => v.IsActive)
+                .ToList();
+
+            // Build OptionGroups from Active Variants
+            var optionGroups = activeVariants
+                .SelectMany(v => v.OptionValues)
+                .GroupBy(ov => ov.OptionValue.Group)
+                .Select(g => new ProductDetailViewModel.OptionGroupVM
+                {
+                    GroupName = g.Key.Name, // Example: Size / Màu / Khối lượng / Hương vị
+                    Values = g
+                    .GroupBy(x => x.ProductOptionValueId)
+                    .Select(x => {
+                        var opt = x.First();
+                        return new ProductDetailViewModel.OptionValueVM
+                        {
+                            OptionValueId = opt.ProductOptionValueId,
+                            Value = opt.OptionValue.Value,
+                            IsAvailable = x.Any(v => (v.Variant.StockQuantity - v.Variant.ReservedQuantity) > 0)
+                        };
+                    }).ToList()
+                }).ToList();
+
+            var reviews = await _context.Reviews
                 .Include(r => r.User)
-                .Include(r => r.Images)
                 .Where(r => r.TargetType == ReviewTargetType.Product && r.TargetId == id)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
-            var viewModel = new ProductDetailViewModel
+            var vm = new ProductDetailViewModel
             {
                 Product = product,
-                Reviews = productReviews,
-                NewReview = new Review
-                {
-                    TargetType = ReviewTargetType.Product,
-                    TargetId = id,
-                    UserId = User.Identity.IsAuthenticated
-                        ? User.FindFirstValue(ClaimTypes.NameIdentifier)
-                        : null
-                },
-                AverageRating = productReviews.Any() ? productReviews.Average(r => r.Rating) : 0,
-                TotalReviews = productReviews.Count
+                Variants = activeVariants,
+                OptionGroups = optionGroups,
+                Reviews = reviews,
+                TotalReviews = reviews.Count,
+                AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0d
             };
 
-            return View(viewModel);
+            ViewBag.CurrentPage = currentPage;
+            return View(vm);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -223,7 +247,8 @@ namespace DoAnCoSo.Controllers
 
             var lowerSearchTerm = searchTerm.ToLower();
 
-            var joinedResultsInMemory = _context.Products
+            var joinedResultsInMemory = _context.Products   
+                .Where(p => p.IsActive && !p.IsDeleted)   
                 .Join(
                     _context.Categories, // Bảng Categories
                     product => product.CategoryId, // Khóa ngoại trong bảng Products

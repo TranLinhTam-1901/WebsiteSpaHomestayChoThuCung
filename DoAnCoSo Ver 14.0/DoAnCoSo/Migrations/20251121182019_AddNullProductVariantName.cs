@@ -5,7 +5,7 @@
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial1 : Migration
+    public partial class AddNullProductVariantName : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

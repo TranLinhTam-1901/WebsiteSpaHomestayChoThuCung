@@ -82,5 +82,8 @@ namespace DoAnCoSo.Models
         public DateTime? DeletedAt { get; set; }
         public string? DeletedBy { get; set; }
         public string? DeletedReason { get; set; }
+
+        public virtual ICollection<ProductOptionGroup> OptionGroups { get; set; } = new List<ProductOptionGroup>();
+
     }
 }

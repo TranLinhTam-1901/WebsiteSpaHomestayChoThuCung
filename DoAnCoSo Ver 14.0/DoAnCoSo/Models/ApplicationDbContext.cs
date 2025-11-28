@@ -45,7 +45,10 @@ namespace DoAnCoSo.Models
         public DbSet<InventoryLog> InventoryLogs { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
 
+        public DbSet<ProductOptionGroup> ProductOptionGroups { get; set; }
+        public DbSet<ProductOptionValue> ProductOptionValues { get; set; }
 
+        public DbSet<ProductVariantOptionValue> ProductVariantOptionValues { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -186,6 +189,48 @@ namespace DoAnCoSo.Models
                 .WithMany()
                 .HasForeignKey(ci => ci.VariantId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductOptionGroup>(b =>
+            {
+                b.HasKey(g => g.Id);
+                b.Property(g => g.Name).HasMaxLength(100).IsRequired();
+
+                b.HasOne(g => g.Product)
+                 .WithMany() // hoặc WithMany(p => p.OptionGroups) nếu bạn thêm navigation
+                 .HasForeignKey(g => g.ProductId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProductOptionValue>(b =>
+            {
+                b.HasKey(v => v.Id);
+                b.Property(v => v.Value).HasMaxLength(100).IsRequired();
+
+                b.HasOne(v => v.Group)
+                 .WithMany(g => g.Values)
+                 .HasForeignKey(v => v.ProductOptionGroupId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            modelBuilder.Entity<ProductVariantOptionValue>(b =>
+            {
+                b.HasKey(x => new { x.ProductVariantId, x.ProductOptionValueId });
+
+                b.HasOne(x => x.Variant)
+                    .WithMany(v => v.OptionValues)
+                    .HasForeignKey(x => x.ProductVariantId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne(x => x.OptionValue)
+                    .WithMany(ov => ov.Variants)
+                    .HasForeignKey(x => x.ProductOptionValueId)
+                    .OnDelete(DeleteBehavior.NoAction); 
+            });
+
+            modelBuilder.Entity<ProductVariant>()
+            .Property(v => v.Name)
+            .IsRequired(false);
 
 
         }
