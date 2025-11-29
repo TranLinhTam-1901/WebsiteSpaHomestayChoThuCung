@@ -26,10 +26,22 @@
 
         <div class="card-body">
             <div class="row mb-3">
-                <div class="col-md-6">
-                    <input type="text" class="form-control search-input" placeholder="Tìm theo tên, email hoặc vai trò...">
-                </div>
+                <form method="get" asp-action="UserList" class="d-flex align-items-center gap-2">
+
+                    <input type="text"
+                           name="search"
+                           value="@Context.Request.Query["search"]"
+                           class="form-control search-input"
+                           placeholder="Tìm theo tên, email hoặc vai trò..."
+                           style="width: 300px;">
+
+                    <button type="submit" class="btn btn-pink search-btn">
+                        <i class="fas fa-search"></i> Tìm
+                    </button>
+
+                </form>
             </div>
+
 
             <div class="table-responsive">
                 <table class="table table-bordered align-middle text-center user-table">
@@ -317,6 +329,26 @@
         color: #777;
         margin-top: 16px;
     }
+
+    .btn-pink {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 6px 18px;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF406A;
+            color: white;
+        }
+
+    .search-btn {
+        border-radius: 20px !important;
+        padding: 8px 18px;
+    }
+
+
 </style>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -335,4 +367,6 @@
             }, 3000); // 3 giây cho admin list
         }
     });
+
+
 </script>

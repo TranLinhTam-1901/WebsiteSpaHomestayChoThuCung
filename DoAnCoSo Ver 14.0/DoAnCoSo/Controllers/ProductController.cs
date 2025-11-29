@@ -124,6 +124,7 @@ namespace DoAnCoSo.Controllers
         public async Task<IActionResult> Details(int id, int currentPage = 1)
         {
             var product = await _context.Products
+            .Include(p => p.Category) 
             .Include(p => p.Images)
             .Include(p => p.Variants)
                 .ThenInclude(v => v.OptionValues)
@@ -165,6 +166,17 @@ namespace DoAnCoSo.Controllers
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
+            // ================== RELATED PRODUCTS (THEO CATEGORY) ==================
+            var relatedProducts = await _context.Products
+                 .Include(p => p.Images)
+                 .Where(p =>
+                     p.CategoryId == product.CategoryId &&
+                     p.Id != product.Id &&
+                     p.IsActive &&
+                     !p.IsDeleted
+                 )
+                 .ToListAsync();
+
             var vm = new ProductDetailViewModel
             {
                 Product = product,
@@ -172,7 +184,8 @@ namespace DoAnCoSo.Controllers
                 OptionGroups = optionGroups,
                 Reviews = reviews,
                 TotalReviews = reviews.Count,
-                AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0d
+                AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0d,
+                RelatedProducts = relatedProducts
             };
 
             ViewBag.CurrentPage = currentPage;

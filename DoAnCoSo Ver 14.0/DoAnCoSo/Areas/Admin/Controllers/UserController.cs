@@ -22,9 +22,11 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         }
 
 
-        public async Task<IActionResult> UserList()
+        public async Task<IActionResult> UserList(string? search)
         {
-            var users = await _context.Users.Select(u => new UserInfoViewModel
+
+            // Bước 1: tạo query
+            var query = _context.Users.Select(u => new UserInfoViewModel
             {
                 Id = u.Id,
                 FullName = u.FullName,
@@ -32,7 +34,23 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 Email = u.Email,
                 Role = "",
                 IsLocked = u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.Now
-            }).ToListAsync();
+            });
+
+            // Bước 2: lọc theo từ khóa tìm kiếm
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string keyword = search.Trim().ToLower();
+
+                query = query.Where(u =>
+                    u.FullName.ToLower().Contains(keyword) ||
+                    u.UserName.ToLower().Contains(keyword) ||
+                    u.Email.ToLower().Contains(keyword)
+                );
+            }
+
+            // Bước 3: thực thi query
+            var users = await query.ToListAsync();
+
 
             foreach (var userViewModel in users)
             {
