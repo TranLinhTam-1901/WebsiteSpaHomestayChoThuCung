@@ -4,27 +4,56 @@
     <h2 class="section-title">👤 Quản lý tài khoản</h2>
 
     <div class="user-card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0 fw-bold">Danh sách người dùng</h4>
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div id="admin-alert"
+                     class="alert alert-success mb-0"
+                     role="alert">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div id="admin-alert"
+                     class="alert alert-danger mb-0"
+                     role="alert">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
         </div>
 
         <div class="card-body">
             <div class="row mb-3">
-                <div class="col-md-6">
-                    <input type="text" class="form-control search-input" placeholder="Tìm theo tên, email hoặc vai trò...">
-                </div>
+                <form method="get" asp-action="UserList" class="d-flex align-items-center gap-2">
+
+                    <input type="text"
+                           name="search"
+                           value="@Context.Request.Query["search"]"
+                           class="form-control search-input"
+                           placeholder="Tìm theo tên, email hoặc vai trò..."
+                           style="width: 300px;">
+
+                    <button type="submit" class="btn btn-pink search-btn">
+                        <i class="fas fa-search"></i> Tìm
+                    </button>
+
+                </form>
             </div>
+
 
             <div class="table-responsive">
                 <table class="table table-bordered align-middle text-center user-table">
                     <thead class="table-pink">
                         <tr>
-                            <th style="width: 24%">ID</th>
-                            <th style="width: 18%">Tên người dùng</th>
-                            <th style="width: 18%">Tên đăng nhập</th>
-                            <th style="width: 22%">Email</th>
+                            <th style="width: 20%">ID</th>
+                            <th style="width: 16%">Tên người dùng</th>
+                            <th style="width: 14%">Tên đăng nhập</th>
+                            <th style="width: 18%">Email</th>
                             <th style="width: 10%">Vai trò</th>
-                            <th style="width: 8%">Hành động</th>
+                            <th style="width: 10%">Trạng thái</th>
+                            <th style="width: 12%">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -50,17 +79,50 @@
                                         <span class="badge role-customer">Customer</span>
                                     }
                                 </td>
+                                <td>
+                                    @if (user.IsLocked)
+                                    {
+                                        <span class="badge status-locked">Đã khóa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge status-active">Đang hoạt động</span>
+                                    }
+                                </td>
                                 <td class="actions-cell">
                                     <div class="actions">
+
                                         <a asp-action="EditUser" asp-route-id="@user.Id" class="btn-accept btn-sm">
                                             <i class="fas fa-edit"></i> Sửa
                                         </a>
-                                        <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="d-inline-block"
-                                              onsubmit="return confirm('Bạn có chắc muốn xóa người dùng này?');">
-                                            <button type="submit" class="btn-cancel btn-sm">
-                                                <i class="fas fa-trash-alt"></i> Xóa
-                                            </button>
-                                        </form>
+
+                                        @if (string.Equals(user.Role, "Admin", System.StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <!-- Có thể không hiển thị gì thêm hoặc hiển thị text "Admin hệ thống" -->
+                                            @* <span class="badge status-active ms-1">Admin hệ thống</span> *@
+                                        }
+                                        else
+                                        {
+                                            @* Customer: cho Khóa / Mở khóa *@
+                                            if (user.IsLocked)
+                                            {
+                                                <form asp-action="UnlockUser" asp-route-id="@user.Id" method="post" class="d-inline-block"
+                                                      onsubmit="return confirm('Bạn có chắc muốn mở khóa tài khoản này?');">
+                                                    <button type="submit" class="btn-unlock btn-sm">
+                                                        <i class="fas fa-lock-open"></i> Mở khóa
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="LockUser" asp-route-id="@user.Id" method="post" class="d-inline-block"
+                                                      onsubmit="return confirm('Bạn có chắc muốn khóa tài khoản này? Người dùng sẽ không đăng nhập được nữa.');">
+                                                    <button type="submit" class="btn-lock btn-sm">
+                                                        <i class="fas fa-lock"></i> Khóa
+                                                    </button>
+                                                </form>
+                                            }
+                                        }
                                     </div>
                                 </td>
                             </tr>
@@ -146,7 +208,6 @@
             background-color: #FFFFFF;
         }
 
-    /* ID cell: ellipsis + copy, gọn vừa phải */
     .id-cell {
         display: flex;
         align-items: center;
@@ -182,7 +243,6 @@
             color: #fff;
         }
 
-    /* Badge vai trò */
     .badge {
         font-size: 12px;
         padding: 6px 10px;
@@ -199,7 +259,16 @@
         color: #fff;
     }
 
-    /* Hành động: nằm ngang, không xuống dòng */
+    .status-active {
+        background-color: #4caf50;
+        color: #fff;
+    }
+
+    .status-locked {
+        background-color: #f44336;
+        color: #fff;
+    }
+
     .actions-cell {
         white-space: nowrap;
     }
@@ -210,10 +279,9 @@
         gap: 8px;
     }
 
-    /* Nút hành động: giữ hover */
-    .btn-cancel {
-        border: 2px solid red;
-        color: red;
+    .btn-lock {
+        border: 2px solid #f44336;
+        color: #f44336;
         font-weight: bold;
         padding: 4px 10px;
         font-size: 12px;
@@ -221,8 +289,23 @@
         background-color: transparent;
     }
 
-        .btn-cancel:hover {
-            background-color: red;
+        .btn-lock:hover {
+            background-color: #f44336;
+            color: #fff;
+        }
+
+    .btn-unlock {
+        border: 2px solid #2196f3;
+        color: #2196f3;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        background-color: transparent;
+    }
+
+        .btn-unlock:hover {
+            background-color: #2196f3;
             color: #fff;
         }
 
@@ -246,4 +329,44 @@
         color: #777;
         margin-top: 16px;
     }
+
+    .btn-pink {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 6px 18px;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF406A;
+            color: white;
+        }
+
+    .search-btn {
+        border-radius: 20px !important;
+        padding: 8px 18px;
+    }
+
+
 </style>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const alertBox = document.getElementById("admin-alert");
+
+        if (alertBox && alertBox.textContent.trim() !== "") {
+            setTimeout(function () {
+                alertBox.style.transition = "opacity 0.5s";
+                alertBox.style.opacity = "0";
+
+                setTimeout(function () {
+                    if (alertBox && alertBox.parentNode) {
+                        alertBox.parentNode.removeChild(alertBox);
+                    }
+                }, 600);
+            }, 3000); // 3 giây cho admin list
+        }
+    });
+
+
+</script>

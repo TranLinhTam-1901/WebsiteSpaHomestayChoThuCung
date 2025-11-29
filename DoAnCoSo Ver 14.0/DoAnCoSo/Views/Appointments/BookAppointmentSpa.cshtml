@@ -2,7 +2,11 @@
 @using DoAnCoSo.Models
 
 @{
-    ViewData["Title"] = "🧼 Đặt lịch Spa cho thú cưng 🐾";
+    bool isUpdate = Model.IsUpdate;
+    ViewData["Title"] = isUpdate
+        ? "✏️ Cập nhật lịch Spa cho thú cưng 🐾"
+        : "🧼 Đặt lịch Spa cho thú cưng 🐾";
+
     var spaServices = ViewBag.SpaServices as List<Service> ?? new List<Service>();
     var spaPricings = ViewBag.SpaPricings as List<SpaPricing> ?? new List<SpaPricing>();
     var userPets = Model.UserPets ?? new List<Pet>();
@@ -14,8 +18,10 @@
     <div class="booking-card mx-auto" style="max-width: 750px;">
         <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
 
-        <form asp-action="BookAppointmentSpa" method="post">
-            <!-- 1️⃣ Chủ nuôi -->
+        <form asp-action="@(isUpdate ? "UpdateAppointmentSpa" : "BookAppointmentSpa")" method="post">
+            <input type="hidden" asp-for="AppointmentId" />
+
+            <!-- 1️⃣ Thông tin chủ nuôi -->
             <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
             <div class="mb-3">
                 <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
@@ -27,14 +33,15 @@
             <div class="mb-3">
                 <label class="form-label">Thú cưng có sẵn</label>
                 <select id="existingPetSelect" class="form-select">
-                    @foreach (var pet in userPets)
+                    @foreach (var pet in userPets.OrderBy(p => p.Name))
                     {
                         <option value="@pet.PetId"
                                 data-name="@pet.Name"
                                 data-type="@pet.Type"
                                 data-breed="@pet.Breed"
                                 data-age="@pet.Age"
-                                data-weight="@pet.Weight">
+                                data-weight="@pet.Weight"
+                                selected="@(Model.ExistingPetId == pet.PetId ? "selected" : "")">
                             @pet.Name
                         </option>
                     }
@@ -81,14 +88,15 @@
                                 data-priceunder5="@(pricing?.PriceUnder5kg ?? 0)"
                                 data-price5to12="@(pricing?.Price5To12kg ?? 0)"
                                 data-price12to25="@(pricing?.Price12To25kg ?? 0)"
-                                data-priceover25="@(pricing?.PriceOver25kg ?? 0)">
+                                data-priceover25="@(pricing?.PriceOver25kg ?? 0)"
+                                selected="@(Model.ServiceId == service.ServiceId ? "selected" : "")">
                             @service.Name
                         </option>
                     }
                 </select>
             </div>
 
-            <!-- 4️⃣ Giá -->
+            <!-- 4️⃣ Giá dịch vụ -->
             <h5><span class="section-icon">💰</span>Giá dịch vụ</h5>
             <div class="mb-3">
                 <input type="text" class="form-control fw-bold text-danger" id="calculatedPrice" value="0 VNĐ" readonly />
@@ -99,12 +107,7 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label asp-for="AppointmentDate" class="form-label">Ngày hẹn</label>
-                    <input asp-for="AppointmentDate"
-                           type="text"
-                           id="appointmentPicker"
-                           class="form-control"
-                           placeholder="Chọn ngày hẹn..."
-                           required />
+                    <input asp-for="AppointmentDate" type="text" id="appointmentPicker" class="form-control" placeholder="Chọn ngày hẹn..." required />
                 </div>
                 <div class="col-md-6">
                     <label asp-for="AppointmentTime" class="form-label">Giờ hẹn</label>
@@ -112,7 +115,9 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-pink w-100 mt-4">📅 Đặt lịch ngay</button>
+            <button type="submit" class="btn btn-pink w-100 mt-4">
+                @(isUpdate ? "💾 Cập nhật lịch" : "📅 Đặt lịch ngay")
+            </button>
         </form>
     </div>
 </div>
@@ -122,7 +127,6 @@
         const petSelect = document.getElementById("existingPetSelect");
         const serviceSelect = document.getElementById("serviceSelect");
         const priceInput = document.getElementById("calculatedPrice");
-
         const petNameInput = document.getElementById("PetName");
         const petTypeInput = document.getElementById("PetType");
         const petBreedInput = document.getElementById("PetBreed");
@@ -139,15 +143,13 @@
         function updatePetInfo() {
             const selectedPet = petSelect.selectedOptions[0];
             if (!selectedPet) return;
-
             petNameInput.value = selectedPet.dataset.name || "";
             petTypeInput.value = selectedPet.dataset.type || "";
             petBreedInput.value = selectedPet.dataset.breed || "";
             petAgeInput.value = selectedPet.dataset.age || "";
             petWeightInput.value = selectedPet.dataset.weight || "";
             existingPetIdInput.value = selectedPet.value;
-
-            updatePrice(); // cập nhật giá ngay khi đổi pet
+            updatePrice();
         }
 
         function updatePrice() {
@@ -157,10 +159,8 @@
                 priceInput.value = "0 VNĐ";
                 return;
             }
-
             const weight = parseWeight(selectedPet.dataset.weight);
             let price = 0;
-
             if (weight < 5) {
                 price = parseFloat(selectedService.dataset.priceunder5) || 0;
             } else if (weight <= 12) {
@@ -170,31 +170,49 @@
             } else {
                 price = parseFloat(selectedService.dataset.priceover25) || 0;
             }
-
             priceInput.value = price.toLocaleString("vi-VN") + " VNĐ";
         }
 
-        // Sự kiện khi đổi thú cưng
         petSelect.addEventListener("change", updatePetInfo);
-
-        // Sự kiện khi đổi dịch vụ
         serviceSelect.addEventListener("change", updatePrice);
 
-        // Khởi tạo mặc định khi vào trang
-        if (petSelect.options.length > 0) petSelect.selectedIndex = 0;
-        if (serviceSelect.options.length > 0) serviceSelect.selectedIndex = 0;
+        // Chọn mặc định
+        if (!existingPetIdInput.value && petSelect.options.length > 0) {
+            petSelect.selectedIndex = 0;
+            existingPetIdInput.value = petSelect.value;
+        } else if (existingPetIdInput.value) {
+            for (let i = 0; i < petSelect.options.length; i++) {
+                if (petSelect.options[i].value === existingPetIdInput.value) {
+                    petSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
 
-        updatePetInfo(); // cập nhật thông tin thú cưng và giá ngay khi vào trang
+        // Chọn dịch vụ mặc định
+        let defaultServiceIndex = 0;
+        const selectedServiceId = "@(Model.ServiceId)";
+        if (selectedServiceId) {
+            for (let i = 0; i < serviceSelect.options.length; i++) {
+                if (serviceSelect.options[i].value === selectedServiceId) {
+                    defaultServiceIndex = i;
+                    break;
+                }
+            }
+        }
+        serviceSelect.selectedIndex = defaultServiceIndex;
 
-                // ------------------ AppointmentDate ------------------
+        updatePetInfo();
+
+        // flatpickr cho AppointmentDate
         flatpickr("#appointmentPicker", {
-            dateFormat: "d/m/Y",
+            dateFormat: "Y/m/d",
             altInput: true,
             altFormat: "d/m/Y",
             locale: "vn",
             disableMobile: true,
             minDate: "today",
-            defaultDate: "@(Model.AppointmentDate.ToString("dd/MM/yyyy"))"
+            defaultDate: "@(Model.AppointmentDate.ToString("yyyy/MM/dd")))"
         });
     });
 </script>

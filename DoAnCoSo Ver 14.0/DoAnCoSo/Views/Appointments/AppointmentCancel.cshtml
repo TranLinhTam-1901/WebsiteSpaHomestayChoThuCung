@@ -1,0 +1,93 @@
+﻿@model DoAnCoSo.Models.Appointment
+@{
+    ViewData["Title"] = "❌ Xác nhận hủy lịch";
+}
+
+<style>
+    .cancel-card {
+        border-radius: 20px;
+        background: #fff;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 8px 20px rgba(255, 182, 193, 0.4);
+        padding: 30px;
+        max-width: 750px;
+    }
+
+    .cancel-title {
+        font-weight: bold;
+        color: #FF6185;
+        font-size: 1.8rem;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .cancel-message {
+        font-size: 1.1rem;
+        color: #444;
+        line-height: 1.6;
+    }
+
+        .cancel-message strong {
+            color: #FF6185;
+        }
+
+    .btn-secondary {
+        background-color: #FFB6C1;
+        color: black;
+        font-weight: bold;
+        padding: 12px;
+        border-radius: 12px;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background-color: #FF6185;
+            color: white;
+        }
+
+    .btn-danger {
+        background-color: #FF3B3B;
+        border: none;
+        color: black;
+        font-weight: bold;
+        border-radius: 12px;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-danger:hover {
+            background-color: #D92D2D;
+            color: white;
+        }
+</style>
+
+<div class="container py-5">
+    <div class="cancel-card mx-auto">
+        <h2 class="cancel-title">@ViewData["Title"]</h2>
+
+        <div class="alert alert-warning border-0">
+            <h4 class="alert-heading">⚠️ Bạn có chắc muốn hủy lịch?</h4>
+            <p class="cancel-message">
+                Bạn đang yêu cầu hủy dịch vụ
+                <strong>@Model.Service?.Name</strong>
+                cho thú cưng
+                <strong>@Model.Pet?.Name</strong>.
+            </p>
+            <hr>
+            <p class="cancel-message mb-0">
+                Thao tác này không thể hoàn tác. Bạn có muốn tiếp tục?
+            </p>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <form asp-action="ConfirmCancelAppointment" asp-route-id="@Model.AppointmentId" method="post" class="d-inline">
+                <button type="submit" class="btn btn-danger">🗑️ Xác nhận hủy</button>
+            </form>
+
+            <a asp-action="CustomerAppointmentHistory" class="btn btn-secondary">
+                ⬅️ Quay lại
+            </a>
+        </div>
+    </div>
+</div>

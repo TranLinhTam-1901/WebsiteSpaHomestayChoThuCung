@@ -1,0 +1,403 @@
+﻿@model IEnumerable<DoAnCoSo.Models.InventoryLog>
+@{
+    ViewData["Title"] = "📜 Lịch sử kho";
+    // var optionLabel = (string)(ViewBag.OptionLabel ?? "Phân loại");
+}
+
+<div class="inventory-wrapper py-5">
+    <h2 class="section-title">📜 Lịch sử giao dịch kho</h2>
+
+    <div class="inventory-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách giao dịch</h4>
+            <a asp-action="Index" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+
+     
+        <div class="card-body">
+
+            <div class="d-flex justify-content-end align-items-center gap-3 mb-3">
+                <!-- FORM TÌM KIẾM -->
+                <form method="get" asp-action="Logs" class="d-flex align-items-center gap-2">
+
+                    <input type="text"
+                           name="search"
+                           value="@Context.Request.Query["search"]"
+                           class="form-control"
+                           style="width: 260px;"
+                           placeholder="Tìm theo tên SP, người thực hiện, lý do..." />
+
+                    <!-- GIỮ TRẠNG THÁI TICK KHI TÌM -->
+                    <input type="hidden" name="showAll" value="@(ViewBag.ShowAll ? "true" : "false")" />
+
+                    <button type="submit" class="btn btn-pink">Tìm</button>
+                </form>
+
+
+                <!-- FORM TICK HIỆN LOG ẨN -->
+                <form method="get" asp-action="Logs" class="d-flex align-items-center">
+
+                    <!-- GIỮ LẠI SEARCH KHI TICK -->
+                    <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+
+                    <label class="me-2 fw-bold">Hiện log ẩn:</label>
+
+                    <input type="checkbox"
+                           name="showAll"
+                           value="true"
+                           class="form-check-input"
+                           @(ViewBag.ShowAll ? "checked" : "")
+                           onchange="this.form.submit()" />
+                </form>
+
+                <!-- FORM LỌC THEO KHOẢNG NGÀY -->
+                <form method="get" asp-action="Logs" class="d-flex align-items-center gap-2 mb-3">
+
+                    <!-- GIỮ LẠI SEARCH & SHOWALL KHI LỌC NGÀY -->
+                    <input type="hidden" name="search" value="@Context.Request.Query["search"]" />
+                    <input type="hidden" name="showAll" value="@(ViewBag.ShowAll ? "true" : "false")" />
+
+                    <!-- From -->
+                    <input type="date"
+                           name="fromDate"
+                           value="@(ViewBag.FromDate != null
+                                               ? ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd")
+                                               : "")"
+                           class="form-control"
+                           style="width: 180px;" />
+
+                    <!-- To -->
+                    <input type="date"
+                           name="toDate"
+                           value="@(ViewBag.ToDate != null
+                                               ? ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd")
+                                               : "")"
+                           class="form-control"
+                           style="width: 180px;" />
+
+                    <button type="submit" class="btn btn-pink">Lọc ngày</button>
+                </form>
+
+
+
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center inventory-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th>#</th>
+                            <th>Sản phẩm</th>
+                            <th>Thay đổi (SL)</th>
+                            <th>Lý do</th>
+                            <th>Người thực hiện</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="no-data">Chưa có giao dịch nào.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            int i = 1;
+                            var map = ViewBag.UserMap as IDictionary<string, string>;
+                            foreach (var log in Model)
+                            {
+                                string actor = "-";
+                                if (!string.IsNullOrEmpty(log.PerformedByUserId))
+                                {
+                                    actor = map != null && map.ContainsKey(log.PerformedByUserId)
+                                    ? map[log.PerformedByUserId]
+                                    : log.PerformedByUserId;
+                                }
+
+                                <tr class="log-row @(log.QuantityChange < 0 ? "row-export" : "row-import")"
+                                    data-id="@log.Id"
+                                    style="cursor:pointer;">
+                                    <td>@i</td>
+                                    <td>@log.Product?.Name</td>
+                                    <td>@log.QuantityChange</td>
+                                    <td>
+                                        @switch (log.Reason)
+                                        {
+                                            case "OrderReserved":
+                                                @:Giữ hàng cho đơn hàng
+                                                break;
+                                            case "OrderUnreserved":
+                                                @:Bỏ giữ hàng cho đơn hàng
+                                                break;
+                                            case "OrderConfirmed":
+                                                @:Xuất kho cho đơn hàng
+                                                break;
+                                            case "OrderCanceledRestock":
+                                                @:Hoàn kho từ đơn hàng
+                                                break;
+
+                                            case "AdjustStock":
+                                                @:Điều chỉnh tồn kho
+                                                break;
+                                            case "ExportStock":
+                                                @:Xuất kho
+                                                break;
+                                            case "ImportStock":
+                                                @:Nhập kho
+                                                break;
+                                            case "InitialImport":
+                                                @:Khởi tạo tồn kho ban đầu
+                                                break;
+                                            case "ImportStockVariant":
+                                                @:Nhập kho theo biến thể
+                                                break;
+                                            case "ExportStockVariant":
+                                                @:Xuất kho theo biến thể
+                                                break;
+                                            default:
+                                                @log.Reason
+                                                break;
+                                        }
+                                    </td>
+                                    @* <td>
+                                        @{
+                                            string raw = log.ReferenceId ?? ""; // <-- tên property bạn đang dùng
+                                            string refText = "";
+
+                                            if (int.TryParse(raw, out int idOnly))
+                                            {
+                                                refText = $"Đơn hàng #{idOnly}";
+                                            }
+                                            else if (raw.StartsWith("Order:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                var id = raw.Split(':')[1];
+                                                refText = $"Đơn hàng #{id}";
+                                            }
+                                            else if (raw.StartsWith("Product:", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                var id = raw.Split(':')[1];
+                                                refText = $"Sản phẩm #{id}";
+                                            }
+                                            else
+                                            {
+                                                refText = raw;
+                                            }
+                                        }
+                                        @refText
+                                    </td>                                  *@
+                                    <td title="@log.PerformedByUserId">@actor</td>
+                                    <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    @* <td class="note">
+                                        @switch (log.Reason)
+                                        {
+                                            case "OrderReserved":
+                                                @:Giữ hàng theo yêu cầu đặt hàng
+                                                break;
+
+                                            case "OrderUnreserved":
+                                                @:Bỏ giữ hàng sau khi đơn bị huỷ
+                                                break;
+
+                                            case "OrderConfirmed":
+                                                @:Xuất kho khi đơn được xác nhận
+                                                break;
+
+                                            case "OrderCanceledRestock":
+                                                @:Hoàn kho do đơn bị huỷ
+                                                break;
+
+                                            case "InitialImport":
+                                                @:Khởi tạo tồn kho ban đầu
+                                                break;
+
+                                            case "AdjustStock":
+                                                @:Điều chỉnh số lượng tồn kho
+                                                break;
+
+                                            case "ExportStock":
+                                                @:Xuất kho theo thao tác quản trị
+                                                break;
+
+                                            case "ImportStock":
+                                                @:Nhập kho bổ sung hàng hoá
+                                                break;
+
+                                            default:
+                                                @log.Note
+                                                break;
+                                        }
+                                    </td> *@
+
+                                    @* <td>@(!string.IsNullOrWhiteSpace(log.Variant?.Name) ? log.Variant!.Name : "—")</td> *@
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Chi Tiết Log -->
+    <div class="modal fade" id="logDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content p-3" id="logDetailContainer">
+                <!-- HTML chi tiết sẽ được load ở đây -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .inventory-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .inventory-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+        background: white;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: .3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .inventory-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .inventory-table th, .inventory-table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .inventory-table tbody tr:nth-child(odd) {
+        background: #fff;
+    }
+
+    .inventory-table tbody tr:nth-child(even) {
+        background: #FFF7F9;
+    }
+
+    .inventory-table tbody tr:hover {
+        background: #FFE9EF !important;
+    }
+
+    .row-import > * {
+        background: #E9F8EF !important;
+    }
+
+    .row-export > * {
+        background: #FFE9EC !important;
+    }
+
+    .note {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+    }
+
+    
+    /* Làm dòng có thể click */
+    .log-row {
+        transition: background-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+    }
+
+        /* Hover nhẹ nhàng – không transform, không scale */
+        .log-row:hover {
+            background-color: #FFE6EF !important; /* pastel nhẹ */
+            box-shadow: inset 0 0 0 9999px rgba(255, 230, 239, 0.35); /* hiệu ứng "highlight" nhẹ */
+        }
+
+            /* Chỉ đổi màu chữ, KHÔNG đổi font-weight */
+            .log-row:hover td {
+                color: #FF6185;
+            }
+
+    
+
+    /* nút tiềm kiếm  */
+    .btn-pink {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        border-radius: 20px;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF406A;
+            color: white;
+        }
+        
+
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.querySelectorAll('.log-row').forEach(row => {
+            row.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+
+                fetch(`/Admin/Inventory/LogDetails/${id}`)
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById("logDetailContainer").innerHTML = html;
+                        let modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                        modal.show();
+                    })
+                    .catch(err => console.error('Error loading details:', err));
+            });
+        });
+
+    });
+</script>

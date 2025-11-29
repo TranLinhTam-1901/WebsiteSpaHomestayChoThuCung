@@ -26,5 +26,9 @@ namespace DoAnCoSo.Models
         public DateTime DateCreated { get; set; } = DateTime.UtcNow;
 
         public string? SelectedFlavor { get; set; }
+
+        public int? VariantId { get; set; } // nếu map được flavor → variant
+        public string? SelectedVariantName { get; set; }
+
     }
 }

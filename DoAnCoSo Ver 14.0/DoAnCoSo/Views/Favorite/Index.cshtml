@@ -3,7 +3,7 @@
     ViewData["Title"] = "Sản phẩm yêu thích";
 }
 
-<div class="container favorite-page py-5">
+<div class="favorite-page py-5">
     <h2 class="section-title">💖 Sản phẩm yêu thích 💖</h2>
 
     @if (Model != null && Model.Count > 0)
@@ -52,7 +52,7 @@
     {
         <div class="empty-favorite">
             <p>😿 Bạn chưa có sản phẩm yêu thích nào.</p>
-            <a href="/Product" class="btn btn-outline-primary mt-2">Khám phá sản phẩm</a>
+            <a asp-controller="Product" asp-action="AllProducts" class="btn mt-2">Khám phá sản phẩm</a>
         </div>
     }
 </div>
@@ -68,10 +68,16 @@
         background-color: #FFF0F5;
     }
 
+    .favorite-page {
+        max-width: 960px;
+        margin: auto;
+        padding: 15px;
+    }
+
     .section-title {
         font-size: 2rem;
         font-weight: bold;
-        color: var(--pink-dark);
+        color: #FF6185;
         text-align: center;
         margin-bottom: 40px;
         position: relative;

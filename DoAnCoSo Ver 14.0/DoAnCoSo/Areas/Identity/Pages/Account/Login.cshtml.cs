@@ -105,38 +105,60 @@ namespace DoAnCoSo.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                return Page();
+            }
 
-                if (result.Succeeded)
-                {
-                    var user = await _userManager.FindByEmailAsync(Input.Email);
-
-                    // 🔹 Update SecurityStamp → tất cả session cũ invalid
-                    await _userManager.UpdateSecurityStampAsync(user);
-
-                    // 🔹 SignIn cho session mới
-                    await _signInManager.SignInAsync(user, isPersistent: Input.RememberMe);
-
-                    // 🔹 Gửi SignalR ForceLogout cho các session cũ
-                    var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<ChatHub>>();
-                    await hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
-
-                    return LocalRedirect(returnUrl);
-                }
-
-                if (result.RequiresTwoFactor)
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-
-                if (result.IsLockedOut)
-                    return RedirectToPage("./Lockout");
-
+            // 🔍 Tìm user theo Email
+            var user = await _userManager.FindByEmailAsync(Input.Email);
+            if (user == null)
+            {
+                // Không lộ thông tin user tồn tại hay không
                 ModelState.AddModelError(string.Empty, "Tài khoản hoặc mật khẩu không đúng.");
                 return Page();
             }
 
+            // 🔐 Thực hiện đăng nhập
+            var result = await _signInManager.PasswordSignInAsync(
+                user.UserName,          // dùng UserName nội bộ
+                Input.Password,
+                Input.RememberMe,
+                lockoutOnFailure: true  // cho phép tăng AccessFailedCount & lockout nếu sai nhiều
+            );
+
+            if (result.Succeeded)
+            {
+                // 🔹 Update SecurityStamp → tất cả session cũ invalid
+                await _userManager.UpdateSecurityStampAsync(user);
+
+                // 🔹 SignIn cho session mới
+                await _signInManager.SignInAsync(user, isPersistent: Input.RememberMe);
+
+                // 🔹 Gửi SignalR ForceLogout cho các session cũ
+                var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<ChatHub>>();
+                await hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
+
+                _logger.LogInformation("User logged in.");
+                return LocalRedirect(returnUrl);
+            }
+
+            // ✅ Tài khoản bị khóa (do Admin đặt LockoutEnd rất xa hoặc do login sai nhiều lần)
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.");
+                return Page(); // quay lại cùng trang Login, hiển thị message ở asp-validation-summary
+            }
+
+            if (result.RequiresTwoFactor)
+            {
+                return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
+            }
+
+            // Sai mật khẩu hoặc lỗi khác
+            ModelState.AddModelError(string.Empty, "Tài khoản hoặc mật khẩu không đúng.");
             return Page();
         }
+
     }
 }

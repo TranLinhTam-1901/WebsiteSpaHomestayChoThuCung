@@ -1,98 +1,78 @@
 ﻿@model DoAnCoSo.Models.Category
 
 @{
-    ViewData["Title"] = "Thêm loại sản phẩm";
+    ViewData["Title"] = "🌸 Thêm loại sản phẩm";
 }
 
-<div class="container py-5 d-flex justify-content-center">
-    <div class="card shadow-lg border-0 rounded-4 w-50">
-        <div class="card-header text-center rounded-top-4 table-pink py-3">
-            <h2 class="mb-0 fw-bold">🌸 Thêm loại sản phẩm 🌸</h2>
-        </div>
+<link rel="stylesheet" href="~/css/booking.css" />
 
-        <div class="card-body p-4">
-            <form asp-action="Add" method="post">
-                <div class="mb-3">
-                    <label asp-for="Name" class="form-label fw-semibold text-pink">Tên loại</label>
-                    <input asp-for="Name" class="form-control border-pink rounded-3" placeholder="Nhập tên loại sản phẩm..." />
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <form asp-action="Add" method="post">
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+            <div class="row g-3 mb-3">
+                <div class="col-md-12">
+                    <label asp-for="Name" class="form-label">Tên loại sản phẩm</label>
+                    <input asp-for="Name" class="form-control" placeholder="Nhập tên loại sản phẩm..." required />
                     <span asp-validation-for="Name" class="text-danger small"></span>
                 </div>
+            </div>
 
-                <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-pink-gradient px-4 py-2 rounded-pill shadow-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Thêm
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-pink px-4 py-2 rounded-pill ms-2">
-                        ← Trở lại
-                    </a>
-                </div>
-            </form>
-        </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">
+                    ← Quay lại
+                </a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">
+                    💾 Lưu loại sản phẩm
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <style>
-    :root {
-        --pink-main: #FF6185;
-        --pink-light: #FFB6C1;
-        --pink-dark: #e74c7b;
+    /* Khung booking-card giống thêm thú cưng */
+    .booking-card {
+        background-color: #fff;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
     }
 
-    body {
-        background-color: #FFF5F8;
+    .booking-title {
+        font-weight: 600;
+        color: #FF6185;
     }
 
-    .text-pink {
-        color: var(--pink-main);
-    }
-
-    .btn-pink-gradient {
-        background: #FFB6C1;
+    /* Button hồng */
+    .btn-pink {
+        background-color: #FFB6C1;
         color: #000;
         font-weight: bold;
         border: none;
         transition: 0.25s;
     }
 
-        .btn-pink-gradient:hover {
+        .btn-pink:hover {
             background-color: #FF6185;
             color: #fff;
         }
 
-    .btn-outline-pink {
-        border: 1.5px solid var(--pink-main);
-        color: var(--pink-main);
-        background-color: #fff;
-        transition: 0.25s;
+    /* Label */
+    label {
         font-weight: 500;
     }
 
-        .btn-outline-pink:hover {
-            background-color: var(--pink-main);
-            color: #fff;
-        }
+    /* Card responsive */
+    @@media (max-width: 768px) {
+        .booking-card
 
-    .table-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-light));
-        color: black;
+    {
+        padding: 1.5rem;
     }
 
-    .border-pink {
-        border: 1.5px solid var(--pink-light);
-        transition: 0.3s;
-    }
-
-        .border-pink:focus {
-            border-color: var(--pink-main);
-            box-shadow: 0 0 0 0.25rem rgba(255, 97, 133, 0.25);
-        }
-
-    .card {
-        border-radius: 18px;
-    }
-
-    .card-header {
-        border-top-left-radius: 18px !important;
-        border-top-right-radius: 18px !important;
     }
 </style>

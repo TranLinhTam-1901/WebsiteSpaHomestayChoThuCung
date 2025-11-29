@@ -29,12 +29,15 @@
                     <tbody>
                         @foreach (var item in Model)
                         {
+                            var displayPetName = item.Pet?.Name ?? item.DeletedPet?.Name ?? "[Đã xóa]";
+                            var displayPetType = item.Pet?.Type ?? item.DeletedPet?.Type ?? "-";
+
                             <tr>
                                 <td class="id-text" title="@item.AppointmentId">@item.AppointmentId</td>
-                                <td>@(item.Pet?.Name ?? "N/A") (@(item.Pet?.Type ?? "N/A"))</td>
+                                <td>@displayPetName (@displayPetType)</td>
                                 <td>@(item.Service?.Name ?? "N/A")</td>
                                 <td>
-                                    @if (item.ServiceId >= 1 && item.ServiceId <= 3)
+                                    @if (item.Service?.Category == ServiceCategory.Homestay)
                                     {
                                         if (item.StartDate != default(DateTime) && item.EndDate != default(DateTime))
                                         {
@@ -55,18 +58,29 @@
                                     }
                                     else
                                     {
-                                        if (item.StartDate != default(DateTime))
-                                        {
-                                            @item.StartDate.ToString("dd/MM/yyyy")
-                                        }
-                                        else
+                                        string dateDisplay = item.AppointmentDate != default(DateTime)
+                                        ? item.AppointmentDate.ToString("dd/MM/yyyy")
+                                        : "N/A";
+
+                                        string timeDisplay = item.AppointmentTime != TimeSpan.Zero
+                                        ? item.AppointmentTime.ToString(@"hh\:mm")
+                                        : "N/A";
+
+                                        if (dateDisplay == "N/A" && timeDisplay == "N/A")
                                         {
                                             @:N/A
                                         }
-
-                                        @if (item.AppointmentTime != default(TimeSpan))
+                                        else if (dateDisplay == "N/A")
                                         {
-                                            @: @item.AppointmentTime.ToString(@"hh\:mm")
+                                            @timeDisplay
+                                        }
+                                        else if (timeDisplay == "N/A")
+                                        {
+                                            @dateDisplay
+                                        }
+                                        else
+                                        {
+                                            @($"{dateDisplay} {timeDisplay}")
                                         }
                                     }
                                 </td>
@@ -78,6 +92,10 @@
                                     else if (item.Status.GetDisplayName() == "Đã hủy")
                                     {
                                         <span class="badge status-cancelled">Đã hủy</span>
+                                    }
+                                    else if (item.Status.GetDisplayName() == "Đã xóa")
+                                    {
+                                        <span class="badge status-deleted">Đã xóa</span>
                                     }
                                     else
                                     {
@@ -101,9 +119,19 @@
             }
         </div>
     </div>
+
+    <nav>
+        <ul id="pagination" class="pagination justify-content-center mt-4"></ul>
+    </nav>
 </div>
 
 <style>
+    :root {
+        --pink-main: #ff7aa2;
+        --pink-light: #ffe3ec;
+        --pink-dark: #e74c7b;
+    }
+
     .appointment-wrapper {
         max-width: 1300px;
         margin: auto;
@@ -195,6 +223,11 @@
         color: #000;
     }
     /* vàng */
+    .status-deleted {
+        background-color: #6c757d;
+        color: #fff;
+    }
+    /* xám */
 
     .actions-cell {
         white-space: nowrap;
@@ -220,4 +253,85 @@
         color: #777;
         margin-top: 16px;
     }
+
+    /* PAGINATION */
+    .pagination .page-link {
+        color: var(--pink-dark);
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination .page-link:hover {
+            background-color: #FFB6C1;
+            color: white;
+        }
+
+    .pagination .active .page-link {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        color: white;
+    }
+
+        /* 👉 BỎ FOCUS */
+        .pagination .page-link:focus,
+        .pagination .active .page-link:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
 </style>
+
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+        const itemsPerPage = 10; // số hàng mỗi trang
+        const rows = document.querySelectorAll(".appointment-table tbody tr");
+        const totalItems = rows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pagination = document.getElementById("pagination");
+
+        function showPage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? "" : "none";
+            });
+
+            // active pagination
+            document.querySelectorAll("#pagination li").forEach(li => li.classList.remove("active"));
+            const currentPage = document.querySelector(`#pagination li[data-page='${page}']`);
+            if (currentPage) currentPage.classList.add("active");
+
+            // cuộn lên đầu bảng
+            const card = document.querySelector(".appointment-card");
+            if (card) {
+                window.scrollTo({ top: card.offsetTop - 20, behavior: "smooth" });
+            }
+        }
+
+        // tạo pagination
+        if (totalPages > 1) {
+            pagination.innerHTML = ""; // xóa nếu đã có
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.classList.add("page-item");
+                li.setAttribute("data-page", i);
+
+                const a = document.createElement("a");
+                a.classList.add("page-link");
+                a.href = "#";
+                a.textContent = i;
+
+                a.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    showPage(i);
+                });
+
+                li.appendChild(a);
+                pagination.appendChild(li);
+            }
+        }
+
+        // hiển thị trang đầu tiên
+        if (totalPages > 0) showPage(1);
+    });
+</script>

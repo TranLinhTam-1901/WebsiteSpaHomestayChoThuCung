@@ -28,9 +28,11 @@ public class FavoriteController : Controller
         }
 
         var products = _context.Favorites
-            .Where(f => f.UserId == userId)
-            .Select(f => f.Product)
-            .ToList();
+       .Where(f => f.UserId == userId
+                   && f.Product != null
+                   && f.Product.IsActive) 
+       .Select(f => f.Product)
+       .ToList();
 
         return View(products);
     }
@@ -71,7 +73,10 @@ public class FavoriteController : Controller
 
         _context.SaveChanges();
 
-        var count = _context.Favorites.Count(f => f.UserId == userId);
+        var count = _context.Favorites
+    .Where(f => f.UserId == userId && f.Product != null && f.Product.IsActive)
+    .Count();
+
 
         return Json(new
         {
@@ -93,9 +98,10 @@ public class FavoriteController : Controller
         }
 
         var favorites = _context.Favorites
-            .Where(f => f.UserId == userId)
+            .Where(f => f.UserId == userId && f.Product != null && f.Product.IsActive)
             .Select(f => f.ProductId)
             .ToList();
+
 
         return Json(new { favoriteIds = favorites });
     }

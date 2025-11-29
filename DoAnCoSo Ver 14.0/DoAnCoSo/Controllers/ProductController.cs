@@ -32,7 +32,12 @@ namespace DoAnCoSo.Controllers
 
         public IActionResult AllProducts(string? promoCode)
         {
-            var products = _context.Products.AsQueryable();
+            var products = _context.Products
+             .Where(p => p.IsActive && !p.IsDeleted)   // nếu chưa có IsDeleted thì bỏ điều kiện này
+             .AsQueryable();
+
+            products = products.Where(p => !p.IsDeleted && p.IsActive);
+
 
             // 🟢 Nếu có promoCode được truyền vào
             if (!string.IsNullOrEmpty(promoCode))
@@ -116,65 +121,135 @@ namespace DoAnCoSo.Controllers
             return Json(new { success = false, message = "Bạn cần đăng nhập để sử dụng chức năng này." });
         }
 
-        public async Task<IActionResult> Details(int id)
+        public async Task<IActionResult> Details(int id, int currentPage = 1)
         {
-            var product = await _productRepository.GetProductWithReviewsAndImagesAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
+            var product = await _context.Products
+            .Include(p => p.Category) 
+            .Include(p => p.Images)
+            .Include(p => p.Variants)
+                .ThenInclude(v => v.OptionValues)
+                    .ThenInclude(x => x.OptionValue)
+                        .ThenInclude(o => o.Group)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
-            // Lấy review kèm User (để hiển thị tên)
-            var productReviews = await _context.Reviews
+
+            if (product == null)
+                return NotFound();
+
+            var activeVariants = product.Variants
+                .Where(v => v.IsActive)
+                .ToList();
+
+            // Build OptionGroups from Active Variants
+            var optionGroups = activeVariants
+                .SelectMany(v => v.OptionValues)
+                .GroupBy(ov => ov.OptionValue.Group)
+                .Select(g => new ProductDetailViewModel.OptionGroupVM
+                {
+                    GroupName = g.Key.Name, // Example: Size / Màu / Khối lượng / Hương vị
+                    Values = g
+                    .GroupBy(x => x.ProductOptionValueId)
+                    .Select(x => {
+                        var opt = x.First();
+                        return new ProductDetailViewModel.OptionValueVM
+                        {
+                            OptionValueId = opt.ProductOptionValueId,
+                            Value = opt.OptionValue.Value,
+                            IsAvailable = x.Any(v => (v.Variant.StockQuantity - v.Variant.ReservedQuantity) > 0)
+                        };
+                    }).ToList()
+                }).ToList();
+
+            var reviews = await _context.Reviews
                 .Include(r => r.User)
                 .Where(r => r.TargetType == ReviewTargetType.Product && r.TargetId == id)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
-            var viewModel = new ProductDetailViewModel
+            // ================== RELATED PRODUCTS (THEO CATEGORY) ==================
+            var relatedProducts = await _context.Products
+                 .Include(p => p.Images)
+                 .Where(p =>
+                     p.CategoryId == product.CategoryId &&
+                     p.Id != product.Id &&
+                     p.IsActive &&
+                     !p.IsDeleted
+                 )
+                 .ToListAsync();
+
+            var vm = new ProductDetailViewModel
             {
                 Product = product,
-                Reviews = productReviews,
-                NewReview = new Review
-                {
-                    TargetType = ReviewTargetType.Product,
-                    TargetId = id,
-                    UserId = User.Identity.IsAuthenticated
-                        ? User.FindFirstValue(ClaimTypes.NameIdentifier)
-                        : null
-                },
-                AverageRating = productReviews.Any() ? productReviews.Average(r => r.Rating) : 0,
-                TotalReviews = productReviews.Count
+                Variants = activeVariants,
+                OptionGroups = optionGroups,
+                Reviews = reviews,
+                TotalReviews = reviews.Count,
+                AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0d,
+                RelatedProducts = relatedProducts
             };
 
-            return View(viewModel);
+            ViewBag.CurrentPage = currentPage;
+            return View(vm);
         }
+
 
         [HttpPost]
-        public async Task<IActionResult> AddReview(Review NewReview, IEnumerable<IFormFile> reviewImages)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReview(Review newReview, IEnumerable<IFormFile> reviewImages)
         {
+            // 1) Yêu cầu đăng nhập
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
                 return RedirectToPage("/Account/Login", new { area = "Identity" });
-            }
 
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString))
+            // 2) Gán thông tin bắt buộc
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
                 TempData["ErrorMessage"] = "Không xác định được người dùng.";
-                return RedirectToAction("Details", new { id = NewReview.TargetId });
+                return RedirectToAction("Details", new { id = newReview.TargetId });
             }
 
-            NewReview.UserId = userIdString;
-            NewReview.TargetType = ReviewTargetType.Product;   // ✅ bắt buộc
-            NewReview.CreatedDate = DateTime.Now;
+            newReview.UserId = userId;
+            newReview.TargetType = ReviewTargetType.Product; // bạn đang review sản phẩm
+            newReview.CreatedDate = DateTime.Now;
 
-            _context.Reviews.Add(NewReview);
+            // 3) Khởi tạo collection ảnh nếu null
+            newReview.Images ??= new List<ReviewImage>();
+
+            // 4) Upload ảnh (nếu có)
+            if (reviewImages != null)
+            {
+                var uploadsDir = Path.Combine(_webHostEnvironment.WebRootPath, "images", "reviews");
+                if (!Directory.Exists(uploadsDir))
+                    Directory.CreateDirectory(uploadsDir);
+
+                foreach (var file in reviewImages.Where(f => f?.Length > 0))
+                {
+                    // (tuỳ ý) kiểm tra mime/size ở đây
+                    var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                    var filePath = Path.Combine(uploadsDir, fileName);
+
+                    using (var fs = new FileStream(filePath, FileMode.Create))
+                        await file.CopyToAsync(fs);
+
+                    // THAY ProductReviewImage -> ReviewImage
+                    newReview.Images.Add(new ReviewImage
+                    {
+                        ImageUrl = $"/images/reviews/{fileName}"
+                        // nếu model có các field khác (Caption, SortOrder...) thì set thêm
+                    });
+                }
+            }
+
+            // 5) Lưu DB: THAY _context.ProductReviews -> _context.Reviews
+            _context.Reviews.Add(newReview);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", new { id = NewReview.TargetId });
+            TempData["SuccessMessage"] = "Bình luận đã được gửi.";
+            return RedirectToAction("Details", new { id = newReview.TargetId });
         }
+
 
         public IActionResult Search(string searchTerm)
         {
@@ -185,7 +260,8 @@ namespace DoAnCoSo.Controllers
 
             var lowerSearchTerm = searchTerm.ToLower();
 
-            var joinedResultsInMemory = _context.Products
+            var joinedResultsInMemory = _context.Products   
+                .Where(p => p.IsActive && !p.IsDeleted)   
                 .Join(
                     _context.Categories, // Bảng Categories
                     product => product.CategoryId, // Khóa ngoại trong bảng Products
