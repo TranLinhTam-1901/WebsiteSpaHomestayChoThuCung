@@ -125,8 +125,8 @@
 
             <!-- Nút hành động -->
             <div class="d-flex justify-content-between mt-4">
-                <a asp-action="Index" class="btn btn-secondary">⬅️ Quay lại</a>
-                <button type="submit" class="btn btn-pink">💾 Cập nhật</button>
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Cập nhật</button>
             </div>
         </form>
     </div>
@@ -161,47 +161,35 @@
 
             const today = new Date();
             let years = today.getFullYear() - dob.getFullYear();
-            let months = today.getMonth() - dob.getMonth();
+            const m = today.getMonth() - dob.getMonth();
+            const d = today.getDate() - dob.getDate();
 
-            if (months < 0) {
-                years--;
-                months += 12;
-            }
+            if (m < 0 || (m === 0 && d < 0)) years--;
 
-            if (years === 0 && months < 6) {
-                ageInput.value = "< 1";
-                ageInput.dataset.realAge = 0;
-            } else {
-                if (months >= 6) years++; // làm tròn lên nếu quá nửa năm
-                ageInput.value = years;
-                ageInput.dataset.realAge = years;
-            }
+            ageInput.dataset.realAge = years >= 0 ? years : 0;
+            ageInput.value = years > 0 ? years : "<1";
         }
 
         // Khởi tạo flatpickr
         const dobPicker = flatpickr(dobInput, {
-            dateFormat: "d/m/Y",
+            dateFormat: "Y/m/d",
             altInput: true,
             altFormat: "d/m/Y",
             locale: "vn",
             maxDate: "today",
             disableMobile: true,
-            defaultDate: "@(Model.DateOfBirth?.ToString("dd/MM/yyyy"))",
+            defaultDate: "@(Model.DateOfBirth?.ToString("yyyy/MM/dd"))",
             onChange: function (selectedDates) {
-                updateAge(selectedDates[0]);
+                if (selectedDates.length) updateAge(selectedDates[0]);
             }
         });
 
-        // Khi load form, nếu có sẵn ngày sinh thì tính tuổi luôn
-        if (dobPicker.input.value) {
-            const parts = dobPicker.input.value.split('/');
-            if (parts.length === 3) {
-                const dob = new Date(parts[2], parts[1] - 1, parts[0]);
-                updateAge(dob);
-            }
+        // Khi load form, tính tuổi ngay nếu đã có ngày sinh
+        if (dobPicker.selectedDates.length) {
+            updateAge(dobPicker.selectedDates[0]);
         }
 
-        // Khi submit form, gửi giá trị thật (dạng số)
+        // Khi submit form, gửi giá trị thật
         const form = ageInput.closest("form");
         if (form) {
             form.addEventListener("submit", function () {

@@ -26,6 +26,9 @@ public class OrderHistoryController : Controller
                 .Where(o => o.UserId == currentUser.Id)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
+                     .ThenInclude(p => p.Variants)
+                     .Include(o => o.OrderPromotions)                // ✅ thêm để hiển thị giảm giá
+                .ThenInclude(op => op.Promotion)
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
@@ -83,6 +86,7 @@ public class OrderHistoryController : Controller
         var order = await _context.Orders
             .Include(o => o.OrderDetails)
                 .ThenInclude(od => od.Product)
+                  .ThenInclude(p => p.Variants)
                  .Include(o => o.OrderPromotions)              // 🟢 Thêm dòng này: lấy danh sách giảm giá được áp dụng cho đơn này
             .ThenInclude(op => op.Promotion)
             .Where(o => o.Id == id && o.UserId == currentUser.Id) // Chỉ lấy đơn hàng của người dùng hiện tại

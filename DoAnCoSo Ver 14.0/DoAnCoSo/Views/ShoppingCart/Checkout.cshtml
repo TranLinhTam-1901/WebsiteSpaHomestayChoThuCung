@@ -3,118 +3,6 @@
 @{
     ViewData["Title"] = "💳 Thanh Toán";
 }
-
-<style>
-    .checkout-wrapper {
-        max-width: 960px;
-        margin: auto;
-        padding: 20px 15px;
-    }
-
-    .checkout-box {
-        background-color: #fff;
-        border: 1px solid #FFB6C1;
-        border-radius: 16px;
-        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
-        padding: 24px;
-    }
-
-    .checkout-title {
-        font-size: 2rem;
-        font-weight: 600;
-        color: #FF6185;
-        text-align: center;
-        margin-bottom: 32px;
-        position: relative;
-    }
-
-        .checkout-title::after {
-            content: "";
-            display: block;
-            width: 60px;
-            height: 4px;
-            background-color: #FFB6C1;
-            margin: 12px auto 0;
-            border-radius: 2px;
-        }
-
-    .section-subtitle {
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #FF6185;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-        .section-subtitle i {
-            color: #FF6185;
-        }
-
-    .list-group-item img {
-        border-radius: 10px;
-    }
-
-    .form-label {
-        font-weight: 600;
-        color: #444;
-        font-size: 0.95rem;
-    }
-
-    .form-control, .form-select {
-        border-radius: 10px;
-        border: 1px solid #FFB6C1;
-        font-size: 0.95rem;
-    }
-
-    .btn-checkout {
-        background-color: #FF6185;
-        color: white;
-        font-weight: bold;
-        padding: 10px 20px;
-        border-radius: 12px;
-        border: none;
-        transition: background-color 0.3s ease;
-        font-size: 0.95rem;
-    }
-
-        .btn-checkout:hover {
-            background-color: #e75478;
-        }
-
-    .alert-heading {
-        color: #FF6185;
-        font-weight: bold;
-    }
-
-    .text-danger {
-        font-size: 0.9rem;
-    }
-
-    @@media (max-width: 768px) {
-        .checkout-title
-
-    {
-        font-size: 1.4rem;
-    }
-
-    .section-subtitle {
-        font-size: 1rem;
-    }
-
-    .form-label, .form-control, .form-select {
-        font-size: 0.9rem;
-    }
-
-    .btn-checkout {
-        font-size: 0.9rem;
-        padding: 8px 16px;
-    }
-
-    }
-</style>
-
 <div class="checkout-wrapper py-5">
     <div class="checkout-box">
         <h2 class="checkout-title">@ViewData["Title"]</h2>
@@ -151,6 +39,24 @@
                         <div>
                             <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="img-thumbnail me-2" style="width: 50px;">
                             @item.Product.Name (@item.Quantity x @((item.Product.PriceReduced.HasValue && item.Product.PriceReduced > 0 ? item.Product.PriceReduced.Value : item.Product.Price).ToString("N0"))đ)
+                            @{
+                                var hasVariantName = !string.IsNullOrWhiteSpace(item.SelectedVariantName);
+                                var hasVariantId = item.VariantId.HasValue;
+                            }
+                            @if (hasVariantName)
+                            {
+                                <small class="text-muted ms-1">(Hương vị: @item.SelectedVariantName)</small>
+                            }
+                            else if (hasVariantId)
+                            {
+                                <small class="text-muted ms-1">(Hương vị: #@item.VariantId)</small>
+                            }
+
+                            @* Giữ nguyên hiển thị hương vị khi không dùng biến thể *@
+                            @if (!string.IsNullOrEmpty(item.SelectedFlavor))
+                            {
+                                <small class="text-muted ms-1">(Hương vị: @item.SelectedFlavor)</small>
+                            }
                             @if (!string.IsNullOrEmpty(item.SelectedFlavor))
                             {
                                 <small class="text-muted">(Hương vị: @item.SelectedFlavor)</small>
@@ -172,6 +78,8 @@
                     <input type="hidden" asp-for="BuyNowProductId" />
                     <input type="hidden" asp-for="BuyNowQuantity" />
                     <input type="hidden" asp-for="BuyNowFlavor" />
+                    <input asp-for="BuyNowVariantId" type="hidden" />
+
                 }
                 else
                 {
@@ -357,5 +265,111 @@
     .opacity-50 {
         opacity: 0.6;
         pointer-events: none;
+    }
+
+    .checkout-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding: 20px 15px;
+    }
+
+    .checkout-box {
+        background-color: #fff;
+        border: 1px solid #FFB6C1;
+        border-radius: 16px;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        padding: 24px;
+    }
+
+    .checkout-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 32px;
+        position: relative;
+    }
+
+        .checkout-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .section-subtitle {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #FF6185;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .section-subtitle i {
+            color: #FF6185;
+        }
+
+    .list-group-item img {
+        border-radius: 10px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #444;
+        font-size: 0.95rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #FFB6C1;
+        font-size: 0.95rem;
+    }
+
+    .btn-checkout {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: none;
+        transition: background-color 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+        .btn-checkout:hover {
+            background-color: #e75478;
+        }
+
+    .alert-heading {
+        color: #FF6185;
+        font-weight: bold;
+    }
+
+    .text-danger {
+        font-size: 0.9rem;
+    }
+
+    @@media (max-width: 768px) {
+        .checkout-title {
+            font-size: 1.4rem;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+        }
+
+        .form-label, .form-control, .form-select {
+            font-size: 0.9rem;
+        }
+
+        .btn-checkout {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
     }
 </style>

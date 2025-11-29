@@ -1,0 +1,388 @@
+﻿@model IEnumerable<DoAnCoSo.Models.InventoryLog>
+@{
+    ViewData["Title"] = "📜 Lịch sử kho";
+
+    var showAll = ViewBag.ShowAll ?? false;
+}
+
+<div class="inventory-wrapper py-5">
+    <h2 class="section-title">📜 Lịch sử giao dịch kho</h2>
+
+    <div class="inventory-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách giao dịch</h4>
+
+            <div class="d-flex align-items-center gap-2">
+
+                <input type="text" id="fromDatePicker" class="form-control w-auto" placeholder="Từ ngày"
+                       value="@(ViewBag.FromDate != null ? ((DateTime)ViewBag.FromDate).ToString("yyyy/MM/dd") : "")" />
+
+                <input type="text" id="toDatePicker" class="form-control w-auto" placeholder="Đến ngày"
+                       value="@(ViewBag.ToDate != null ? ((DateTime)ViewBag.ToDate).ToString("yyyy/MM/dd") : "")" />
+
+                <a href="javascript:void(0);" id="btnFilterDate" class="btn-back" title="Lọc ngày">
+                    <i class="fas fa-calendar-check"></i>
+                </a>
+
+                <!-- Input tìm kiếm -->
+                <input type="text" id="searchInput" class="form-control w-auto"
+                       placeholder="Tìm kiếm..." value="@Context.Request.Query["search"]" />
+
+                <!-- Nút tìm kiếm (icon, <a>) -->
+                <a href="javascript:void(0);" id="btnSearch" class="btn-back" title="Tìm kiếm">
+                    <i class="fas fa-search"></i>
+                </a>
+
+                <!-- Nút quay lại -->
+                <a asp-action="Index" class="btn-back" title="Quay lại">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+
+                <!-- Nút hiện log ẩn -->
+                <a href="javascript:void(0);" id="btnToggleHiddenLogs"
+                   class="btn-back @(showAll ? "active" : "outline")"
+                   data-show="@showAll.ToString().ToLower()" title="Hiện log ẩn">
+                    <i class="fas @(showAll ? "fa-eye" : "fa-eye-slash")"></i>
+                </a>
+
+                <!-- Hidden input giữ trạng thái showAll -->
+                <input type="hidden" id="showAllInput" value="@(showAll ? "true" : "false")" />
+
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center inventory-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 15%">Sản phẩm</th>
+                            <th style="width: 15%">Thay đổi (SL)</th>
+                            <th style="width: 30%">Lý do</th>
+                            <th style="width: 15%">Người thực hiện</th>
+                            <th style="width: 20%">Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="no-data">Chưa có giao dịch nào.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            int i = 1;
+                            var map = ViewBag.UserMap as IDictionary<string, string>;
+                            foreach (var log in Model)
+                            {
+                                string actor = "-";
+                                if (!string.IsNullOrEmpty(log.PerformedByUserId))
+                                {
+                                    actor = map != null && map.ContainsKey(log.PerformedByUserId)
+                                    ? map[log.PerformedByUserId]
+                                    : log.PerformedByUserId;
+                                }
+
+                                <tr class="log-row @(log.QuantityChange < 0 ? "row-export" : "row-import")"
+                                    data-id="@log.Id"
+                                    style="cursor:pointer;">
+                                    <td>@i</td>
+                                    <td>@log.Product?.Name</td>
+                                    <td>@log.QuantityChange</td>
+                                    <td>
+                                        @{
+                                            switch (log.Reason)
+                                            {
+                                                case "OrderReserved":
+                                                    @:Giữ hàng cho đơn hàng
+                                                    break;
+                                                case "OrderUnreserved":
+                                                    @:Bỏ giữ hàng cho đơn hàng
+                                                    break;
+                                                case "OrderConfirmed":
+                                                    @:Xuất kho cho đơn hàng
+                                                    break;
+                                                case "OrderCanceledRestock":
+                                                    @:Hoàn kho từ đơn hàng
+                                                    break;
+                                                case "AdjustStock":
+                                                    @:Điều chỉnh tồn kho
+                                                    break;
+                                                case "ExportStock":
+                                                    @:Xuất kho
+                                                    break;
+                                                case "ImportStock":
+                                                    @:Nhập kho
+                                                    break;
+                                                case "InitialImport":
+                                                    @:Khởi tạo tồn kho ban đầu
+                                                    break;
+                                                case "ImportStockVariant":
+                                                    @:Nhập kho theo biến thể
+                                                    break;
+                                                case "ExportStockVariant":
+                                                    @:Xuất kho theo biến thể
+                                                    break;
+                                                default:
+                                                    @log.Reason
+                                                    break;
+                                            }
+                                        }
+                                    </td>
+                                    <td title="@log.PerformedByUserId">@actor</td>
+                                    <td>@log.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal chi tiết log -->
+    <div class="modal fade" id="logDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content p-3" id="logDetailContainer"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Giao diện chung dựa trên inventory view */
+    .inventory-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+        .section-title::after {
+            content: "";
+            width: 80px;
+            height: 4px;
+            display: block;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .inventory-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        /* padding: 12px 20px; */
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: .3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .inventory-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .inventory-table th, .inventory-table td {
+        vertical-align: middle;
+    }
+
+    .inventory-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .inventory-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .note {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+    }
+
+    .log-row {
+        transition: background-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+        cursor: pointer;
+    }
+        .log-row:hover td {
+            color: #FF6185;
+        }
+
+    .btn-pink {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        border-radius: 20px;
+        padding: 4px 10px;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF406A;
+            color: #fff;
+        }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        attachLogRowClick();
+
+        const toggleBtn = document.getElementById('btnToggleHiddenLogs');
+        const showAllInput = document.getElementById('showAllInput');
+        const searchInput = document.getElementById('searchInput');
+        const btnSearch = document.getElementById('btnSearch');
+
+        toggleBtn.addEventListener('click', function () {
+            const current = this.dataset.show === 'true';
+            this.dataset.show = (!current).toString();
+            showAllInput.value = (!current).toString();
+
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye', !current);
+            icon.classList.toggle('fa-eye-slash', current);
+
+            this.classList.toggle('active', !current);
+            this.classList.toggle('outline', current);
+
+            loadLogs();
+        });
+
+        btnSearch.addEventListener('click', function () {
+            loadLogs();
+        });
+
+        searchInput.addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                loadLogs();
+            }
+        });
+
+        function loadLogs() {
+            const params = new URLSearchParams({
+                search: searchInput.value,
+                showAll: showAllInput.value
+            }).toString();
+
+            fetch(`@Url.Action("Logs", "Inventory", new { area = "Admin" })?${params}`)
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTable = doc.querySelector('.inventory-table');
+                    document.querySelector('.inventory-table').innerHTML = newTable.innerHTML;
+                    attachLogRowClick();
+                })
+                .catch(err => console.error(err));
+        }
+
+        function attachLogRowClick() {
+            document.querySelectorAll('.log-row').forEach(row => {
+                row.addEventListener('click', function () {
+                    const id = this.getAttribute('data-id');
+                    fetch(`/Admin/Inventory/LogDetails/${id}`)
+                        .then(res => res.text())
+                        .then(html => {
+                            document.getElementById("logDetailContainer").innerHTML = html;
+                            let modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                            modal.show();
+                        })
+                        .catch(err => console.error('Error loading details:', err));
+                });
+            });
+        }
+
+        // Flatpickr instances
+        const fromPicker = flatpickr("#fromDatePicker", {
+            dateFormat: "Y/m/d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "vn",
+            disableMobile: true,
+            maxDate: "today",
+            onChange: function(selectedDates) {
+                if(selectedDates.length) {
+                    toPicker.set('minDate', selectedDates[0]);
+                    if(toPicker.selectedDates[0] && toPicker.selectedDates[0] < selectedDates[0]) {
+                        toPicker.setDate(selectedDates[0]);
+                    }
+                }
+            }
+        });
+
+        const toPicker = flatpickr("#toDatePicker", {
+            dateFormat: "Y/m/d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "vn",
+            disableMobile: true,
+            maxDate: "today",
+            defaultDate: "today",
+            onChange: function(selectedDates) {
+                if(selectedDates.length) {
+                    fromPicker.set('maxDate', selectedDates[0]);
+                    if(fromPicker.selectedDates[0] && fromPicker.selectedDates[0] > selectedDates[0]) {
+                        fromPicker.setDate(selectedDates[0]);
+                    }
+                }
+            }
+        });
+
+        // Nút lọc ngày
+        const btnFilterDate = document.getElementById('btnFilterDate');
+        btnFilterDate.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const fromDate = fromPicker.input.value;
+            const toDate = toPicker.input.value;
+            const search = searchInput.value;
+            const showAll = showAllInput.value;
+
+            const params = new URLSearchParams({ search, showAll, fromDate, toDate }).toString();
+
+            fetch(`@Url.Action("Logs", "Inventory", new { area = "Admin" })?${params}`)
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    document.querySelector('.inventory-table').innerHTML = doc.querySelector('.inventory-table').innerHTML;
+                    attachLogRowClick();
+                })
+                .catch(err => console.error(err));
+        });
+    });
+</script>

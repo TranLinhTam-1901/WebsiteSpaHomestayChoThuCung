@@ -127,10 +127,10 @@
             </div>
 
             <div class="d-flex justify-content-between mt-4">
-                <a asp-action="Index" class="btn btn-secondary">
-                    ⬅️ Quay lại
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">
+                    ← Quay lại
                 </a>
-                <button type="submit" class="btn btn-pink">💾 Lưu hồ sơ</button>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Lưu hồ sơ</button>
             </div>
         </form>
     </div>
@@ -158,49 +158,38 @@
 
         // Khởi tạo flatpickr riêng cho input ngày sinh
         const dobPicker = flatpickr(dobInput, {
-            dateFormat: "d/m/Y",
+            dateFormat: "Y/m/d",
             altInput: true,
             altFormat: "d/m/Y",
             locale: "vn",
             maxDate: "today",
             disableMobile: true,
             onChange: function (selectedDates) {
-                updateAge(selectedDates[0]);
+                if (selectedDates.length) updateAge(selectedDates[0]);
             }
         });
 
-        // Khi load form, nếu có sẵn ngày sinh thì tính tuổi
-        if (dobPicker.input.value) {
-            const parts = dobPicker.input.value.split('/');
-            if (parts.length === 3) {
-                const dob = new Date(parts[2], parts[1] - 1, parts[0]);
-                updateAge(dob);
-            }
+        // Khi load form, tính tuổi ngay nếu đã chọn
+        if (dobPicker.selectedDates.length) {
+            updateAge(dobPicker.selectedDates[0]);
         }
 
         function updateAge(dob) {
             if (!dob) {
                 ageInput.value = '';
+                ageInput.dataset.realAge = '';
                 return;
             }
 
             const today = new Date();
             let years = today.getFullYear() - dob.getFullYear();
-            let months = today.getMonth() - dob.getMonth();
+            const m = today.getMonth() - dob.getMonth();
+            const d = today.getDate() - dob.getDate();
 
-            if (months < 0) {
-                years--;
-                months += 12;
-            }
+            if (m < 0 || (m === 0 && d < 0)) years--;
 
-            if (years === 0 && months < 6) {
-                ageInput.value = "< 1";
-                ageInput.dataset.realAge = 0;
-            }else {
-                if (months >= 6) years++;
-                ageInput.value = years;
-                ageInput.dataset.realAge = years;
-            }
+            ageInput.dataset.realAge = years >= 0 ? years : 0;
+            ageInput.value = years > 0 ? years : "<1";
         }
 
         // Khi submit form, gửi giá trị thật

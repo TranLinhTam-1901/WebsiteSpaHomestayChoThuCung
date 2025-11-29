@@ -53,7 +53,8 @@ namespace DoAnCoSo.Repositories
         {
             return await _context.Products
                 .Include(p => p.Images)
-                .Include(p => p.Category) // ✅ thêm Include Category
+                .Include(p => p.Category)
+                .Include(p => p.Variants) 
                 .Include(p => p.Reviews)
                     .ThenInclude(r => r.User)
                 .Include(p => p.Reviews)
@@ -63,23 +64,16 @@ namespace DoAnCoSo.Repositories
 
         public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(string categoryName)
         {
-            // Kiểm tra tên danh mục không rỗng hoặc null
             if (string.IsNullOrEmpty(categoryName))
             {
-                // Trả về danh sách rỗng nếu tên danh mục không hợp lệ
                 return Enumerable.Empty<Product>();
             }
 
-            // --- BẮT ĐẦU CODE TRUY VẤN DATABASE ---
-            // Truy vấn bảng Products
             return await _context.Products
-                                 // Tải kèm thông tin Category (cần để lọc theo tên Category)
-                                 .Include(p => p.Category)
-                                 // Lọc các sản phẩm mà tên Category của chúng khớp với categoryName
-                                 .Where(p => p.Category != null && p.Category.Name == categoryName)
-                                 // Thực thi truy vấn và tải kết quả vào bộ nhớ dưới dạng danh sách
-                                 .ToListAsync();
-            // --- KẾT THÚC CODE TRUY VẤN DATABASE ---
+                .Include(p => p.Category)
+                .Where(p => p.Category != null && p.Category.Name == categoryName)
+                .Where(p => p.IsActive && !p.IsDeleted)  
+                .ToListAsync();
         }
 
 

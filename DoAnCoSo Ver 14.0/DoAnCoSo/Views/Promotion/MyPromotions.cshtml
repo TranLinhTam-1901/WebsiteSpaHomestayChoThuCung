@@ -1,16 +1,14 @@
 ﻿@model IEnumerable<dynamic>
 @{
-    ViewData["Title"] = "🎁 Khuyến mãi của tôi";
+    ViewData["Title"] = "🛍️ Khuyến mãi của tôi";
 }
 
-<section class="container py-5">
-    <h2 class="text-center text-danger fw-bold mb-4">🎁 Khuyến mãi của tôi</h2>
+<section class="order-wrapper py-5">
+    <h2 class="section-title">🛍️ Khuyến mãi của tôi</h2>
 
     @if (Model == null || !Model.Any())
     {
-        <div class="alert alert-info text-center">
-            Bạn chưa lưu mã khuyến mãi nào.
-        </div>
+        <p class="no-promotions">Bạn chưa lưu mã khuyến mãi nào.</p>
     }
     else
     {
@@ -78,6 +76,31 @@
 </section>
 
 <style>
+    .order-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding: 15px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
     .table-pink th {
         background-color: #ffe5ec;
         color: #FF6185;
@@ -90,5 +113,12 @@
 
     .fw-bold.text-danger {
         color: #FF6185 !important;
+    }
+
+    .no-promotions {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #666;
+        margin-top: 40px;
     }
 </style>

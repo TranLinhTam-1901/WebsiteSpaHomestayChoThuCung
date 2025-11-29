@@ -1,5 +1,6 @@
 ﻿using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 public class FavoriteCountViewComponent : ViewComponent
@@ -11,17 +12,23 @@ public class FavoriteCountViewComponent : ViewComponent
         _context = context;
     }
 
-    public IViewComponentResult Invoke()
+    public async Task<IViewComponentResult> InvokeAsync()
     {
-        var userId = (User as ClaimsPrincipal)?.FindFirstValue(ClaimTypes.NameIdentifier);
+        var user = User as ClaimsPrincipal;
+        var userId = user?.FindFirstValue(ClaimTypes.NameIdentifier);
 
         int favoriteCount = 0;
 
-        if (userId != null)
+        if (!string.IsNullOrEmpty(userId))
         {
-            favoriteCount = _context.Favorites.Count(f => f.UserId == userId); // Lấy số lượng sản phẩm yêu thích của người dùng
+            favoriteCount = await _context.Favorites
+                .Where(f => f.UserId == userId
+                            && f.Product != null
+                            && f.Product.IsActive)   // ✅ chỉ đếm sản phẩm còn hoạt động
+                .CountAsync();
         }
 
-        return View(favoriteCount); // Trả về số lượng yêu thích cho View
+        return View(favoriteCount);
     }
+
 }

@@ -29,7 +29,7 @@ namespace DoAnCoSo.Models
         public Category? Category { get; set; }
 
         // Hương vị (lưu dạng chuỗi)
-        public string Flavors { get; set; } = string.Empty;
+        public string? Flavors { get; set; }
 
         [NotMapped]
         public List<string> FlavorsList
@@ -42,11 +42,22 @@ namespace DoAnCoSo.Models
                 : string.Empty;
         }
 
+
+        // kho hàng 
+        public int StockQuantity { get; set; } = 0;       
+        public int LowStockThreshold { get; set; } = 5;   
+        public int SoldQuantity { get; set; } = 0;
+
+        public int ReservedQuantity { get; set; } = 0;
+
+
         // Yêu thích
         public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 
+
         // Đánh giá (đã thay ProductReview -> Review)
         public List<Review> Reviews { get; set; } = new();
+
 
         // % Giảm giá
         [NotMapped]
@@ -61,5 +72,18 @@ namespace DoAnCoSo.Models
                 return 0;
             }
         }
+
+        public virtual ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+
+        // ==== NEW: Trạng thái bán/ẩn sản phẩm (xóa mềm) ====
+        public bool IsActive { get; set; } = true;    // còn kinh doanh
+        public bool IsDeleted { get; set; } = false;  // đã ẩn/xóa mềm
+
+        public DateTime? DeletedAt { get; set; }
+        public string? DeletedBy { get; set; }
+        public string? DeletedReason { get; set; }
+
+        public virtual ICollection<ProductOptionGroup> OptionGroups { get; set; } = new List<ProductOptionGroup>();
+
     }
 }

@@ -1,0 +1,277 @@
+﻿@model DoAnCoSo.ViewModels.InventoryVariantListViewModel
+@{
+    ViewData["Title"] = $"Biến thể - {Model.ProductName}";
+}
+
+<div class="inventory-wrapper py-5">
+    <h2 class="section-title">📦 Biến thể sản phẩm: @Model.ProductName</h2>
+
+    <div class="inventory-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách các biến thể</h4>
+
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="Index" class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                     Quay lại
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center inventory-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 10%">Tên biến thể</th>
+                            <th style="width: 10%">Tồn kho</th>
+                            <th style="width: 10%">Đã bán</th>
+                            <th style="width: 10%">Giữ tạm</th>
+                            <th style="width: 15%">Ngưỡng cảnh báo</th>
+                            <th style="width: 40%">Nhập/Xuất</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Variants.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="no-data">Không có biến thể nào.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            int i = 1;
+                            foreach (var v in Model.Variants)
+                            {
+                                <tr class="@(v.StockQuantity <= v.LowStockThreshold ? "row-low" : "")">
+                                    <td>@i</td>
+                                    <td>@v.VariantName</td>
+                                    <td>@v.StockQuantity</td>
+                                    <td>@v.SoldQuantity</td>
+                                    <td>@v.ReservedQuantity</td>
+                                    <td>@v.LowStockThreshold</td>
+
+                                    <!-- Nhập/Xuất chung cột -->
+                                    <td class="actions-cell">
+                                        <div class="d-flex align-items-center gap-2 justify-content-center">
+                                            <form method="post" id="form-@v.VariantId" class="d-flex align-items-center gap-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="variantId" value="@v.VariantId" />
+                                                <input type="number" name="quantity" min="1" class="form-control qty" placeholder="SL" />
+                                                <input type="text" name="note" class="form-control note" placeholder="Ghi chú" />
+                                            </form>
+
+                                            <!-- Nút Nhập -->
+                                            <a href="javascript:void(0);" class="btn-detail" onclick="submitAction('@Url.Action("ImportVariant")', '@v.VariantId')">Nhập</a>
+
+                                            <!-- Nút Xuất -->
+                                            <a href="javascript:void(0);" class="btn-delete" onclick="submitAction('@Url.Action("ExportVariant")', '@v.VariantId')">Xuất</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function submitAction(actionUrl, variantId) {
+        const form = document.getElementById("form-" + variantId);
+        const formData = new FormData(form);
+
+        fetch(actionUrl, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "RequestVerificationToken": form.querySelector('input[name="__RequestVerificationToken"]').value
+            }
+        })
+        .then(res => res.text()) // lấy HTML trả về
+        .then(html => {
+            // Tạo DOM ảo
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            // Lấy table mới
+            const newRow = doc.querySelector(`#form-${variantId}`).closest("tr");
+            if (newRow) {
+                const oldRow = document.querySelector(`#form-${variantId}`).closest("tr");
+                oldRow.replaceWith(newRow); // cập nhật row đó
+            } else {
+                console.warn("Không tìm thấy row mới trong HTML trả về.");
+            }
+        })
+        .catch(err => console.error("Lỗi submitAction:", err));
+    }
+</script>
+
+<style>
+    .inventory-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+        .section-title::after {
+            content: "";
+            width: 80px;
+            height: 4px;
+            display: block;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .inventory-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+        background: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        @* padding: 12px 20px; *@
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .inventory-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .inventory-table th, .inventory-table td {
+        vertical-align: middle;
+    }
+
+    .inventory-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .inventory-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .row-low td {
+        color: red;
+        font-weight: bold;
+    }
+
+    .action-cell .form-control {
+        border-radius: 4px;
+        border: 1px solid #FFB6C1;
+        max-width: 100px;
+    }
+
+    .btn-detail, .btn-delete {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-detail {
+        border: 2px solid green;
+        color: green;
+        background-color: transparent;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-weight: bold;
+    }
+
+        .btn-detail:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .btn-delete {
+        border: 2px solid red;
+        color: red;
+        background-color: transparent;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-weight: bold;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .qty {
+        max-width: 80px
+    }
+
+    .note {
+        max-width: 220px
+    }
+
+    @@media (max-width: 768px) {
+        .action-cell .form-control
+
+    {
+        max-width: 70px;
+        margin-bottom: 3px;
+    }
+
+    .action-cell form {
+        flex-wrap: wrap;
+        gap: 3px;
+        justify-content: center;
+    }
+
+    }
+
+    .no-data {
+        padding: 15px;
+        color: #777;
+        text-align: center;
+    }
+
+    /* Ẩn mũi tên trong input type=number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+
+    .inventory-table input:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+</style>

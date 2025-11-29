@@ -39,6 +39,16 @@ namespace DoAnCoSo.Models
         public DbSet<OrderPromotion> OrderPromotions { get; set; }
         public DbSet<UserPromotion> UserPromotions { get; set; }
 
+        public DbSet<DoAnCoSo.Models.Blockchain.BlockchainRecord> BlockchainRecords { get; set; }
+
+        public DbSet<DeletedPets> DeletedPets { get; set; }
+        public DbSet<InventoryLog> InventoryLogs { get; set; }
+        public DbSet<ProductVariant> ProductVariants { get; set; }
+
+        public DbSet<ProductOptionGroup> ProductOptionGroups { get; set; }
+        public DbSet<ProductOptionValue> ProductOptionValues { get; set; }
+
+        public DbSet<ProductVariantOptionValue> ProductVariantOptionValues { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,9 +62,9 @@ namespace DoAnCoSo.Models
             // 🔹 Appointment - Pet
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Pet)
-                .WithMany(p => p.Appointments)
+                .WithMany()
                 .HasForeignKey(a => a.PetId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull); // hoặc DeleteBehavior.Cascade
 
             modelBuilder.Entity<PetServiceRecord>()
                 .HasKey(r => r.RecordId);
@@ -138,6 +148,91 @@ namespace DoAnCoSo.Models
             modelBuilder.Entity<UserPromotion>()
                 .HasIndex(up => new { up.UserId, up.PromotionId })
                 .IsUnique();
+            // Thêm phần unique constraint cho UserPromotion tại đây:
+            modelBuilder.Entity<UserPromotion>()
+                .HasIndex(up => new { up.UserId, up.PromotionId })
+                .IsUnique();
+
+            modelBuilder.Entity<InventoryLog>()
+                .HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductVariant>(b =>
+            {
+                b.HasKey(v => v.Id);
+                b.HasIndex(v => new { v.ProductId, v.Name }).IsUnique(); // Mỗi sản phẩm, tên biến thể không trùng
+                b.Property(v => v.Name).HasMaxLength(200).IsRequired();
+
+                b.HasOne(v => v.Product)
+                 .WithMany(p => p.Variants) // => nhớ thêm ICollection<ProductVariant> Variants trong Product nếu bạn muốn
+                 .HasForeignKey(v => v.ProductId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Log có thể tham chiếu variant
+            modelBuilder.Entity<InventoryLog>(b =>
+            {
+                b.HasIndex(l => l.VariantId);
+            });
+
+            // OrderDetail/CartItem: chỉ cần cột VariantId nullable, FK có thể cấu hình nếu muốn:
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne<ProductVariant>()
+                .WithMany()
+                .HasForeignKey(od => od.VariantId)
+                .OnDelete(DeleteBehavior.Restrict); // tránh xóa nhầm variant gây mất lịch sử
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne<ProductVariant>()
+                .WithMany()
+                .HasForeignKey(ci => ci.VariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProductOptionGroup>(b =>
+            {
+                b.HasKey(g => g.Id);
+                b.Property(g => g.Name).HasMaxLength(100).IsRequired();
+
+                b.HasOne(g => g.Product)
+                 .WithMany() // hoặc WithMany(p => p.OptionGroups) nếu bạn thêm navigation
+                 .HasForeignKey(g => g.ProductId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProductOptionValue>(b =>
+            {
+                b.HasKey(v => v.Id);
+                b.Property(v => v.Value).HasMaxLength(100).IsRequired();
+
+                b.HasOne(v => v.Group)
+                 .WithMany(g => g.Values)
+                 .HasForeignKey(v => v.ProductOptionGroupId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            modelBuilder.Entity<ProductVariantOptionValue>(b =>
+            {
+                b.HasKey(x => new { x.ProductVariantId, x.ProductOptionValueId });
+
+                b.HasOne(x => x.Variant)
+                    .WithMany(v => v.OptionValues)
+                    .HasForeignKey(x => x.ProductVariantId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                b.HasOne(x => x.OptionValue)
+                    .WithMany(ov => ov.Variants)
+                    .HasForeignKey(x => x.ProductOptionValueId)
+                    .OnDelete(DeleteBehavior.NoAction); 
+            });
+
+            modelBuilder.Entity<ProductVariant>()
+            .Property(v => v.Name)
+            .IsRequired(false);
+
+
         }
     }
 }

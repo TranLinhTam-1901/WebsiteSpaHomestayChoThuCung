@@ -1,93 +1,122 @@
 ﻿@model DoAnCoSo.Models.Category
 
-<div class="container py-5">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-gradient-pink text-center rounded-top-4 py-3">
-            <h2 class="mb-0">🌸 Danh mục: @Model.Name 🌸</h2>
+@{
+    ViewData["Title"] = "📋 Chi tiết danh mục";
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto p-4" style="max-width: 1000px; min-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <!-- Thông tin danh mục -->
+        <h5><span class="section-icon">📋</span> Thông tin danh mục</h5>
+        <div class="row mb-3">
+            <div class="col-md-6 mb-3">
+                <strong>Tên danh mục:</strong> @(string.IsNullOrWhiteSpace(Model.Name) ? "Chưa có" : Model.Name)
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Số sản phẩm:</strong> @(Model.Products?.Count() ?? 0)
+            </div>
         </div>
 
-        <div class="card-body">
-            @if (Model.Products != null && Model.Products.Any())
-            {
-                <div class="row g-4 mt-2">
-                    @foreach (var product in Model.Products)
-                    {
-                        <div class="col-md-3 col-sm-6">
-                            <div class="card product-card border-0 shadow-sm h-100">
-                                <img src="@product.ImageUrl" alt="@product.Name" class="card-img-top rounded-top-4">
-                                <div class="card-body text-center">
-                                    <h6 class="fw-semibold text-truncate mb-2">@product.Name</h6>
-                                    <p class="text-muted small mb-2">@product.Price.ToString("N0")₫</p>
-                                    <a asp-controller="Product" asp-action="Display" asp-route-id="@product.Id"
-                                       class="btn btn-outline-pink btn-sm rounded-pill px-3">Xem chi tiết</a>
+        <!-- Sản phẩm trong danh mục -->
+        <h5 class="mt-4"><span class="section-icon">🛍️</span>Tất cả sản phẩm</h5>
+        @if (Model.Products != null && Model.Products.Any())
+        {
+            <div class="row g-4 mt-2">
+                @foreach (var product in Model.Products)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card product-card shadow-sm h-100">
+                            @if (!string.IsNullOrEmpty(product.ImageUrl))
+                            {
+                                <img src="@product.ImageUrl" alt="@product.Name"
+                                     class="card-img-top rounded-top-3" style="height:180px; object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="rounded-top-3 d-flex align-items-center justify-content-center bg-light"
+                                     style="height:180px;">
+                                    <i class="fas fa-box fa-3x" style="color:#FF6185;"></i>
                                 </div>
+                            }
+                            <div class="card-body text-center">
+                                <h6 class="fw-semibold text-truncate mb-2">@product.Name</h6>
+                                <p class="text-muted small mb-2">@product.Price.ToString("N0")₫</p>
+                                <a asp-area="" asp-controller="Product" asp-action="Display" asp-route-id="@product.Id"
+                                   class="btn btn-outline-pink btn-sm rounded-pill px-3">Xem chi tiết</a>
                             </div>
                         </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <p class="text-muted fst-italic text-center mt-3">Không có sản phẩm nào trong danh mục này.</p>
-            }
-        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted fst-italic mt-2">Không có sản phẩm nào trong danh mục này.</p>
+        }
 
-        <div class="card-footer text-center bg-light">
-            <a asp-action="Index" class="btn btn-gradient-pink px-4 py-2 rounded-pill shadow-sm">
-                ← Trở lại danh sách
-            </a>
+        <!-- Nút thao tác -->
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+            <a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-warning px-4 py-2 rounded-pill shadow-sm">🛠️ Sửa</a>
         </div>
     </div>
 </div>
 
 <style>
-    :root {
-        --pink-main: #FF6185;
-        --pink-accent: #FFB6C1;
-    }
-
-    .bg-gradient-pink {
-        background: linear-gradient(90deg, var(--pink-main), var(--pink-accent));
-        color: black;
-    }
-
-    .btn-gradient-pink {
-        background: #FFB6C1;
-        color: #000;
-        font-weight: bold;
-        border: none;
-        transition: 0.25s;
-    }
-
-        .btn-gradient-pink:hover {
-            background-color: #FF6185;
-            color: #fff;
-        }
-
-    .btn-outline-pink {
-        border: 1.5px solid var(--pink-main);
-        color: var(--pink-main);
+    .booking-card {
         background-color: #fff;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+
+    .booking-title {
+        font-weight: 600;
+        color: #FF6185;
+    }
+
+    .section-icon {
+        margin-right: 0.5rem;
+    }
+
+    .product-card {
+        border-radius: 1rem;
+        transition: 0.3s;
+    }
+
+    .product-card:hover {
+        transform: none
+    }
+
+    .btn-pink, .btn-outline-pink {
         transition: 0.25s;
         font-weight: 500;
     }
 
+    .btn-outline-pink {
+        border: 1.5px solid #FF6185;
+        color: #FF6185;
+        background-color: #fff;
+    }
+
         .btn-outline-pink:hover {
-            background-color: var(--pink-main);
+            background-color: #FF6185;
             color: #fff;
         }
 
-    .product-card {
-        transition: 0.3s;
-        border-radius: 1rem;
+    .btn-warning {
+        background-color: #FFC107;
+        border-color: #FFC107;
+        color: #000;
     }
 
-    .card-img-top {
-        object-fit: cover;
-        height: 180px;
-    }
-
-    .card {
-        border-radius: 1rem;
-    }
+        .btn-warning:hover {
+            background-color: #e0a800;
+            border-color: #d39e00;
+            color: #fff;
+        }
 </style>

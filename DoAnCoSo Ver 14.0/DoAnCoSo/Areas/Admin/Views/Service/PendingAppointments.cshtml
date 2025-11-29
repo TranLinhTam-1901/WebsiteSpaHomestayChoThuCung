@@ -19,11 +19,11 @@
                 <table class="table table-bordered align-middle text-center appointment-table">
                     <thead class="table-pink">
                         <tr>
-                            <th style="width:20%">Mã đặt lịch</th>
+                            <th style="width:15%">Mã đặt lịch</th>
                             <th style="width:20%">Thú cưng</th>
                             <th style="width:20%">Dịch vụ</th>
-                            <th style="width:25%">Thời gian</th>
-                            <th style="width:15%">Hành động</th>
+                            <th style="width:20%">Thời gian</th>
+                            <th style="width:25%">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,18 +55,29 @@
                                     }
                                     else
                                     {
-                                        if (item.StartDate != default(DateTime))
-                                        {
-                                            @item.StartDate.ToString("dd/MM/yyyy")
-                                        }
-                                        else
+                                        string dateDisplay = item.AppointmentDate != default(DateTime)
+                                        ? item.AppointmentDate.ToString("dd/MM/yyyy")
+                                        : "N/A";
+
+                                        string timeDisplay = item.AppointmentTime != TimeSpan.Zero
+                                        ? item.AppointmentTime.ToString(@"hh\:mm")
+                                        : "N/A";
+
+                                        if (dateDisplay == "N/A" && timeDisplay == "N/A")
                                         {
                                             @:N/A
                                         }
-
-                                        @if (item.AppointmentTime != default(TimeSpan))
+                                        else if (dateDisplay == "N/A")
                                         {
-                                            @: @item.AppointmentTime.ToString(@"hh\:mm")
+                                            @timeDisplay
+                                        }
+                                        else if (timeDisplay == "N/A")
+                                        {
+                                            @dateDisplay
+                                        }
+                                        else
+                                        {
+                                            @($"{dateDisplay} {timeDisplay}")
                                         }
                                     }
                                 </td>
@@ -85,6 +96,44 @@
                                         <a asp-action="AppointmentDetails" asp-route-id="@item.AppointmentId" class="btn-detail btn-sm">
                                             <i class="fas fa-info-circle"></i> Chi tiết
                                         </a>
+
+                                        @{
+                                            bool canEdit = false;
+                                            string onclickAttr = "";
+                                            string actionName = "";
+
+                                            switch (item.Service.Category)
+                                            {
+                                                case ServiceCategory.Homestay:
+                                                    canEdit = item.Status == AppointmentStatus.Pending &&
+                                                    (item.StartDate - DateTime.Today).TotalDays >= 2;
+                                                    actionName = "UpdateAppointmentHomestay";
+                                                    break;
+
+                                                case ServiceCategory.Spa:
+                                                    canEdit = item.Status == AppointmentStatus.Pending &&
+                                                    (item.AppointmentDate - DateTime.Today).TotalDays >= 1;
+                                                    actionName = "UpdateAppointmentSpa";
+                                                    break;
+
+                                                case ServiceCategory.Vet:
+                                                    canEdit = item.Status == AppointmentStatus.Pending &&
+                                                    (item.AppointmentDate - DateTime.Today).TotalDays >= 1;
+                                                    actionName = "UpdateAppointmentVet";
+                                                    break;
+                                            }
+
+                                            var btnClass = canEdit ? "btn-update btn-sm" : "btn-update btn-sm disabled";
+                                            if (!canEdit)
+                                            {
+                                                onclickAttr = "return false;"; // ngăn click
+                                            }
+                                        }
+
+                                        <a asp-action="@actionName" asp-route-id="@item.AppointmentId" class="@btnClass" onclick="@onclickAttr">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+
                                     </div>
                                 </td>
                             </tr>
@@ -99,9 +148,19 @@
             }
         </div>
     </div>
+
+    <nav>
+        <ul id="pagination" class="pagination justify-content-center mt-4"></ul>
+    </nav>
 </div>
 
 <style>
+    :root {
+        --pink-main: #ff7aa2;
+        --pink-light: #ffe3ec;
+        --pink-dark: #e74c7b;
+    }
+
     .appointment-wrapper {
         max-width: 1300px;
         margin: auto;
@@ -226,9 +285,111 @@
             color: #fff;
         }
 
+    .btn-update {
+        background-color: #FFD633;
+        color: #000;
+        font-weight: bold;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        text-decoration: none;
+    }
+
+        .btn-update:hover {
+            background-color: #FFB800;
+            color: #fff;
+        }
+
+    a.btn-update.disabled {
+        pointer-events: none; /* không thể click */
+        opacity: 0.5; /* xám đi */
+        cursor: not-allowed; /* con trỏ báo không thể click */
+    }
+
     .no-appointments {
         text-align: center;
         color: #777;
         margin-top: 16px;
     }
+
+    /* PAGINATION */
+    .pagination .page-link {
+        color: var(--pink-dark);
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination .page-link:hover {
+            background-color: #FFB6C1;
+            color: white;
+        }
+
+    .pagination .active .page-link {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        color: white;
+    }
+
+        /* 👉 BỎ FOCUS */
+        .pagination .page-link:focus,
+        .pagination .active .page-link:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
 </style>
+
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+        const itemsPerPage = 10; // số hàng mỗi trang
+        const rows = document.querySelectorAll(".appointment-table tbody tr");
+        const totalItems = rows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pagination = document.getElementById("pagination");
+
+        function showPage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? "" : "none";
+            });
+
+            // cập nhật active pagination
+            document.querySelectorAll("#pagination li").forEach(li => li.classList.remove("active"));
+            const currentPage = document.querySelector(`#pagination li[data-page='${page}']`);
+            if (currentPage) currentPage.classList.add("active");
+
+            // cuộn lên đầu bảng
+            const card = document.querySelector(".appointment-card");
+            if (card) {
+                window.scrollTo({ top: card.offsetTop - 20, behavior: "smooth" });
+            }
+        }
+
+        // tạo pagination
+        if (totalPages > 1) {
+            pagination.innerHTML = ""; // xóa nếu đã có
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.classList.add("page-item");
+                li.setAttribute("data-page", i);
+
+                const a = document.createElement("a");
+                a.classList.add("page-link");
+                a.href = "#";
+                a.textContent = i;
+
+                a.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    showPage(i);
+                });
+
+                li.appendChild(a);
+                pagination.appendChild(li);
+            }
+        }
+
+        // hiển thị trang đầu tiên
+        if (totalPages > 0) showPage(1);
+    });
+</script>
