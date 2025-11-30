@@ -485,11 +485,10 @@
                         body: new URLSearchParams({ id, __RequestVerificationToken: token })
                     });
                     const data = await res.json();
-                    if (data.success) {
+                if (data.success) {
                         const row = document.querySelector(`tr[data-id="${id}"]`);
                         if (row) {
-                            row.querySelector('.status-cell').innerHTML = '<span class="badge bg-secondary">Ngừng bán</span>';
-                            row.querySelector('.js-hide').outerHTML = `<button type="button" class="btn-show btn-sm js-unhide" data-id="${id}"><i class="bi bi-arrow-counterclockwise"></i> Hiện</button>`;
+                            row.remove();   // 💥 Xóa khỏi bảng ngay lập tức
                         }
                         bsModal.hide();
                     } else { alert(data.message || 'Ẩn thất bại'); }

@@ -383,6 +383,8 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             existingProduct.CategoryId = product.CategoryId;
             existingProduct.IsActive = product.IsActive;
             existingProduct.LowStockThreshold = product.LowStockThreshold;
+            existingProduct.IsDeleted = !product.IsActive;
+
 
             if (imageUrl != null)
                 existingProduct.ImageUrl = await SaveImage(imageUrl);
@@ -708,14 +710,17 @@ namespace DoAnCoSo.Areas.Admin.Controllers
             }
 
 
-          
+
 
             // =====================================================================
             // UPDATE TỔNG TỒN
             // =====================================================================
-            existingProduct.StockQuantity = existingProduct.Variants
-                .Where(v => v.IsActive)
-                .Sum(v => v.StockQuantity);
+            if (existingProduct.Variants != null && existingProduct.Variants.Any())
+            {
+                existingProduct.StockQuantity = existingProduct.Variants
+                    .Where(v => v.IsActive)
+                    .Sum(v => v.StockQuantity);
+            }
 
 
             await _context.SaveChangesAsync();
