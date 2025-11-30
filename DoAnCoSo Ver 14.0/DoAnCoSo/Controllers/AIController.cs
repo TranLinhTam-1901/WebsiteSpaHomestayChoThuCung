@@ -22,5 +22,20 @@ namespace DoAnCoSo.Controllers
 
             return Content(result, "application/json");
         }
+        [HttpPost]
+        public async Task<IActionResult> Translate([FromBody] TranslateRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.Text))
+                return BadRequest("Empty text");
+
+            var result = await _vision.TranslateAsync(req.Text);
+            return Content(result, "application/json");
+        }
+
+        public class TranslateRequest
+        {
+            public string Text { get; set; }
+        }
+
     }
 }

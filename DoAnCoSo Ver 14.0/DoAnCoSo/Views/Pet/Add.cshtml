@@ -100,7 +100,7 @@
             <div class="mb-3">
                 <label asp-for="DietPreferences" class="form-label">Chế độ ăn</label>
                 <textarea asp-for="DietPreferences" class="form-control" rows="2"></textarea>
-            </div>
+            </div>  
 
             <div class="mb-3">
                 <label asp-for="HealthNotes" class="form-label">Ghi chú sức khỏe</label>
@@ -153,7 +153,7 @@
 <!-- SCRIPT TÍNH TUỔI + AI -->
 <script>
     // ============================
-    // 1) Script TÍNH TUỔI (giữ nguyên)
+    // 1) Script TÍNH TUỔI (GIỮ NGUYÊN)
     // ============================
     document.addEventListener("DOMContentLoaded", function () {
         const ageInput = document.getElementById("age");
@@ -206,87 +206,115 @@
             });
         }
     });
-    // ============================
-        // 2) SCRIPT AI PHÂN TÍCH ẢNH
+
+
+    // =====================================================
+    // 2) SCRIPT AI PHÂN TÍCH ẢNH + TỰ DỊCH SANG TIẾNG VIỆT
+    // =====================================================
+
+    // HÀM cleanText() – loại bỏ ký tự dư thừa
+    function cleanText(text) {
+        if (!text) return "";
+        return text
+            .replace(/[\[\]\"]/g, "")   // bỏ dấu [, ], "
+            .replace(/\s+/g, " ")        // gom nhiều space thành 1
+            .replace(/,$/, "")           // bỏ dấu phẩy cuối
+            .trim();
+    }
+
+    // HÀM translate() – gọi AI dịch tiếng Anh → tiếng Việt
+    async function translate(text) {
+        let res = await fetch("@Url.Action("Translate", "AI")", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text })
+        });
+
+        let raw = await res.text();
+        let data = JSON.parse(raw);
+        return cleanText(data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text);
+    }
+
+    // Nút phân tích ảnh
+    document.getElementById("btnAI").onclick = async () => {
+        let file = document.getElementById("petImage").files[0];
+        if (!file) {
+            alert("⚠️ Vui lòng chọn ảnh trước!");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("image", file);
+
+        let res = await fetch("@Url.Action("Analyze", "AI")", {
+            method: "POST",
+            body: formData
+        });
+
+        let raw = await res.text();
+        console.log("RAW RESPONSE:", raw);
+
+        let data;
+        try {
+            data = JSON.parse(raw);
+        } catch {
+            alert("❌ API không trả JSON hợp lệ!");
+            return;
+        }
+
+        let aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!aiText) {
+            alert("❌ Không đọc được dữ liệu AI!");
+            return;
+        }
+
+        document.getElementById("AI_AnalysisResult").value = aiText;
+
+        // Parse JSON AI trả về
+        let petInfo;
+        try {
+            petInfo = JSON.parse(aiText);
+        } catch {
+            alert("❌ AI trả JSON không hợp lệ!");
+            return;
+        }
+
         // ============================
-        document.getElementById("btnAI").onclick = async () => {
-            let file = document.getElementById("petImage").files[0];
-            if (!file) {
-                alert("⚠️ Vui lòng chọn ảnh trước!");
-                return;
-            }
+        //  TỰ DỊCH + FILL FORM
+        // ============================
 
-            let formData = new FormData();
-            formData.append("image", file);
-
-            let res = await fetch("@Url.Action("Analyze", "AI")", {
-                method: "POST",
-                body: formData
+        // TYPE (select Chó/Mèo)
+        if (petInfo.type) {
+            translate(petInfo.type).then(vi => {
+                let cleaned = cleanText(vi);
+                if (cleaned.includes("Mèo")) document.getElementById("PetType").value = "Mèo";
+                else document.getElementById("PetType").value = "Chó";
             });
+        }
 
-            // Đọc raw response (Google trả JSON dạng text)
-            let raw = await res.text();
-            console.log("RAW RESPONSE:", raw);
+        // BREED
+        if (petInfo.breed) {
+            translate(petInfo.breed).then(vi => {
+                document.getElementById("PetBreed").value = cleanText(vi);
+            });
+        }
 
-            let data;
-            try {
-                data = JSON.parse(raw);
-            } catch (e) {
-                alert("❌ API không trả JSON hợp lệ!");
-                return;
-            }
+        // COLOR
+        if (petInfo.color) {
+            translate(petInfo.color).then(vi => {
+                document.getElementById("PetColor").value = cleanText(vi);
+            });
+        }
 
-            // Lấy nội dung text AI trả về (JSON string)
-            let aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        // MARKS (Dấu hiệu nhận dạng)
+        if (petInfo.marks) {
+            translate(petInfo.marks).then(vi => {
+                document.getElementById("PetMarks").value = cleanText(vi);
+            });
+        }
 
-            if (!aiText) {
-                console.log("Parsed JSON:", data);
-                alert("❌ Không đọc được dữ liệu AI!");
-                return;
-            }
+        alert("🎉 AI đã phân tích & dịch tiếng Việt thành công!");
+    };
 
-            // Gán vào textarea để người dùng xem JSON
-            document.getElementById("AI_AnalysisResult").value = aiText;
-
-            // =======================
-            //  PARSE JSON TỪ AI
-            // =======================
-            let petInfo;
-            try {
-                petInfo = JSON.parse(aiText);
-            } catch {
-                alert("❌ AI trả JSON không hợp lệ!");
-                return;
-            }
-
-            // =======================
-            //  FILL FORM TỰ ĐỘNG
-            // =======================
-
-            // TYPE (Chó / Mèo)
-            if (petInfo.type) {
-                let t = petInfo.type.toLowerCase();
-                if (t.includes("cat") || t.includes("mèo"))
-                    document.getElementById("PetType").value = "Mèo";
-                if (t.includes("dog") || t.includes("chó"))
-                    document.getElementById("PetType").value = "Chó";
-            }
-
-            // BREED
-            if (petInfo.breed) {
-                document.getElementById("PetBreed").value = petInfo.breed;
-            }
-
-            // COLOR
-            if (petInfo.color) {
-                document.getElementById("PetColor").value = petInfo.color;
-            }
-
-            // MARKS (Dấu hiệu nhận dạng)
-            if (petInfo.marks) {
-                document.getElementById("PetMarks").value = petInfo.marks;
-            }
-
-            alert("🎉 AI đã tự động điền thông tin vào form!");
-        };
 </script>
+
