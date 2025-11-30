@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DoAnCoSo.Migrations
 {
     /// <inheritdoc />
-    public partial class AddNewModel1 : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -69,7 +69,8 @@ namespace DoAnCoSo.Migrations
                     Hash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PreviousHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PerformedBy = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    PerformedBy = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TransactionHash = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -789,7 +790,7 @@ namespace DoAnCoSo.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProductId = table.Column<int>(type: "int", nullable: false),
                     Sku = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     PriceOverride = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     StockQuantity = table.Column<int>(type: "int", nullable: false),
                     ReservedQuantity = table.Column<int>(type: "int", nullable: false),
@@ -992,7 +993,8 @@ namespace DoAnCoSo.Migrations
                 columns: table => new
                 {
                     ProductVariantId = table.Column<int>(type: "int", nullable: false),
-                    ProductOptionValueId = table.Column<int>(type: "int", nullable: false)
+                    ProductOptionValueId = table.Column<int>(type: "int", nullable: false),
+                    IsVariantGroup = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1237,7 +1239,8 @@ namespace DoAnCoSo.Migrations
                 name: "IX_ProductVariants_ProductId_Name",
                 table: "ProductVariants",
                 columns: new[] { "ProductId", "Name" },
-                unique: true);
+                unique: true,
+                filter: "[Name] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReviewImages_ReviewId",
