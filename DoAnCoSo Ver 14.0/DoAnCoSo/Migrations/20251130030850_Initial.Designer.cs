@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DoAnCoSo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251117090149_AddNewModel1")]
-    partial class AddNewModel1
+    [Migration("20251130030850_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -219,6 +219,9 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("TransactionHash")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -954,7 +957,6 @@ namespace DoAnCoSo.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -980,7 +982,8 @@ namespace DoAnCoSo.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId", "Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Name] IS NOT NULL");
 
                     b.ToTable("ProductVariants");
                 });
@@ -992,6 +995,9 @@ namespace DoAnCoSo.Migrations
 
                     b.Property<int>("ProductOptionValueId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsVariantGroup")
+                        .HasColumnType("bit");
 
                     b.HasKey("ProductVariantId", "ProductOptionValueId");
 
