@@ -140,6 +140,12 @@ namespace DoAnCoSo.Areas.Identity.Pages.Account
                 await hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
 
                 _logger.LogInformation("User logged in.");
+
+                if (await _userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    return RedirectToAction("Index", "Revenue", new { area = "Admin" });
+                }
+
                 return LocalRedirect(returnUrl);
             }
 
