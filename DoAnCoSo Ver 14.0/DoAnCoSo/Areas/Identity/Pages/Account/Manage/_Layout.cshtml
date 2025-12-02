@@ -1,12 +1,14 @@
-﻿@{
-    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
-    {
-        Layout = parentLayout.ToString();
-    }
-    else
-    {
-        Layout = "/Areas/Identity/Pages/_Layout.cshtml";
-    }
+﻿@using DoAnCoSo.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+    bool isAdmin = user != null && await UserManager.IsInRoleAsync(user, "Admin");
+
+    Layout = isAdmin
+        ? "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml"
+        : "~/Views/Shared/_Layout.cshtml";   // layout user bình thường
 }
 
 <div class="container py-5">

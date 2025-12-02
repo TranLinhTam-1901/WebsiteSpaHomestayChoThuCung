@@ -142,7 +142,8 @@ app.UseEndpoints(endpoints =>
     // Route cho khu vực Admin
     endpoints.MapControllerRoute(
         name: "Admin",
-        pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+        pattern: "{area:exists}/{controller=Revenue}/{action=Index}/{id?}");
+
 
     // Route mặc định
     endpoints.MapControllerRoute(

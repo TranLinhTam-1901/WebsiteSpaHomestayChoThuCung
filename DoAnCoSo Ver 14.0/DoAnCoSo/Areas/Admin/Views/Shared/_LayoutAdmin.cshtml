@@ -1,0 +1,397 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>@ViewData["Title"] - PawHouse Admin</title>
+
+    <!-- BOOTSTRAP & ICONS -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" />
+
+    <!-- 🗓️ Flatpickr -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+
+    <!-- SELECT2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- SITE CSS -->
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/adminChat.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+
+    <style>
+
+        body {
+            display: flex;
+            margin: 0;
+            background: #f5f6fa;
+            font-family: "Segoe UI", sans-serif;
+        }
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: #111317;
+            height: 100vh; 
+            overflow-y: auto;
+            color: white;
+            padding: 0 0 20px 0; /* bỏ padding top cho logo block */
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+            /* Ẩn thanh cuộn xấu */
+            .sidebar::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .sidebar::-webkit-scrollbar-thumb {
+                background: #444;
+                border-radius: 3px;
+            }
+
+                .sidebar::-webkit-scrollbar-thumb:hover {
+                    background: #666;
+                }
+            .sidebar .logo {
+                text-align: center;
+                padding: 28px 20px 25px;
+                background: linear-gradient(180deg, #292C33, #1E2025);
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+                margin-bottom: 20px;
+            }
+
+                .sidebar .logo img {
+                    width: 150px;
+                    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15)); /* làm logo sáng nhẹ */
+                    margin-top: 10px;
+                    margin-bottom: 10px;
+                }
+
+
+                    .sidebar .logo img:hover {
+                        transform: scale(1.03);
+                        filter: drop-shadow(0 0 10px rgba(255,255,255,0.35));
+                    }
+
+            .sidebar .nav-link {
+                color: #C7C7C7; /* Default text */
+                padding: 12px 20px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-radius: 8px;
+                margin: 5px 10px;
+                font-size: 15px;
+                transition: background-color 0.3s ease, color 0.3s ease;
+            }
+
+                /* Active & Hover */
+                .sidebar .nav-link:hover,
+                .sidebar .nav-link.active {
+                    background: rgba(255, 111, 143, 0.15); /* Hồng nhạt */
+                    color: #FF6F8F !important; /* Hồng brand */
+                }
+
+                    .sidebar .nav-link:hover i,
+                    .sidebar .nav-link.active i {
+                        color: #FF6F8F !important;
+                    }
+
+        /* RIGHT SIDE PANEL */
+        .right-panel {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* TOPBAR - small floating style */
+        .admin-user-top {
+            position: fixed;
+            top: 15px;
+            right: 25px;
+            background: #ffffff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            z-index: 900;
+            width: auto; /* ✔ không full width */
+        }
+
+        .main-content {
+            margin-top: 30px; /* ✔ tránh bị topbar che */
+            padding: 25px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+            .user-name:hover {
+                color: #FF6F8F;
+            }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 0;
+        }
+
+            .logout-btn:hover {
+                color: #b52d3b;
+                transform: scale(1.1);
+            }
+
+        .collapse {
+            transition: height 0.3s ease-in-out;
+            overflow: hidden;
+            height: 0;
+        }
+
+            .collapse.show {
+                height: auto;
+            }
+
+    </style>
+
+
+    @RenderSection("Styles", required: false)
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <div class="logo">
+            <img src="~/images/Footer-logo.png" alt="PawHouse Admin Logo" />
+        </div>
+
+        <nav class="nav flex-column">
+
+            <a class="nav-link @(IsActive("Revenue", "Index"))"
+               asp-area="Admin" asp-controller="Revenue" asp-action="Index">
+                <i class="bi bi-graph-up"></i> Doanh thu
+            </a>
+
+            <a class="nav-link @(IsActive("Categories", "Index"))"
+               asp-area="Admin" asp-controller="Categories" asp-action="Index">
+                <i class="bi bi-list-ul"></i> Danh mục sản phẩm
+            </a>
+
+            <a class="nav-link @(IsActive("Product", "Index"))"
+               asp-area="Admin" asp-controller="Product" asp-action="Index">
+                <i class="bi bi-bag-check"></i> Sản phẩm
+            </a>
+
+            <a class="nav-link @(IsActive("Chat", "Index"))" asp-area="Admin" asp-controller="Chat" asp-action="Index" title="CSKH">
+                <i class="bi bi-headset"></i> Chăm Sóc Khách Hàng
+            </a>
+
+            <a class="nav-link @(IsActive("Promotion", "Index"))"
+               asp-area="Admin" asp-controller="Promotion" asp-action="Index">
+                <i class="bi bi-gift"></i> Khuyến mãi
+            </a>
+
+            <a class="nav-link @(IsActive("Order", "Index"))"
+               asp-area="Admin" asp-controller="Order" asp-action="Index">
+                <i class="bi bi-receipt"></i> Đơn hàng
+            </a>
+
+            <a class="nav-link @(IsActive("Inventory", "Index"))"
+               asp-area="Admin" asp-controller="Inventory" asp-action="Index">
+                <i class="bi bi-box-seam"></i> Kho hàng
+            </a>
+
+            <a class="nav-link @(IsActive("Pet", "Index"))"
+               asp-area="Admin" asp-controller="Pet" asp-action="Index">
+                <i class="bi bi-clipboard-heart"></i> Hồ sơ thú cưng
+            </a>
+
+            <a class="nav-link @(IsActive("Blockchain", "Index"))"
+               asp-area="Admin" asp-controller="Blockchain" asp-action="Index">
+                <i class="bi bi-link-45deg"></i> Blockchain
+            </a>
+
+            <a class="nav-link @(IsActive("User", "UserList"))"
+               asp-area="Admin" asp-controller="User" asp-action="UserList">
+                <i class="bi bi-people"></i> Tài khoản
+            </a>
+
+            <a class="nav-link @(IsActive("Service", "PendingAppointments"))"
+               asp-area="Admin" asp-controller="Service" asp-action="PendingAppointments">
+                <i class="bi bi-journal-check"></i> Xác nhận đặt lịch
+            </a>
+
+            <a class="nav-link @(IsActive("Service", "AppointmentHistory"))"
+               asp-area="Admin" asp-controller="Service" asp-action="AppointmentHistory">
+                <i class="bi bi-clock-history"></i> Lịch sử đặt lịch
+            </a>
+            <!-- Mục "Đặt lịch" trong sidebar -->
+            <a class="nav-link" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#bookingMenu" aria-expanded="false" aria-controls="bookingMenu">
+                <i class="bi bi-calendar-check"></i> Đặt lịch
+            </a>
+            <div class="collapse" id="bookingMenu">
+                <a class="nav-link @(IsActive("Service", "AppointmentHomestay"))" asp-area="Admin" asp-controller="Service" asp-action="AppointmentHomestay">
+                    <i class="bi bi-house-door-fill"></i>Homestay
+                </a>
+                <a class="nav-link @(IsActive("Service", "AppointmentSpa")) " asp-area="Admin" asp-controller="Service" asp-action="AppointmentSpa">
+                    <i class="bi bi-heart-pulse-fill"></i>Spa
+                </a>
+                <a class="nav-link @(IsActive("Service", "AppointmentVet"))" asp-area="Admin" asp-controller="Service" asp-action="AppointmentVet">
+                    <i class="bi bi-hospital-fill"></i> Thú y
+                </a>
+            </div>
+
+
+        </nav>
+    </div>
+
+
+    <div class="right-panel">
+
+        <div class="admin-user-top">
+            @if (SignInManager.IsSignedIn(User))
+            {
+                var u = await UserManager.GetUserAsync(User);
+
+                <div class="user-info">
+                    <a asp-area="Identity" asp-page="/Account/Manage/Index" class="user-name">
+                        <i class="bi bi-person-circle me-1"></i>
+                        @u.FullName
+                    </a>
+
+                    <form method="post" asp-area="Identity" asp-page="/Account/Logout"
+                          asp-route-returnUrl="/" class="logout-form">
+                        <button type="submit" class="logout-btn" title="Đăng xuất">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+        @RenderBody()
+    </div>
+
+
+    </div>
+    <!-- JS LIBS -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SELECT2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- SITE JS -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>
+<script>
+
+        // ------------------- SIGNALR FORCE LOGOUT -------------------
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chathub")
+        .build();
+
+    connection.on("ForceLogout", () => {
+        alert("Bạn đã bị đăng xuất vì đăng nhập trên thiết bị khác.");
+        window.location.href = "/Identity/Account/Login";
+    });
+
+    connection.start().catch(err => console.error("SignalR connection error:", err));
+       // ------------------- AJAX để thay đổi nội dung mà không reload trang -------------------
+    $(".nav-link").on("click", function(e) {
+        e.preventDefault();
+        var url = $(this).attr("href");
+
+        // Kiểm tra giá trị URL trước khi thực hiện AJAX (Debug)
+        console.log("URL: ", url);
+
+        // Lưu vị trí cuộn hiện tại của sidebar vào localStorage
+        var scrollPos = $(".sidebar").scrollTop();
+        localStorage.setItem('sidebarScrollPos', scrollPos);
+
+        // Thực hiện AJAX để thay đổi nội dung mà không reload trang
+        $.ajax({
+            url: url,
+            success: function(data) {
+                $(".main-content").html(data);  // Cập nhật phần nội dung chính
+                // Phục hồi lại vị trí cuộn của sidebar sau khi nội dung được thay đổi
+                var savedScrollPos = localStorage.getItem('sidebarScrollPos');
+                if (savedScrollPos) {
+                    $(".sidebar").scrollTop(savedScrollPos);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log("AJAX Error: " + status + " - " + error);
+                alert("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.");
+            }
+        });
+    });
+
+    // ------------------- Quản lý Collapse bằng Bootstrap API -------------------
+    document.addEventListener('DOMContentLoaded', function () {
+        const collapseElements = document.querySelectorAll('.collapse');
+
+        collapseElements.forEach(function (collapseElement) {
+            // Khởi tạo collapse của Bootstrap (không toggle tự động)
+            var bsCollapse = new bootstrap.Collapse(collapseElement, {
+                toggle: false  // Đảm bảo rằng collapse không tự động mở khi tải trang
+            });
+
+            // Lắng nghe sự kiện "show" (khi phần tử collapse được mở)
+            collapseElement.addEventListener('show.bs.collapse', function () {
+                // Optional: Thêm logic khi phần collapse được mở
+                console.log("Collapse is opening");
+            });
+
+            // Lắng nghe sự kiện "hidden" (khi phần tử collapse bị ẩn)
+            collapseElement.addEventListener('hidden.bs.collapse', function () {
+                // Optional: Thêm logic khi phần collapse bị đóng
+                console.log("Collapse is closing");
+            });
+        });
+    });
+</script>
+@functions {
+    string IsActive(string controller, string action)
+    {
+        var routeData = ViewContext.RouteData.Values;
+        var currentController = routeData["controller"]?.ToString();
+        var currentAction = routeData["action"]?.ToString();
+
+        return (currentController == controller && currentAction == action) ? "active" : "";
+    }
+}
