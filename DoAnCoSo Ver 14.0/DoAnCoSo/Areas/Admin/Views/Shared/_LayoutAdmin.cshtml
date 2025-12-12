@@ -332,7 +332,7 @@
 
     connection.start().catch(err => console.error("SignalR connection error:", err));
        // ------------------- AJAX để thay đổi nội dung mà không reload trang -------------------
-    $(".nav-link").on("click", function(e) {
+   /* $(".nav-link").on("click", function(e) {
         e.preventDefault();
         var url = $(this).attr("href");
 
@@ -359,7 +359,7 @@
                 alert("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.");
             }
         });
-    });
+    });*/
 
     // ------------------- Quản lý Collapse bằng Bootstrap API -------------------
     document.addEventListener('DOMContentLoaded', function () {
