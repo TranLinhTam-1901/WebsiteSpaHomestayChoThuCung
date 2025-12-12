@@ -10,11 +10,11 @@
 
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0 fw-bold">Danh sách thao tác trên thú cưng</h4>
-            <div>
+            @* <div>
                 <a asp-area="Admin" asp-controller="Master" asp-action="Index" class="btn-back">
                     <i class="fas fa-arrow-left"></i> Quay lại trang quản trị
                 </a>
-            </div>
+            </div> *@
         </div>
 
         <div class="card-body table-responsive">
@@ -212,13 +212,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // ----------------- PAGINATION -----------------
-        const itemsPerPage = 10; // số lịch hẹn mỗi trang
+        const itemsPerPage = 10; // số dòng mỗi trang
         const rows = document.querySelectorAll("table tbody tr");
         const totalItems = rows.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         const pagination = document.getElementById("pagination");
 
-        function showPage(page) {
+        function showPage(page, scroll = true) {
             const start = (page - 1) * itemsPerPage;
             const end = start + itemsPerPage;
 
@@ -230,11 +230,13 @@
             const currentPage = document.querySelector(`#pagination li[data-page='${page}']`);
             if (currentPage) currentPage.classList.add("active");
 
-            // cuộn lên đầu bảng
-            const card = document.querySelector(".pet-card");
-            if (card) {
-                const tableTop = card.offsetTop - 100;
-                window.scrollTo({ top: tableTop, behavior: "smooth" });
+            // Chỉ cuộn khi scroll = true
+            if (scroll) {
+                const card = document.querySelector(".pet-card");
+                if (card) {
+                    const tableTop = card.offsetTop - 100;
+                    window.scrollTo({ top: tableTop, behavior: "smooth" });
+                }
             }
         }
 
@@ -252,14 +254,15 @@
                 li.appendChild(a);
                 li.addEventListener("click", function (e) {
                     e.preventDefault();
-                    showPage(i);
+                    showPage(i); // click thì cuộn bình thường
                 });
 
                 pagination.appendChild(li);
             }
         }
 
-        // Hiển thị trang đầu tiên
-        showPage(1);
+        // Hiển thị trang đầu tiên **không cuộn**
+        showPage(1, false);
     });
 </script>
+

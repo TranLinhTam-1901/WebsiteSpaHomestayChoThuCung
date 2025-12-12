@@ -107,7 +107,9 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     : p.Product.ReservedQuantity,
 
                 LowStockThreshold = p.Product.LowStockThreshold,
-                VariantCount = p.Product.Variants.Count()
+                VariantCount = p.Product.Variants.Count(),
+
+                IsDeleted = p.Product.IsDeleted
             })
             .OrderByDescending(p => p.ProductId)
             .ToList();

@@ -6,50 +6,31 @@
     <div class="user-card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4 class="mb-0 fw-bold">Danh sách người dùng</h4>
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div id="admin-alert"
-                     class="alert alert-success mb-0"
-                     role="alert">
-                    @TempData["SuccessMessage"]
-                </div>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div id="admin-alert"
-                     class="alert alert-danger mb-0"
-                     role="alert">
-                    @TempData["ErrorMessage"]
-                </div>
-            }
+
+            <form id="searchForm" onsubmit="return false;" class="d-flex align-items-center gap-2">
+                <input type="text"
+                       id="searchInput"
+                       class="form-control search-input"
+                       placeholder="Tìm theo tên, email hoặc vai trò..."
+                       style="width: 300px;">
+
+                <a href="#" class="btn-search" id="searchLink">
+                    <i class="fas fa-search"></i>
+                </a>
+            </form>
+
         </div>
 
         <div class="card-body">
-            <div class="row mb-3">
-                <form method="get" asp-action="UserList" class="d-flex align-items-center gap-2">
-
-                    <input type="text"
-                           name="search"
-                           value="@Context.Request.Query["search"]"
-                           class="form-control search-input"
-                           placeholder="Tìm theo tên, email hoặc vai trò..."
-                           style="width: 300px;">
-
-                    <button type="submit" class="btn btn-pink search-btn">
-                        <i class="fas fa-search"></i> Tìm
-                    </button>
-
-                </form>
-            </div>
-
 
             <div class="table-responsive">
+
                 <table class="table table-bordered align-middle text-center user-table">
                     <thead class="table-pink">
                         <tr>
                             <th style="width: 20%">ID</th>
-                            <th style="width: 16%">Tên người dùng</th>
-                            <th style="width: 14%">Tên đăng nhập</th>
+                            <th style="width: 15%">Tên người dùng</th>
+                            <th style="width: 15%">Tên đăng nhập</th>
                             <th style="width: 18%">Email</th>
                             <th style="width: 10%">Vai trò</th>
                             <th style="width: 10%">Trạng thái</th>
@@ -219,12 +200,10 @@
 
     .id-text {
         display: inline-block;
-        max-width: clamp(180px, 22vw, 320px);
+        max-width: 100px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-        color: #333;
     }
 
     .btn-copy {
@@ -255,17 +234,17 @@
     }
 
     .role-customer {
-        background-color: #E6A9EC;
+        background-color: #8B5CF6;
         color: #fff;
     }
 
     .status-active {
-        background-color: #4caf50;
+        background-color: green;
         color: #fff;
     }
 
     .status-locked {
-        background-color: #f44336;
+        background-color: red;
         color: #fff;
     }
 
@@ -280,8 +259,8 @@
     }
 
     .btn-lock {
-        border: 2px solid #f44336;
-        color: #f44336;
+        border: 2px solid red;
+        color: red;
         font-weight: bold;
         padding: 4px 10px;
         font-size: 12px;
@@ -290,7 +269,7 @@
     }
 
         .btn-lock:hover {
-            background-color: #f44336;
+            background-color: red;
             color: #fff;
         }
 
@@ -330,43 +309,62 @@
         margin-top: 16px;
     }
 
-    .btn-pink {
+    .btn-search {
         background-color: #FF6185;
-        color: white;
+        color: #fff;
         font-weight: bold;
-        border-radius: 20px;
-        padding: 6px 18px;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        margin-right: 10px;
+        transition: 0.3s;
     }
 
-        .btn-pink:hover {
-            background-color: #FF406A;
-            color: white;
+        .btn-search:hover {
+            background-color: #FFB6C1;
+            color: #000;
         }
 
-    .search-btn {
-        border-radius: 20px !important;
-        padding: 8px 18px;
+    .search-input:focus {
+        outline: none; /* bỏ viền xanh mặc định */
+        box-shadow: none; /* bỏ shadow nếu có */
     }
 
-
 </style>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const alertBox = document.getElementById("admin-alert");
+    const searchInput = document.getElementById("searchInput");
+    const searchLink = document.getElementById("searchLink");
 
-        if (alertBox && alertBox.textContent.trim() !== "") {
-            setTimeout(function () {
-                alertBox.style.transition = "opacity 0.5s";
-                alertBox.style.opacity = "0";
+    // Click vào <a> thì lọc
+    searchLink.addEventListener("click", function(e) {
+        e.preventDefault(); // tránh reload
+        filterTable();
+    });
 
-                setTimeout(function () {
-                    if (alertBox && alertBox.parentNode) {
-                        alertBox.parentNode.removeChild(alertBox);
-                    }
-                }, 600);
-            }, 3000); // 3 giây cho admin list
+    // Nếu muốn Enter cũng lọc
+    searchInput.addEventListener("keyup", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            filterTable();
         }
     });
 
+    function filterTable() {
+        const keyword = searchInput.value.toLowerCase();
+        const rows = document.querySelectorAll(".user-table tbody tr");
 
+        rows.forEach(row => {
+            const fullName = row.cells[1].innerText.toLowerCase();
+            const email = row.cells[3].innerText.toLowerCase();
+            const role = row.cells[4].innerText.toLowerCase();
+
+            const match = fullName.includes(keyword) ||
+                          email.includes(keyword) ||
+                          role.includes(keyword);
+
+            row.style.display = match ? "" : "none";
+        });
+    }
 </script>
+

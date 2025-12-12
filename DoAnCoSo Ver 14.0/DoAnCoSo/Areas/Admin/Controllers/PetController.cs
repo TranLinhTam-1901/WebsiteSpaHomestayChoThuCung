@@ -196,12 +196,30 @@ namespace DoAnCoSo.Areas.Admin.Controllers
         }
 
         // 🗑️ Xóa
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var pet = await _context.Pets
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PetId == id);
+
+            if (pet == null)
+            {
+                TempData["ErrorMessage"] = "❌ Không tìm thấy hồ sơ thú cưng.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(pet);
+        }
+
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int PetId)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var performedBy = currentUser?.FullName ?? "Hệ thống";
+            var userId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Admin");
 
             var pet = await _context.Pets.Include(p => p.User).FirstOrDefaultAsync(p => p.PetId == PetId);
             if (pet == null) return RedirectToAction(nameof(Index));
@@ -267,20 +285,9 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                 }
                 catch (Exception bcEx)
                 {
-                    deletedPet.OriginalPetId,
-                    deletedPet.Name,
-                    deletedPet.Type,
-                    deletedPet.Breed,
-                    deletedPet.Gender,
-                    deletedPet.Age,
-                    deletedPet.Weight,
-                    deletedPet.UserId,
-                    deletedPet.ImageUrl,
-                    deletedPet.DeletedAt,
-                    deletedPet.DeletedBy
-                };
+                    Console.WriteLine("Blockchain log lỗi (bỏ qua): " + bcEx.Message);
+                }
 
-                await _blockchainService.AddPetBlockAsync(deletedPetRecord, "ADMIN_DELETE", performedBy);
                 TempData["SuccessMessage"] = "🗑️ Hồ sơ thú cưng đã được đánh dấu xóa!";
             }
             catch (Exception ex)

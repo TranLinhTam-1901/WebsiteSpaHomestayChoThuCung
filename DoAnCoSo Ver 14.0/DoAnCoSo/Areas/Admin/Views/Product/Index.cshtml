@@ -22,7 +22,8 @@
                 <a href="javascript:void(0);"
                    class="btn-add toggle-deleted @(showDeleted ? "active" : "outline")"
                    data-show="@showDeleted.ToString().ToLower()">
-                    @(showDeleted ? "Ẩn sản phẩm đã ẩn" : "Hiện sản phẩm đã ẩn")
+
+                    <i class="fa @(showDeleted ? "fa-eye" : "fa-eye-slash")"></i>
                 </a>
             </div>
         </div>
@@ -32,15 +33,15 @@
                 <table class="table table-bordered align-middle text-center product-table">
                     <thead class="table-pink">
                         <tr>
-                            <th>ID</th>
-                            <th>Tên sản phẩm</th>
-                            <th>Hình ảnh</th>
-                            <th>Giá</th>
-                            <th>Tồn kho</th>
-                            <th>Mô tả</th>
-                            <th>Danh mục</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
+                            <th style="width: 5%">ID</th>
+                            <th style="width: 10%">Tên sản phẩm</th>
+                            <th style="width: 10%">Hình ảnh</th>
+                            <th style="width: 10%">Giá</th>
+                            <th style="width: 10%">Tồn kho</th>
+                            <th style="width: 15%">Mô tả</th>
+                            <th style="width: 10%">Danh mục</th>
+                            <th style="width: 10%">Trạng thái</th>
+                            <th style="width: 30%">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -79,13 +80,14 @@
                                     <td class="text-truncate" style="max-width:220px;">@product.Description</td>
                                     <td>@product.Category?.Name</td>
                                     <td class="status-cell">
-                                        @if (product.IsDeleted)
+                                        @if (product.IsActive)
                                         {
-                                            <span class="badge bg-secondary">Ngừng bán</span>
+                                            <span class="badge bg-success">Đang bán</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-success">Đang bán</span>
+
+                                            <span class="badge bg-secondary">Ngừng bán</span>
                                         }
                                     </td>
                                     <td class="actions-cell">
@@ -168,6 +170,7 @@
 <style>
     /* Container */
     .product-wrapper {
+        max-width: 100%; 
         max-width: 1300px;
         margin: auto;
     }
@@ -483,11 +486,10 @@
                         body: new URLSearchParams({ id, __RequestVerificationToken: token })
                     });
                     const data = await res.json();
-                    if (data.success) {
+                if (data.success) {
                         const row = document.querySelector(`tr[data-id="${id}"]`);
                         if (row) {
-                            row.querySelector('.status-cell').innerHTML = '<span class="badge bg-secondary">Ngừng bán</span>';
-                            row.querySelector('.js-hide').outerHTML = `<button type="button" class="btn-show btn-sm js-unhide" data-id="${id}"><i class="bi bi-arrow-counterclockwise"></i> Hiện</button>`;
+                            row.remove();   // 💥 Xóa khỏi bảng ngay lập tức
                         }
                         bsModal.hide();
                     } else { alert(data.message || 'Ẩn thất bại'); }
@@ -498,7 +500,10 @@
                 const btn = e.target.closest(".toggle-deleted");
                 if (!btn) return;
 
-                const showDeleted = btn.dataset.show === "true"; // trạng thái hiện tại
+                const showDeleted = btn.dataset.show === "true";
+
+                const icon = btn.querySelector("i");
+                const text = btn.querySelector(".text");
 
                 try {
                     const res = await fetch('@Url.Action("Index", "Product", new { area = "Admin" })?showDeleted=' + (!showDeleted), {
@@ -514,11 +519,13 @@
                     const newTbody = doc.querySelector("tbody");
                     document.querySelector("tbody").innerHTML = newTbody.innerHTML;
 
-                    // Cập nhật nút toggle
+                    // Update trạng thái
                     btn.dataset.show = (!showDeleted).toString();
-                    btn.textContent = !showDeleted ? "Ẩn sản phẩm đã ẩn" : "Hiện sản phẩm đã ẩn";
 
-                    // Cập nhật class để style active/outline
+                    // 🔥 UPDATE ICON
+                    icon.className = "fa " + (showDeleted ? "fa-eye-slash" : "fa-eye");
+
+                    // Update style
                     btn.classList.toggle("active", !showDeleted);
                     btn.classList.toggle("outline", showDeleted);
 

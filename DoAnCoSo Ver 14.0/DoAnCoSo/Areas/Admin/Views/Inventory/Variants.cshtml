@@ -1,201 +1,277 @@
 ﻿@model DoAnCoSo.ViewModels.InventoryVariantListViewModel
 @{
     ViewData["Title"] = $"Biến thể - {Model.ProductName}";
-   
-     var holds = ViewBag.Holds as IDictionary<int,int> ?? new Dictionary<int,int>();
-   
 }
 
-<div class="container py-4">
-    <h3 class="mb-3">📦 Biến thể sản phẩm: <strong>@Model.ProductName</strong></h3>
+<div class="inventory-wrapper py-5">
+    <h2 class="section-title">📦 Biến thể sản phẩm: @Model.ProductName</h2>
 
-    <div class="mb-3">
-        <a asp-action="Index" class="btn btn-outline-secondary">⬅️ Quay lại bảng tồn kho</a>
+    <div class="inventory-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách các biến thể</h4>
+
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="Index" class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                     Quay lại
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center inventory-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 10%">Tên biến thể</th>
+                            <th style="width: 10%">Tồn kho</th>
+                            <th style="width: 10%">Đã bán</th>
+                            <th style="width: 10%">Giữ tạm</th>
+                            <th style="width: 15%">Ngưỡng cảnh báo</th>
+                            <th style="width: 40%">Nhập/Xuất</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Variants.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="no-data">Không có biến thể nào.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            int i = 1;
+                            foreach (var v in Model.Variants)
+                            {
+                                <tr class="@(v.StockQuantity <= v.LowStockThreshold ? "row-low" : "")">
+                                    <td>@i</td>
+                                    <td>@v.VariantName</td>
+                                    <td>@v.StockQuantity</td>
+                                    <td>@v.SoldQuantity</td>
+                                    <td>@v.ReservedQuantity</td>
+                                    <td>@v.LowStockThreshold</td>
+
+                                    <!-- Nhập/Xuất chung cột -->
+                                    <td class="actions-cell">
+                                        <div class="d-flex align-items-center gap-2 justify-content-center">
+                                            <form method="post" id="form-@v.VariantId" class="d-flex align-items-center gap-2">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="variantId" value="@v.VariantId" />
+                                                <input type="number" name="quantity" min="1" class="form-control qty" placeholder="SL" />
+                                                <input type="text" name="note" class="form-control note" placeholder="Ghi chú" />
+                                            </form>
+
+                                            <!-- Nút Nhập -->
+                                            <a href="javascript:void(0);" class="btn-detail" onclick="submitAction('@Url.Action("ImportVariant")', '@v.VariantId')">Nhập</a>
+
+                                            <!-- Nút Xuất -->
+                                            <a href="javascript:void(0);" class="btn-delete" onclick="submitAction('@Url.Action("ExportVariant")', '@v.VariantId')">Xuất</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+</div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-    }
-<div class="inventory-card shadow-lg rounded-4 overflow-hidden">
-   <div class="table-responsive">
-    <table class="table-inventory align-middle mb-0">
-        <thead class="table-pink">
-            <tr class="text-center">
-                <th>#</th>
-                <th>Tên biến thể</th>
-                <th>Tồn</th>                      
-                <th>Giữ tạm</th>                               
-                <th>Đã bán</th>
-                <th>Ngưỡng cảnh báo</th>
-                <th>Nhập</th>
-                <th>Xuất</th>
-            </tr>
-        </thead>
-        <tbody>
-           
-            @for (int idx = 0; idx < Model.Variants.Count; idx++)
-            {
-                var v = Model.Variants[idx];
-                var holdOrder = v.ReservedQuantity;
+<script>
+    function submitAction(actionUrl, variantId) {
+        const form = document.getElementById("form-" + variantId);
+        const formData = new FormData(form);
 
-                <tr>
-                    <td class="text-center">@(idx + 1)</td>
-                    <td>@v.VariantName</td>
-                    <td class="text-center fw-bold">@v.StockQuantity</td>
-
-                    <td class="text-center text-info">@holdOrder</td>                 
-                    
-
-                    <td class="text-center text-success">@v.SoldQuantity</td>
-                    <td class="text-center">@v.LowStockThreshold</td>
-
-                    <td class="text-center  action-cell">
-                        <form asp-action="ImportVariant" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="variantId" value="@v.VariantId" />
-                            <input type="number" name="quantity" min="1" style="width:90px" placeholder="SL" />
-                            <input type="text" name="note" style="width:200px" placeholder="Ghi chú" class="ms-1" />
-                            <button type="submit" class="btn btn-sm btn-success ms-1">Nhập</button>
-                        </form>
-                    </td>
-
-                    <td class="text-center  action-cell">
-                        <form asp-action="ExportVariant" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="variantId" value="@v.VariantId" />
-                            <input type="number" name="quantity" min="1" style="width:90px" placeholder="SL" />
-                            <input type="text" name="note" style="width:200px" placeholder="Ghi chú" class="ms-1" />
-                            <button type="submit" class="btn btn-sm btn-danger ms-1">Xuất</button>
-                        </form>
-                    </td>
-                </tr>
+        fetch(actionUrl, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "RequestVerificationToken": form.querySelector('input[name="__RequestVerificationToken"]').value
             }
-        </tbody>
-    </table>
-</div>
-</div>
-</div>
-    <style>
-        :root {
-            --brand: #FF6185;
-            --brand-soft: #FFB6C1;
-            --bg-soft: #FFF0F5;
+        })
+        .then(res => res.text()) // lấy HTML trả về
+        .then(html => {
+            // Tạo DOM ảo
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            // Lấy table mới
+            const newRow = doc.querySelector(`#form-${variantId}`).closest("tr");
+            if (newRow) {
+                const oldRow = document.querySelector(`#form-${variantId}`).closest("tr");
+                oldRow.replaceWith(newRow); // cập nhật row đó
+            } else {
+                console.warn("Không tìm thấy row mới trong HTML trả về.");
+            }
+        })
+        .catch(err => console.error("Lỗi submitAction:", err));
+    }
+</script>
+
+<style>
+    .inventory-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+        .section-title::after {
+            content: "";
+            width: 80px;
+            height: 4px;
+            display: block;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
         }
 
-        body {
-            background-color: var(--bg-soft);
-        }
+    .inventory-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+        background: #fff;
+        overflow: hidden;
+    }
 
-        /* Card khung trắng có border */
-        .inventory-card {
-            border: 1px solid var(--brand-soft);
-            background: #fff;
-            border-radius: 18px;
-            overflow: hidden;
-        }
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
 
-        /* ====== BẢNG HỒNG CHUNG ====== */
-        .table-inventory {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
             color: #000;
         }
 
-            /* Header: dải hồng đậm, chữ đen */
-            .table-inventory thead.table-pink {
-                background: linear-gradient(90deg, var(--brand), var(--brand-soft)) !important;
-                border-bottom: 2px solid rgba(0,0,0,.08);
-            }
+    .inventory-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
 
-                .table-inventory thead.table-pink th {
-                    background: transparent !important;
-                    color: #000 !important;
-                    font-weight: 700;
-                    text-align: center;
-                    padding: .9rem .8rem;
-                    border: none !important;
-                }
+    .inventory-table th, .inventory-table td {
+        vertical-align: middle;
+    }
 
-            .table-inventory thead th + th {
-                border-left: 1px solid rgba(0,0,0,.12) !important;
-            }
+    .inventory-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
 
-            /* Body: zic-zac hồng nhạt, chỉ kẻ ngang */
-            .table-inventory tbody tr:nth-child(odd) > * {
-                background: #fff !important;
-            }
+    .inventory-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
 
-            .table-inventory tbody tr:nth-child(even) > * {
-                background: #fff4f7 !important;
-            }
+    .row-low td {
+        color: red;
+        font-weight: bold;
+    }
 
-            .table-inventory tbody tr:hover > * {
-                background: #ffe9f0 !important;
-            }
+    .action-cell .form-control {
+        border-radius: 4px;
+        border: 1px solid #FFB6C1;
+        max-width: 100px;
+    }
 
-            .table-inventory td {
-                padding: .9rem .8rem;
-                text-align: center;
-                vertical-align: middle;
-                border: 0;
-                border-bottom: 1px solid rgba(0,0,0,.06) !important;
-            }
+    .btn-detail, .btn-delete {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: all 0.3s ease;
+    }
 
-            .table-inventory tbody tr:last-child > * {
-                border-bottom: none !important;
-            }
+    .btn-detail {
+        border: 2px solid green;
+        color: green;
+        background-color: transparent;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-weight: bold;
+    }
 
-            .table-inventory td + td {
-                border-left: none !important;
-            }
-
-            .table-inventory .fw-semibold {
-                color: var(--brand);
-                font-weight: 600;
-            }
-
-        /* Ô Nhập / Xuất gọn gàng */
-        .action-cell .qty {
-            width: 80px;
+        .btn-detail:hover {
+            background-color: green;
+            color: #fff;
         }
 
-        .action-cell .note {
-            width: 220px;
+    .btn-delete {
+        border: 2px solid red;
+        color: red;
+        background-color: transparent;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-weight: bold;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
         }
 
-        .action-cell .form-control {
-            border-color: var(--brand-soft);
-        }
+    .qty {
+        max-width: 80px
+    }
 
-            .action-cell .form-control:focus {
-                border-color: var(--brand);
-                box-shadow: 0 0 0 .2rem rgba(255,97,133,.15);
-            }
+    .note {
+        max-width: 220px
+    }
 
-        /* Responsive nhẹ */
-        @@media (max-width: 992px) {
-            .action-cell .note {
-                width: 180px;
-            }
-        }
+    @@media (max-width: 768px) {
+        .action-cell .form-control
 
-        @@media (max-width: 768px) {
-            .action-cell .qty {
-                width: 72px;
-            }
+    {
+        max-width: 70px;
+        margin-bottom: 3px;
+    }
 
-            .action-cell .note {
-                width: 160px;
-            }
+    .action-cell form {
+        flex-wrap: wrap;
+        gap: 3px;
+        justify-content: center;
+    }
 
-            .action-cell form {
-                width: 100%;
-            }
-        }
-    </style>
+    }
+
+    .no-data {
+        padding: 15px;
+        color: #777;
+        text-align: center;
+    }
+
+    /* Ẩn mũi tên trong input type=number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+
+    .inventory-table input:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+</style>

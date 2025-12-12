@@ -14,5 +14,7 @@
         public string? Trademark { get; set; }
         public string? CategoryName { get; set; }
         public List<string> VariantNames { get; set; }
+
+        public bool IsDeleted { get; set; }
     }
 }
