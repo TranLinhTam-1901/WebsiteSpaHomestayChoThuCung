@@ -1,4 +1,5 @@
-﻿USE [DoAnCoSoVer30.0]
+﻿USE [DoAnCoSoVer512]
+
 -- 1️⃣ Homestay Services
 INSERT INTO Services (Category, Name, Description, Price)
 VALUES 
@@ -480,34 +481,36 @@ BEGIN
         CreatedDate DATETIME NOT NULL DEFAULT GETDATE()
     )
 END
-
+  use [DoAnCoSoVer512]
 -- Xóa dữ liệu cũ để insert lại
 DELETE FROM dbo.Reviews;
+
+SELECT Id, UserName FROM AspNetUsers;
 
 -- Insert dữ liệu review
 INSERT INTO dbo.Reviews (UserId, TargetType, TargetId, Rating, Comment, CreatedDate)
 VALUES
 -- Customer1 --
-('5041400b-6cae-43ab-90d6-923d1c46e1eb', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
-('5041400b-6cae-43ab-90d6-923d1c46e1eb', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
-('5041400b-6cae-43ab-90d6-923d1c46e1eb', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
+('53d53862-a7b2-48ac-8442-760639995a21', 0, 1, 4, N'Thức ăn thơm ngon, cún nhà mình rất thích!', '2025-05-12 12:00:00'),
+('53d53862-a7b2-48ac-8442-760639995a21', 0, 2, 5, N'Mèo nhà mình ăn hết sạch, sẽ mua lại!', '2025-05-10 01:00:00'),
+('53d53862-a7b2-48ac-8442-760639995a21', 0, 4, 5, N'Hạt mềm, không gây rối loạn tiêu hoá như loại cũ.', '2025-05-11 13:00:00'),
 ('5041400b-6cae-43ab-90d6-923d1c46e1eb', 0, 6, 4, N'Chất lượng ổn định, thú cưng thích thú.', '2025-05-13 09:00:00'),
 ('5041400b-6cae-43ab-90d6-923d1c46e1eb', 0, 9, 5, N'Không có mùi hôi, rất vừa miệng chó nhà mình.', '2025-05-15 17:00:00'),
 ('5041400b-6cae-43ab-90d6-923d1c46e1eb', 0, 12, 4, N'Phù hợp cho mèo nhỏ tuổi.', '2025-05-16 14:30:00'),
 ('5041400b-6cae-43ab-90d6-923d1c46e1eb', 0, 15, 5, N'Rất tốt cho hệ tiêu hóa của cún.', '2025-05-18 11:15:00'),
 
 -- Customer2 --
-('d2d5e93f-3025-4dc1-82ba-a04b2eb01a3b', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
-('d2d5e93f-3025-4dc1-82ba-a04b2eb01a3b', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
-('d2d5e93f-3025-4dc1-82ba-a04b2eb01a3b', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
+('5f537154-b802-40e0-84a9-18266f04e69c', 0, 3, 4, N'Sản phẩm đóng gói kỹ, giao hàng nhanh.', '2025-05-10 12:45:00'),
+('5f537154-b802-40e0-84a9-18266f04e69c', 0, 5, 5, N'Cún ăn rất hợp, lông mượt hơn rõ rệt!', '2025-05-12 07:30:00'),
+('5f537154-b802-40e0-84a9-18266f04e69c', 0, 8, 5, N'Giá tốt, dinh dưỡng cao.', '2025-05-14 10:00:00'),
 ('d2d5e93f-3025-4dc1-82ba-a04b2eb01a3b', 0, 10, 3, N'Ổn nhưng hơi khô so với loại khác.', '2025-05-15 11:00:00'),
 ('d2d5e93f-3025-4dc1-82ba-a04b2eb01a3b', 0, 13, 4, N'Mèo rất thích nhai loại này.', '2025-05-17 08:00:00'),
 ('d2d5e93f-3025-4dc1-82ba-a04b2eb01a3b', 0, 16, 5, N'Rất đáng tiền, chất lượng vượt mong đợi.', '2025-05-18 16:00:00'),
 
 -- Customer3 --
-('9873beb7-bd71-47e9-9d21-85ba066917c8', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
-('9873beb7-bd71-47e9-9d21-85ba066917c8', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
-('9873beb7-bd71-47e9-9d21-85ba066917c8', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
+('b72b5e0d-9ccb-4eb3-b334-bceaf3a39ebf', 0, 7, 4, N'Mèo ăn không chừa miếng nào, rất đáng mua.', '2025-05-14 13:20:00'),
+('b72b5e0d-9ccb-4eb3-b334-bceaf3a39ebf', 0, 11, 5, N'Sản phẩm tuyệt vời, thú cưng năng động hơn.', '2025-05-15 09:30:00'),
+('b72b5e0d-9ccb-4eb3-b334-bceaf3a39ebf', 0, 14, 4, N'Cún thích ăn nhưng hơi đắt.', '2025-05-17 15:45:00'),
 ('9873beb7-bd71-47e9-9d21-85ba066917c8', 0, 17, 5, N'Bao bì đẹp, thành phần rõ ràng.', '2025-05-19 12:10:00'),
 ('9873beb7-bd71-47e9-9d21-85ba066917c8', 0, 18, 4, N'Mèo ăn được nhưng không quá mê.', '2025-05-20 10:10:00'),
 ('9873beb7-bd71-47e9-9d21-85ba066917c8', 0, 19, 5, N'Cún ăn vào khỏe hơn rõ rệt.', '2025-05-21 08:30:00'),
@@ -727,3 +730,53 @@ DELETE FROM Promotions;
 DBCC CHECKIDENT ('Promotions', RESEED, 0);
 
 SELECT Id, UserName FROM AspNetUsers;
+
+
+INSERT INTO Promotions
+(
+    Title, ShortDescription, Description, Image,
+    IsCampaign, Discount, StartDate, EndDate,
+    Code, IsPercent, MinOrderValue,
+    MaxUsage, MaxUsagePerUser,
+    IsActive, IsPrivate
+)
+VALUES
+(
+    N'Giảm 20% cho đơn thú cưng',
+    N'Giảm 20% cho tất cả sản phẩm',
+    N'Áp dụng cho thức ăn, phụ kiện thú cưng. Không áp dụng đồng thời khuyến mãi khác.',
+    N'/images/promotions/promo20.png',
+    1,
+    20,
+    '2025-01-01',
+    '2025-12-31',
+    N'PET20',
+    1,
+    300000,
+    1000,
+    1,
+    1,
+    0
+);
+ select * from [dbo].[Promotions]
+
+ INSERT INTO Promotions
+VALUES
+(
+    N'Giảm 50.000đ cho đơn từ 500k',
+    N'Giảm trực tiếp 50.000đ',
+    N'Áp dụng cho đơn hàng từ 500.000đ trở lên.',
+    N'/images/promotions/promo50k.png',
+    0,
+    50000,
+    '2025-02-01',
+    '2025-06-30',
+    N'SALE50K',
+    0,
+    500000,
+    500,
+    1,
+    1,
+    1,
+    0
+);

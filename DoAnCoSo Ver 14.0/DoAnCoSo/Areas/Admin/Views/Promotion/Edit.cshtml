@@ -66,17 +66,24 @@
                 </div>
             </div>
 
-            <!-- Ngày bắt đầu & kết thúc -->
+            <!-- HIDDEN FIELD ĐỂ SUBMIT -->
+            <input asp-for="StartDate" type="hidden" />
+            <input asp-for="EndDate" type="hidden" />
+
+            <!-- INPUT HIỂN THỊ -->
             <div class="row g-3 mb-3">
                 <div class="col">
-                    <label asp-for="StartDate" class="form-label fw-semibold">Ngày bắt đầu</label>
-                    <input asp-for="StartDate" type="text" id="startPicker" class="form-control" placeholder="Chọn ngày bắt đầu..." required />
+                    <label class="form-label fw-semibold">Ngày bắt đầu</label>
+                    <input type="text" id="startPicker" class="form-control"
+                           placeholder="Chọn ngày bắt đầu..." required />
                 </div>
                 <div class="col">
-                    <label asp-for="EndDate" class="form-label fw-semibold">Ngày kết thúc</label>
-                    <input asp-for="EndDate" type="text" id="endPicker" class="form-control" placeholder="Chọn ngày kết thúc..." required />
+                    <label class="form-label fw-semibold">Ngày kết thúc</label>
+                    <input type="text" id="endPicker" class="form-control"
+                           placeholder="Chọn ngày kết thúc..." required />
                 </div>
             </div>
+
 
             <!-- Giá trị đơn tối thiểu -->
             <div class="mb-3">
@@ -169,30 +176,59 @@
                 }
             });
 
-            // Flatpickr
-            const startPicker = flatpickr("#startPicker", {
-                dateFormat: "d/m/Y",
-                altInput: true,
-                altFormat: "d/m/Y",
-                locale: "vn",
-                disableMobile: true,
-                defaultDate: "@(Model.StartDate.ToString("dd/MM/yyyy"))",
-                onChange: function(selectedDates) {
-                    if (selectedDates.length > 0) endPicker.set('minDate', selectedDates[0]);
-                }
-            });
 
-            const endPicker = flatpickr("#endPicker", {
-                dateFormat: "d/m/Y",
-                altInput: true,
-                altFormat: "d/m/Y",
-                locale: "vn",
-                disableMobile: true,
-                defaultDate: "@(Model.EndDate.ToString("dd/MM/yyyy"))",
-                onChange: function(selectedDates) {
-                    if (selectedDates.length > 0) startPicker.set('maxDate', selectedDates[0]);
+               // ===== Flatpickr + Hidden Date Binding =====
+        const startHidden = document.querySelector("input[name='StartDate']");
+        const endHidden   = document.querySelector("input[name='EndDate']");
+
+        // set hidden từ DB
+        startHidden.value = "@Model.StartDate.ToString("o")";
+        endHidden.value   = "@Model.EndDate.ToString("o")";
+
+        const startPicker = flatpickr("#startPicker", {
+            altInput: true,
+            altFormat: "d/m/Y",     // hiển thị
+            dateFormat: "Y-m-d",    // format nội bộ
+            locale: "vn",
+            disableMobile: true,
+
+            // 🔑 PHẢI LÀ yyyy-MM-dd
+            defaultDate: "@Model.StartDate.ToString("yyyy-MM-dd")",
+
+            onChange: function (selectedDates) {
+                if (selectedDates.length > 0) {
+                   startHidden.value = toYMD(selectedDates[0]);
+                    endPicker.set('minDate', selectedDates[0]);
                 }
-            });
+            }
+        });
+
+        const endPicker = flatpickr("#endPicker", {
+            altInput: true,
+            altFormat: "d/m/Y",
+            dateFormat: "Y-m-d",
+            locale: "vn",
+            disableMobile: true,
+
+            defaultDate: "@Model.EndDate.ToString("yyyy-MM-dd")",
+
+            onChange: function (selectedDates) {
+                if (selectedDates.length > 0) {
+                    endHidden.value   = toYMD(selectedDates[0]);
+                    startPicker.set('maxDate', selectedDates[0]);
+                }
+            }
+        });
+
+
+                function toYMD(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+
         });
     </script>
 }
@@ -240,4 +276,11 @@
     input[type=number] {
         -moz-appearance: textfield;
     }
+
+    .flatpickr-input.flatpickr-alt-input {
+        border: 1.5px solid var(--pink-main);
+        border-radius: 0.5rem;
+    }
+
+
 </style>

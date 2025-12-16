@@ -56,7 +56,7 @@ namespace DoAnCoSo.Services
 
             // Gọi Gemini API — dùng model đúng + v1beta
             var response = await http.PostAsync(
-                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={_apiKey}",
+                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}",
                 content
             );
 

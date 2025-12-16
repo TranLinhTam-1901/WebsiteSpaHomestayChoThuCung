@@ -1,16 +1,41 @@
-﻿@model IEnumerable<DoAnCoSo.Models.Category> 
-<ul class="level1">
-   
-    @foreach (var category in Model)
+﻿@model IEnumerable<DoAnCoSo.Models.Category>
+
+@{
+    int maxPerColumn = 5; // số dòng mỗi cột
+    var list = Model.ToList();
+}
+
+<div class="category-columns">
+    @for (int i = 0; i < list.Count; i += maxPerColumn)
     {
-        <li class="level2">
-           
-            <a asp-area="" asp-controller="Product"          
-               asp-action="ProductsByCategory" 
-               asp-route-categoryName="@category.Name" 
-               title="@category.Name">
-                @category.Name 
-            </a>
-        </li>
+        <ul class="level1">
+            @foreach (var item in list.Skip(i).Take(maxPerColumn))
+            {
+                <li class="level2">
+                    <a asp-controller="Product"
+                       asp-action="ProductsByCategory"
+                       asp-route-categoryName="@item.Name">
+                        @item.Name
+                    </a>
+                </li>
+            }
+        </ul>
     }
-</ul>
+</div>
+<style>
+
+    .category-columns {
+        display: flex;
+        gap: 40px;
+    }
+
+    .level1 {
+        padding-left: 0;
+    }
+
+    .level2 {
+        list-style: none;
+        margin-bottom: 6px;
+    }
+
+</style>

@@ -561,7 +561,9 @@
     .related-carousel-wrapper {
         position: relative;
         margin-top: 20px;
-        overflow: hidden;
+        overflow-x: visible; 
+        overflow-y: hidden;
+        padding: 0 30px;
     }
 
 
@@ -587,11 +589,11 @@
         }
 
         .carousel-btn.left {
-            left: -20px;
+            left: 0;
         }
 
         .carousel-btn.right {
-            right: -20px;
+            right: 0;
         }
 
 
@@ -600,28 +602,54 @@
         transition: transform 0.4s ease;
     }
 
-  
+        .related-carousel.centered {
+            justify-content: center;
+        }
+
 </style>
 
 <script>
-    function updateHiddenInputs() {
-        var qSel = document.getElementById('quantitySelect');
-        if (qSel) document.getElementById('hiddenQuantity').value = qSel.value;
 
-        var hasVariants = document.querySelector('.option-value-radio') !== null;
+        document.addEventListener('DOMContentLoaded', function () {
+        const qSel = document.getElementById('quantitySelect');
+        const hasVariants = document.querySelector('.option-value-radio') !== null;
 
-        // Flavor
-        var flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
+        if (!hasVariants && qSel) {
+            // ÉP JS biết tồn kho ngay từ đầu
+            qSel.dataset.available = "@uiAvailable";
+        }
+    });
+       function updateHiddenInputs() {
+        const qSel = document.getElementById('quantitySelect');
+        if (!qSel) return;
+
+        const hasVariants = document.querySelector('.option-value-radio') !== null;
+
+        /* ====== LUÔN cập nhật quantity ====== */
+        document.getElementById('hiddenQuantity').value = qSel.value;
+
+        /* ====== KHÔNG có variant ====== */
+           if (!hasVariants) {
+        document.getElementById('hiddenVariantId').value = "";
+
+        // set flavor cho non-variant
+        const flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
         document.getElementById('hiddenSelectedFlavor').value =
-            hasVariants ? '' : (flavorRadio ? flavorRadio.value : '');
+            flavorRadio ? flavorRadio.value : "";
 
-        // Variant ID
-        var variantId = Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count
-            ? document.getElementById('hiddenVariantId').value
-            : '';
-
-        document.getElementById('hiddenVariantId').value = variantId;
+        return;
     }
+
+
+        @* /* ====== CÓ variant ====== */
+        const variantId =
+            Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count
+                ? document.getElementById('hiddenVariantId').value
+                : "";
+
+        document.getElementById('hiddenVariantId').value = variantId; *@
+    }
+
 
     document.addEventListener('DOMContentLoaded', function () {
         // 1) change thumbnail
@@ -645,7 +673,8 @@
             form.addEventListener('submit', function (e) {
                 updateHiddenInputs();
                 let qty = parseInt(document.getElementById('hiddenQuantity').value || '1');
-                let available = parseInt((qSel?.dataset?.available) || '0');
+                let available = parseInt(qSel.dataset.available);
+
 
                 if (qty > available) {
                     e.preventDefault();
@@ -739,6 +768,21 @@
     }
     variantData = @Html.Raw(json);
 
+
+        document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.option-value-radio:checked').forEach(rd => {
+            selectedOptionValues[rd.dataset.groupIndex] = parseInt(rd.value);
+        });
+
+            const hasVariants = document.querySelector('.option-value-radio') !== null;
+
+    if (hasVariants &&
+        Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count) {
+        updateSelectedVariantAndStock();
+    }
+
+    });
+
     document.querySelectorAll('.option-value-radio').forEach(el => {
         el.addEventListener('change', function () {
             selectedOptionValues[this.dataset.groupIndex] = parseInt(this.value);
@@ -759,6 +803,9 @@
     }
 
         function updateSelectedVariantAndStock() {
+             const hasVariants = document.querySelector('.option-value-radio') !== null;
+            if (!hasVariants) return;   // ⛔ CHẶN BÊN TRONG
+
         if (Object.keys(selectedOptionValues).length !== @Model.OptionGroups?.Count) return;
 
         let selected = Object.values(selectedOptionValues);
@@ -813,6 +860,24 @@
 
     let currentIndex = 0;
     const cardsPerView = 3;
+        // 🔁 Fix lỗi Back button (bfcache)
+    window.addEventListener("pageshow", function (event) {
+      
+            // Reset state JS
+            selectedOptionValues = {};
+
+            // Đọc lại radio đã checked từ DOM
+            document.querySelectorAll('.option-value-radio:checked').forEach(rd => {
+                selectedOptionValues[rd.dataset.groupIndex] = parseInt(rd.value);
+            });
+
+            // Nếu đã chọn đủ option → set lại variant + tồn kho
+            if (Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count) {
+                updateSelectedVariantAndStock();
+            }
+        
+    });
+
     const cardWidth = 302; // 280 + 22 gap
 
     function scrollRelated(direction) {
@@ -830,6 +895,22 @@
         const offset = -(currentIndex * cardWidth * cardsPerView);
         carousel.style.transform = `translateX(${offset}px)`;
     }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+        const carousel = document.getElementById("relatedCarousel");
+        const cards = carousel.children.length;
+        const wrapper = document.querySelector(".related-carousel-wrapper");
+        const leftBtn = wrapper.querySelector(".carousel-btn.left");
+        const rightBtn = wrapper.querySelector(".carousel-btn.right");
+
+        if (cards <= cardsPerView) {
+            // Ít sản phẩm → căn giữa + ẩn mũi tên
+            carousel.classList.add("centered");
+            leftBtn.style.display = "none";
+            rightBtn.style.display = "none";
+        }
+    });
 
 </script>
 

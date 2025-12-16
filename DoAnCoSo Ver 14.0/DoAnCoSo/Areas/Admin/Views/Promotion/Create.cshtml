@@ -52,26 +52,29 @@
                 </div>
             </div>
 
+            <!-- Hidden field để submit -->
+            <input asp-for="StartDate" type="hidden" />
+            <input asp-for="EndDate" type="hidden" />
+
             <div class="row g-3 mb-3">
                 <div class="col">
-                    <label asp-for="StartDate" class="form-label">Ngày bắt đầu</label>
-                    <input asp-for="StartDate"
-                           type="text"
+                    <label class="form-label">Ngày bắt đầu</label>
+                    <input type="text"
                            id="startPicker"
                            class="form-control"
                            placeholder="Chọn ngày bắt đầu..."
                            required />
                 </div>
                 <div class="col">
-                    <label asp-for="EndDate" class="form-label">Ngày kết thúc</label>
-                    <input asp-for="EndDate"
-                           type="text"
+                    <label class="form-label">Ngày kết thúc</label>
+                    <input type="text"
                            id="endPicker"
                            class="form-control"
                            placeholder="Chọn ngày kết thúc..."
                            required />
                 </div>
             </div>
+
 
             <div class="mb-3">
                 <label asp-for="MinOrderValue" class="form-label">Giá trị đơn tối thiểu</label>
@@ -148,30 +151,42 @@
             });
         });
 
-        // Flatpickr
+             // ===== Flatpickr + Hidden Date Binding (CREATE) =====
+        const startHidden = document.querySelector("input[name='StartDate']");
+        const endHidden   = document.querySelector("input[name='EndDate']");
+
+        // clear giá trị ban đầu (Create luôn rỗng)
+        startHidden.value = "";
+        endHidden.value   = "";
+
         const startPicker = flatpickr("#startPicker", {
-            dateFormat: "d/m/Y",
-            altInput: true,
-            altFormat: "d/m/Y",
+                altInput: true,
+        altFormat: "d/m/Y",
+        dateFormat: "Y-m-d",
             locale: "vn",
             disableMobile: true,
-            defaultDate: "@(Model.StartDate.ToString("dd/MM/yyyy"))",
-            onChange: function(selectedDates) {
-                if (selectedDates.length > 0) endPicker.set('minDate', selectedDates[0]);
+            onChange: function (selectedDates) {
+                if (selectedDates.length > 0) {
+                    startHidden.value = selectedDates[0].toISOString();
+                    endPicker.set('minDate', selectedDates[0]);
+                }
             }
         });
 
         const endPicker = flatpickr("#endPicker", {
-            dateFormat: "d/m/Y",
-            altInput: true,
+             altInput: true,
             altFormat: "d/m/Y",
+            dateFormat: "Y-m-d",
             locale: "vn",
             disableMobile: true,
-            defaultDate: "@(Model.EndDate.ToString("dd/MM/yyyy"))",
-            onChange: function(selectedDates) {
-                if (selectedDates.length > 0) startPicker.set('maxDate', selectedDates[0]);
+            onChange: function (selectedDates) {
+                if (selectedDates.length > 0) {
+                    endHidden.value = selectedDates[0].toISOString();
+                    startPicker.set('maxDate', selectedDates[0]);
+                }
             }
         });
+
     </script>
 }
 
