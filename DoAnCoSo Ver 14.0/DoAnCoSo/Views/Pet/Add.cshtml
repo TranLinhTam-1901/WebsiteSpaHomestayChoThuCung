@@ -39,7 +39,7 @@
                            type="text"
                            id="datePicker"
                            class="form-control"
-                           placeholder="Chọn ngày sinh..." />
+                           placeholder="Chọn ngày sinh..." readonly />
                 </div>
 
                 <div class="col-md-3">
@@ -232,6 +232,8 @@
 
         let raw = await res.text();
         let data = JSON.parse(raw);
+         // ✅ nếu Gemini trả lỗi quota/429 thì giữ nguyên tiếng Anh
+   
         return cleanText(data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text);
     }
 
@@ -278,7 +280,16 @@
             alert("❌ AI trả JSON không hợp lệ!");
             return;
         }
+        // thêm mới ở đây
+                // ⛔ KIỂM TRA CÓ PHẢI THÚ CƯNG KHÔNG
+        if (petInfo.isPet === false) {
+            alert("❌ Ảnh này không phải là thú cưng (chó hoặc mèo). Vui lòng chọn ảnh khác.");
 
+            // clear kết quả AI + không fill form
+            document.getElementById("AI_AnalysisResult").value = "";
+            return;
+        }
+            // thêm mới ở đây
         // ============================
         //  TỰ DỊCH + FILL FORM
         // ============================

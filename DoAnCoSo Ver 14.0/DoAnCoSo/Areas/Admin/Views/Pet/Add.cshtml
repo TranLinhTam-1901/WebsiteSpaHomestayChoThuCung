@@ -30,7 +30,7 @@
                 <!-- Loại -->
                 <div class="col-md-2">
                     <label asp-for="Type" class="form-label">Loại</label>
-                    <select asp-for="Type" class="form-select">
+                    <select asp-for="Type" id="PetType"  class="form-select">
                         <option value="Chó">Chó</option>
                         <option value="Mèo">Mèo</option>
                     </select>
@@ -38,7 +38,7 @@
 
                 <div class="col-md-6">
                     <label asp-for="Breed" class="form-label">Giống</label>
-                    <input asp-for="Breed" class="form-control" />
+                    <input asp-for="Breed" id="PetBreed"  class="form-control" />
                 </div>
 
                 <div class="col-md-6">
@@ -46,8 +46,8 @@
                     <input asp-for="DateOfBirth"
                            type="text"
                            id="datePicker"
-                           class="form-control"
-                           placeholder="Chọn ngày sinh..." />
+                           class="form-control readonly-input"
+                           placeholder="Chọn ngày sinh..." readonly />
                 </div>
 
                 <div class="col-md-3">
@@ -60,17 +60,17 @@
 
                 <div class="col-md-3">
                     <label asp-for="Age" class="form-label">Tuổi</label>
-                    <input asp-for="Age" type="text" class="form-control" id="age" readonly />
+                    <input asp-for="Age" type="text" class="form-control readonly-input" id="age" readonly />
                 </div>
 
                 <div class="col-md-6">
-                    <label asp-for="Color" class="form-label">Màu sắc</label>
+                    <label asp-for="Color" id="PetColor" class="form-label">Màu sắc</label>
                     <input asp-for="Color" class="form-control" />
                 </div>
 
                 <div class="col-12">
                     <label asp-for="DistinguishingMarks" class="form-label">Dấu hiệu nhận dạng</label>
-                    <input asp-for="DistinguishingMarks" class="form-control" />
+                    <input asp-for="DistinguishingMarks" id="PetMarks" class="form-control" />
                 </div>
             </div>
 
@@ -117,13 +117,18 @@
             <!-- Hình ảnh -->
             <div class="mb-3">
                 <label asp-for="ImageUrl" class="form-label">Ảnh thú cưng</label>
-                <input name="imageFile" type="file" class="form-control" />
+                <input  id="petImage" name="imageFile" type="file" class="form-control" />
             </div>
+
+            <!-- Nút phân tích AI -->
+            <button type="button" id="btnAI" class="btn btn-warning w-100 mb-3">
+                🔍 Phân tích ảnh bằng AI
+            </button>
 
             <!-- AI -->
             <div class="mb-3">
                 <label asp-for="AI_AnalysisResult" class="form-label">Kết quả phân tích AI</label>
-                <textarea asp-for="AI_AnalysisResult" class="form-control" rows="2" readonly placeholder="Tự động cập nhật sau"></textarea>
+                <textarea asp-for="AI_AnalysisResult" id="AI_AnalysisResult" class="form-control readonly-input" rows="2" readonly placeholder="Tự động cập nhật sau"></textarea>
             </div>
 
             <div class="d-flex justify-content-between mt-4">
@@ -147,6 +152,12 @@
     input[type=number] {
         -moz-appearance: textfield; /* Firefox */
     }
+
+    /* .readonly-input {
+        background-color: #f1f3f5 !important;
+        color: #6c757d;
+    } */
+
 </style>
 
 <script>
@@ -200,4 +211,114 @@
             });
         }
     });
+
+        // AI PHÂN TÍCH ẢNH (ADMIN)
+
+    function cleanText(text) 
+    {
+        if (!text) return "";
+        return text
+            .replace(/[\[\]\"]/g, "")
+            .replace(/\s+/g, " ")
+            .replace(/,$/, "")
+            .trim();
+    }
+
+    async function translate(text) {
+        let res = await fetch("@Url.Action("Translate", "AI", new { area = "" })", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text })
+        });
+
+        let raw = await res.text();
+        let data = JSON.parse(raw);
+
+        // return cleanText(
+        //     data?.candidates?.[0]?.content?.parts?.[0]?.text || text );
+
+        return cleanText(data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text);
+
+    }
+
+    document.getElementById("btnAI").onclick = async () => {
+        let file = document.getElementById("petImage").files[0];
+        if (!file) {
+            alert("⚠️ Vui lòng chọn ảnh trước!");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("image", file);
+
+        let res = await fetch("@Url.Action("Analyze", "AI", new { area = "" })", 
+        {
+        method: "POST",
+        body: formData
+        });
+
+        let raw = await res.text();
+        console.log("RAW RESPONSE:", raw);
+
+        let data;
+        try {
+            data = JSON.parse(raw);
+        } catch {
+            alert("❌ API không trả JSON hợp lệ!");
+            return;
+        }
+
+        let aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!aiText) {
+            alert("❌ Không đọc được dữ liệu AI!");
+            return;
+        }
+
+        document.getElementById("AI_AnalysisResult").value = aiText;
+
+        let petInfo;
+        try {
+            petInfo = JSON.parse(aiText);
+        } catch {
+            alert("❌ AI trả JSON không hợp lệ!");
+            return;
+        }
+
+        if (petInfo.isPet === false) {
+            alert("❌ Ảnh này không phải thú cưng.");
+            document.getElementById("AI_AnalysisResult").value = "";
+            return;
+        }
+
+        // ===== FILL FORM ADMIN =====
+
+        if (petInfo.type) {
+            translate(petInfo.type).then(vi => {
+                let cleaned = cleanText(vi);
+                if (cleaned.includes("Mèo")) document.getElementById("PetType").value = "Mèo";
+                else document.getElementById("PetType").value = "Chó";
+            });
+        }
+
+        if (petInfo.breed) {
+            translate(petInfo.breed).then(v => {
+                document.getElementById("PetBreed").value = cleanText(v);
+            });
+        }
+
+        if (petInfo.color) {
+            translate(petInfo.color).then(v => {
+                document.getElementById("PetColor").value = cleanText(v);
+            });
+        }
+
+        if (petInfo.marks) {
+            translate(petInfo.marks).then(v => {
+                document.getElementById("PetMarks").value = cleanText(v);
+            });
+        }
+
+        alert("AI đã phân tích xong!");
+    };
+
 </script>

@@ -29,9 +29,34 @@ namespace DoAnCoSo.Services
                     new {
                         parts = new object[]
                         {
+                            //new { text =
+                            //    "Analyze this pet image and RETURN JSON ONLY with keys: type, breed, color, marks."
+                            //}
+                            // thêm mới ở đây
                             new { text =
-                                "Analyze this pet image and RETURN JSON ONLY with keys: type, breed, color, marks."
-                            },
+                                    @"Phân tích ảnh.
+
+                                    Nếu ảnh KHÔNG PHẢI là thú cưng (chó hoặc mèo),
+                                    hãy trả về JSON sau:
+
+                                    {
+                                      ""isPet"": false
+                                    }
+
+                                    Nếu LÀ thú cưng, trả về JSON TIẾNG VIỆT:
+
+                                    {
+                                      ""isPet"": true,
+                                      ""type"": ""Chó hoặc Mèo"",
+                                      ""breed"": ""Giống"",
+                                      ""color"": ""Màu sắc"",
+                                      ""marks"": ""Dấu hiệu nhận dạng""
+                                    }
+
+                                    Chỉ trả JSON, không giải thích."
+                                    }
+                            // thêm mới ở đây
+                                    ,
                             new {
                                 inline_data = new {
                                     mime_type = image.ContentType,
@@ -76,6 +101,7 @@ namespace DoAnCoSo.Services
                 parts = new object[]
                 {
                     new { text = $"Dịch câu sau sang TIẾNG VIỆT và chỉ trả lại bản dịch thuần túy, không giải thích: {text}" }
+
                 }
             }
         },
@@ -90,7 +116,7 @@ namespace DoAnCoSo.Services
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
             var response = await http.PostAsync(
-                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={_apiKey}",
+                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}",
                 content
             );
 

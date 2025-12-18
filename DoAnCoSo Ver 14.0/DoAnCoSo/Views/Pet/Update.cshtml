@@ -23,8 +23,13 @@
 
                 <div class="col-md-6">
                     <label asp-for="Type" class="form-label">Loại</label>
-                    <input asp-for="Type" class="form-control" required />
+                    <select asp-for="Type" class="form-select" required>
+                        @* <option value="">-- Chọn loại --</option> *@
+                        <option value="Chó">Chó</option>
+                        <option value="Mèo">Mèo</option>
+                    </select>
                 </div>
+
 
                 <div class="col-md-6">
                     <label asp-for="Breed" class="form-label">Giống</label>
