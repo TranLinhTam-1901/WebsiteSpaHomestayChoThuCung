@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +55,26 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
  .AddDefaultUI()
  .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddRazorPages();
+// ================= JWT AUTH =================
+
+builder.Services.AddAuthentication()
+    .AddCookie() // cho Web
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
+            )
+        };
+    });
+
 
 
 //hien thi thong bao quyen han truy cap admin 
@@ -66,8 +90,23 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.Zero; // Kiểm tra mỗi request
 });
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFlutter",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:62844") // port Flutter Web
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
+
+builder.Services.AddControllers();
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+//builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IProductRepository, EFProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, EFCategoryRepository>();
@@ -93,6 +132,8 @@ builder.Services.AddScoped<EmailService>();
 
 // ✅ Đăng ký BlockchainService
 builder.Services.AddScoped<BlockchainService>();
+
+builder.Services.AddScoped<IProductApiService, ProductApiService>();
 
 builder.Services.AddSingleton<GeminiVisionService>();
 
@@ -130,28 +171,35 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+//app.UseStaticFiles();
 app.UseRouting();
+
+app.UseCors("AllowFlutter");
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
+
+app.MapControllers(); // bắt API
+
 app.MapRazorPages();
 
-app.UseEndpoints(endpoints =>
-{
-    // Route cho khu vực Admin
-    endpoints.MapControllerRoute(
-        name: "Admin",
-        pattern: "{area:exists}/{controller=Revenue}/{action=Index}/{id?}");
 
 
-    // Route mặc định
-    endpoints.MapControllerRoute(
+// Route cho khu vực Admin
+app.MapControllerRoute(
+    name: "Admin",
+    pattern: "{area:exists}/{controller=Revenue}/{action=Index}/{id?}");
+
+
+// Route mặc định
+app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}");
 
-    // Route cho SignalR Hub
-    endpoints.MapHub<ChatHub>("/chathub");
-});
+// Route cho SignalR Hub
+app.MapHub<ChatHub>("/chathub");
+
 
 app.Run();
