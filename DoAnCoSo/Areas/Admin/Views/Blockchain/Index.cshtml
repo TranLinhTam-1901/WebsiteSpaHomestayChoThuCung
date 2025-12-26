@@ -1,0 +1,268 @@
+﻿@model DoAnCoSo.ViewModels.BlockchainViewModel
+@{
+    ViewData["Title"] = "🔗 Blockchain Logs tất cả thú cưng";
+}
+
+<div class="pet-wrapper py-5">
+    <h2 class="section-title">🔗 Blockchain Logs tất cả thú cưng</h2>
+
+    <div class="pet-card">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách thao tác trên thú cưng</h4>
+            @* <div>
+                <a asp-area="Admin" asp-controller="Master" asp-action="Index" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Quay lại trang quản trị
+                </a>
+            </div> *@
+        </div>
+
+        <div class="card-body table-responsive">
+            <table class="table table-bordered align-middle text-center pet-table">
+                <thead class="table-pink">
+                    <tr>
+                        <th>#</th>
+                        <th>Thú cưng</th>
+                        <th>Loại bản ghi</th>
+                        <th>Loại hành động</th>
+                        <th>Thời gian</th>
+                        <th>Người thực hiện</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Records != null && Model.Records.Any())
+                    {
+                        foreach (var block in Model.Records)
+                        {
+                            // Xử lý lấy tên pet
+                            string petName = "Không rõ";
+                            if (!string.IsNullOrEmpty(block.ReferenceId))
+                            {
+                                var parts = block.ReferenceId.Split('-');
+                                if (parts.Length > 0)
+                                {
+                                    var petIdKey = parts[0];
+                                    if (Model.PetsDict.ContainsKey(petIdKey))
+                                    {
+                                        petName = Model.PetsDict[petIdKey];
+                                    }
+                                }
+                            }
+                            <tr>
+                                <td>@block.BlockNumber</td>
+                                <td>@petName</td>
+                                <td>@block.RecordType</td> <!-- Spa / Homestay / Hồ sơ thú cưng -->
+                                <td>
+                                    <span class="badge @((block.Operation == "ADD" || block.Operation == "ADMIN_ADD" || block.Operation == "ADMIN_CONFIRM") ? "bg-success" : (block.Operation == "UPDATE" || block.Operation == "ADMIN_UPDATE") ? "bg-warning text-dark" : "bg-danger")">
+                                        @block.Operation
+                                    </span>
+                                </td>
+                                <td>@block.Timestamp.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(!string.IsNullOrEmpty(block.PerformedBy) ? block.PerformedBy : "Hệ thống")</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@block.Id" class="btn-detail btn-sm">
+                                        <i class="fas fa-eye"></i> Chi tiết
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="no-pet">⚠️ Chưa có dữ liệu ghi vào Blockchain</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav>
+        <ul id="pagination" class="pagination justify-content-center mt-4"></ul>
+    </nav>
+</div>
+
+<!-- CSS giữ nguyên như trước -->
+<style>
+    :root {
+        --pink-main: #ff7aa2;
+        --pink-light: #ffe3ec;
+        --pink-dark: #e74c7b;
+    }
+
+    .pet-wrapper {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .pet-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-back:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .pet-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .pet-table th, .pet-table td {
+        vertical-align: middle;
+    }
+
+    .pet-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .pet-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .no-pet {
+        text-align: center;
+        color: #777;
+        padding: 20px 0;
+    }
+
+    /* PAGINATION */
+    .pagination .page-link {
+        color: var(--pink-dark);
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination .page-link:hover {
+            background-color: #FFB6C1;
+            color: white;
+        }
+
+    .pagination .active .page-link {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        color: white;
+    }
+
+        /* 👉 BỎ FOCUS */
+        .pagination .page-link:focus,
+        .pagination .active .page-link:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ----------------- PAGINATION -----------------
+        const itemsPerPage = 10; // số dòng mỗi trang
+        const rows = document.querySelectorAll("table tbody tr");
+        const totalItems = rows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pagination = document.getElementById("pagination");
+
+        function showPage(page, scroll = true) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? "" : "none";
+            });
+
+            document.querySelectorAll("#pagination li").forEach(li => li.classList.remove("active"));
+            const currentPage = document.querySelector(`#pagination li[data-page='${page}']`);
+            if (currentPage) currentPage.classList.add("active");
+
+            // Chỉ cuộn khi scroll = true
+            if (scroll) {
+                const card = document.querySelector(".pet-card");
+                if (card) {
+                    const tableTop = card.offsetTop - 100;
+                    window.scrollTo({ top: tableTop, behavior: "smooth" });
+                }
+            }
+        }
+
+        if (totalPages > 1) {
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.classList.add("page-item");
+                li.setAttribute("data-page", i);
+
+                const a = document.createElement("a");
+                a.classList.add("page-link");
+                a.href = "#";
+                a.textContent = i;
+
+                li.appendChild(a);
+                li.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    showPage(i); // click thì cuộn bình thường
+                });
+
+                pagination.appendChild(li);
+            }
+        }
+
+        // Hiển thị trang đầu tiên **không cuộn**
+        showPage(1, false);
+    });
+</script>
+

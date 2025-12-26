@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "183779846888",
+    "project_id": "pawhouse-5dd17",
+    "storage_bucket": "pawhouse-5dd17.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183779846888:android:a7d98bd88e3c91e7d4775d",
+        "android_client_info": {
+          "package_name": "com.example.bai6"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd6fWoRdmkv6EFkOaQV7PVahgZk5-RN1Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183779846888:android:82e9d9e9253597cbd4775d",
+        "android_client_info": {
+          "package_name": "com.example.baitap1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd6fWoRdmkv6EFkOaQV7PVahgZk5-RN1Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

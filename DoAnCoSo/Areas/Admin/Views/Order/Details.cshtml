@@ -1,0 +1,284 @@
+﻿@using DoAnCoSo.Models
+@using DoAnCoSo.Extensions
+@model DoAnCoSo.Models.Order
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng (Admin)";
+}
+
+@functions {
+    string ShowOption(DoAnCoSo.Models.OrderDetail d)
+    {
+        if (d.VariantId.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(d.VariantName))
+                return d.VariantName;
+
+            var name = d.Product?.Variants?
+                .FirstOrDefault(v => v.Id == d.VariantId.Value)?.Name;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            return $"Variant #{d.VariantId.Value}";
+        }
+        if (!string.IsNullOrWhiteSpace(d.SelectedFlavor))
+            return d.SelectedFlavor;
+
+        return "Không có";
+    }
+}
+<div class="order-detail-wrapper py-5">
+    <h2 class="section-title">📑 Chi tiết đơn hàng</h2>
+
+    <div class="order-card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0 fw-bold">Đơn hàng #@Model.Id</h4> <!-- in đậm -->
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Mã đơn hàng:</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+
+                <dt class="col-sm-3">Người đặt:</dt>
+                <dd class="col-sm-9">@Model.User?.FullName</dd>
+
+                <dt class="col-sm-3">Ngày đặt:</dt>
+                <dd class="col-sm-9">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+
+                @{
+                    var totalDiscount = Model.OrderPromotions?.Sum(op => op.DiscountApplied) ?? 0;
+                    var originalPrice = Model.TotalPrice + totalDiscount;
+                }
+
+                <dt class="col-sm-3">Giá gốc:</dt>
+                <dd class="col-sm-9">@originalPrice.ToString("N0") VNĐ</dd>
+
+                @if (totalDiscount > 0)
+                {
+                    <dt class="col-sm-3">Khuyến mãi áp dụng:</dt>
+                    <dd class="col-sm-9 text-danger">-@totalDiscount.ToString("N0") VNĐ</dd>
+                }
+
+                <dt class="col-sm-3">Thành tiền:</dt>
+                <dd class="col-sm-9 text-success fw-bold">@Model.TotalPrice.ToString("N0") VNĐ</dd>
+
+
+                <dt class="col-sm-3">Trạng thái:</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Status == OrderStatusEnum.ChoXacNhan)
+                    {
+                        <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                    }
+                    else if (Model.Status == OrderStatusEnum.DaXacNhan)
+                    {
+                        <span class="badge bg-success">Đã xác nhận</span>
+                    }
+                    else if (Model.Status == OrderStatusEnum.DaHuy)
+                    {
+                        <span class="badge bg-danger">Đã hủy</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">@Model.Status.GetDisplayName()</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Người nhận:</dt>
+                <dd class="col-sm-9">@Model.CustomerName</dd>
+
+                <dt class="col-sm-3">Số điện thoại:</dt>
+                <dd class="col-sm-9">@Model.PhoneNumber</dd>
+
+                <dt class="col-sm-3">Địa chỉ giao hàng:</dt>
+                <dd class="col-sm-9">@Model.ShippingAddress</dd>
+
+                <dt class="col-sm-3">Phương thức thanh toán:</dt>
+                <dd class="col-sm-9">@Model.PaymentMethod</dd>
+
+                <dt class="col-sm-3">Ghi chú:</dt>
+                <dd class="col-sm-9">@Model.Notes</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="order-card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0 fw-bold">🛍️ Chi tiết sản phẩm</h4> <!-- in đậm -->
+        </div>
+        <div class="card-body">
+            @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+            {
+                <table class="table table-bordered align-middle text-center">
+                    <thead class="table-pink">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Phân loại</th>
+                            <th>Số lượng</th>
+                            <th>Giá</th>
+                            <th>Tổng phụ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderDetails)
+                        {
+                            <tr>
+                                <td>@item.Product.Name</td>
+                                <td>@ShowOption(item)</td>
+                                <td>@item.Quantity</td>
+                                <td>@item.Price.ToString("N0") VNĐ</td>
+                                <td>@((item.Quantity * item.Price).ToString("N0")) VNĐ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">Không có chi tiết sản phẩm cho đơn hàng này.</p>
+            }
+        </div>
+    </div>
+
+    <div class="text-end">
+        @if (Model.Status == OrderStatusEnum.ChoXacNhan)
+        {
+            <form asp-action="Confirm" asp-route-id="@Model.Id" method="post" class="d-inline"
+                  onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận đơn hàng này?');">
+                <button type="submit" class="btn-accept me-2">
+                    <i class="fas fa-check-circle"></i> Xác nhận đơn hàng
+                </button>
+            </form>
+
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline"
+                  onsubmit="return confirm('Bạn CÓ CHẮC CHẮN muốn xóa đơn hàng này vĩnh viễn? Hành động này không thể hoàn tác!');">
+                <button type="submit" class="btn-cancel">
+                    <i class="fas fa-trash-alt"></i> Xóa đơn hàng
+                </button>
+            </form>
+        }
+        <a asp-action="Index" class="btn-detail">
+            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<style>
+    .order-detail-wrapper {
+        max-width: 960px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .order-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        font-weight: 600;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .badge {
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 12px;
+    }
+
+        .badge.bg-warning {
+            background-color: #FFD1DC;
+            color: #8B0000;
+        }
+
+        .badge.bg-success {
+            background-color: #FF69B4;
+            color: #fff;
+        }
+
+        .badge.bg-danger {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+        .badge.bg-secondary {
+            background-color: #E6A9EC;
+            color: #fff;
+        }
+
+    .table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        text-decoration: none;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-cancel {
+        border: 2px solid red;
+        color: red;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        background-color: transparent;
+    }
+
+        .btn-cancel:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .btn-accept {
+        border: 2px solid green;
+        color: green;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        background-color: transparent;
+    }
+
+        .btn-accept:hover {
+            background-color: green;
+            color: #fff;
+        }
+</style>

@@ -1,0 +1,312 @@
+﻿@model DoAnCoSo.Models.Appointment
+@using DoAnCoSo.Extensions
+@using System
+
+@{
+    ViewData["Title"] = "Chi tiết lịch đặt";
+
+    TimeZoneInfo vietnamTimeZone = null;
+    bool timeZoneFound = false;
+    try
+    {
+        vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        timeZoneFound = true;
+    }
+    catch { }
+}
+
+<div class="appointment-wrapper py-5">
+    <h2 class="section-title">📋 Chi tiết lịch đặt</h2>
+
+    <!-- Thông tin lịch đặt -->
+    <div class="card mb-4 shadow-sm" style="border:2px solid #FF6185;">
+        <div class="card-header" style="background-color:#FF6185; color:white;">
+            <i class="fas fa-calendar-check"></i> Thông tin lịch đặt
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <tr>
+                    <th>Mã lịch đặt</th>
+                    <td>@Model.AppointmentId</td>
+                </tr>
+                <tr>
+                    <th>Dịch vụ</th>
+                    <td>@(Model.Service?.Name ?? "N/A")</td>
+                </tr>
+                <tr>
+                    <th>Loại dịch vụ</th>
+                    <td>@(Model.Service?.Category.ToString() ?? "N/A")</td>
+                </tr>
+                <tr>
+                    <th>Trạng thái</th>
+                    <td>@Model.Status.GetDisplayName()</td>
+                </tr>
+
+                @* Hiển thị dựa theo loại dịch vụ *@
+                @if (Model.Service?.Category == ServiceCategory.Homestay)
+                {
+                    <tr>
+                        <th>Ngày nhận phòng</th>
+                        <td>@(Model.StartDate != default(DateTime) ? Model.StartDate.ToString("dd/MM/yyyy") : "N/A")</td>
+                    </tr>
+                    <tr>
+                        <th>Ngày trả phòng</th>
+                        <td>@(Model.EndDate != default(DateTime) ? Model.EndDate.ToString("dd/MM/yyyy") : "N/A")</td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <th>Thời gian hẹn</th>
+                        <td>
+                            @{
+                                string dateDisplay = Model.AppointmentDate != default(DateTime)
+                                ? Model.AppointmentDate.ToString("dd/MM/yyyy")
+                                : "N/A";
+                                string timeDisplay = Model.AppointmentTime != TimeSpan.Zero
+                                ? Model.AppointmentTime.ToString("hh\\:mm")
+                                : "N/A";
+
+                                if (dateDisplay == "N/A" && timeDisplay == "N/A")
+                                {
+                                    @:N/A
+                                }
+                                else if (dateDisplay == "N/A")
+                                {
+                                    @timeDisplay
+                                }
+                                else if (timeDisplay == "N/A")
+                                {
+                                    @dateDisplay
+                                }
+                                else
+                                {
+                                    @(dateDisplay + " " + timeDisplay)
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+
+                <tr>
+                    <th>Thời điểm đặt</th>
+                    <td>
+                        @if (Model.CreatedDate != default(DateTime) && timeZoneFound)
+                        {
+                            var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(Model.CreatedDate, vietnamTimeZone);
+                            @vietnamTime.ToString("dd/MM/yyyy HH:mm")
+                        }
+                        else if (Model.CreatedDate != default(DateTime))
+                        {
+                            @(Model.CreatedDate.ToString("dd/MM/yyyy HH:mm") + " UTC")
+                        }
+                        else
+                        {
+                            @:N/A
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th>Số điện thoại liên hệ</th>
+                    <td>@(Model.OwnerPhoneNumber ?? "N/A")</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Thông tin thú cưng -->
+    <div class="card mb-4 shadow-sm" style="border:2px solid #FF6185;">
+        <div class="card-header" style="background-color:#FF6185; color:white;">
+            <i class="fas fa-paw"></i> Thông tin thú cưng
+        </div>
+        <div class="card-body">
+            @if (Model.Pet != null)
+            {
+                <table class="table table-bordered table-striped">
+                    <tr><th>Tên thú cưng</th><td>@Model.Pet.Name</td></tr>
+                    <tr><th>Loại</th><td>@Model.Pet.Type</td></tr>
+                    <tr><th>Giống</th><td>@(Model.Pet.Breed ?? "N/A")</td></tr>
+                    <tr><th>Giới tính</th><td>@(Model.Pet.Gender ?? "N/A")</td></tr>
+                    <tr><th>Tuổi</th><td>@(Model.Pet.Age?.ToString() ?? "N/A")</td></tr>
+                    <tr><th>Cân nặng</th><td>@(Model.Pet.Weight.HasValue? Model.Pet.Weight.Value + " kg" : "N/A")</td></tr>
+                    <tr><th>Chiều cao</th><td>@(Model.Pet.Height.HasValue? Model.Pet.Height.Value + " cm" : "N/A")</td></tr>
+                    <tr><th>Màu lông</th><td>@(Model.Pet.Color ?? "N/A")</td></tr>
+                    <tr><th>Dấu hiệu nhận dạng</th><td>@(Model.Pet.DistinguishingMarks ?? "N/A")</td></tr>
+                    <tr><th>Tiêm phòng</th><td>@(Model.Pet.VaccinationRecords ?? "N/A")</td></tr>
+                    <tr><th>Lịch sử bệnh</th><td>@(Model.Pet.MedicalHistory ?? "N/A")</td></tr>
+                    <tr><th>Dị ứng</th><td>@(Model.Pet.Allergies ?? "N/A")</td></tr>
+                    <tr><th>Chế độ ăn</th><td>@(Model.Pet.DietPreferences ?? "N/A")</td></tr>
+                    <tr><th>Ghi chú sức khỏe</th><td>@(Model.Pet.HealthNotes ?? "N/A")</td></tr>
+                    <tr><th>Kết quả AI</th><td>@(Model.Pet.AI_AnalysisResult ?? "N/A")</td></tr>
+                </table>
+            }
+            else if (Model.DeletedPet != null)
+            {
+                var deletedPet = Model.DeletedPet;
+                <table class="table table-bordered table-striped">
+                    <tr><th>Tên thú cưng</th><td>@deletedPet.Name</td></tr>
+                    <tr><th>Loại</th><td>@deletedPet.Type</td></tr>
+                    <tr><th>Giống</th><td>@(deletedPet.Breed ?? "N/A")</td></tr>
+                    <tr><th>Giới tính</th><td>@(deletedPet.Gender ?? "N/A")</td></tr>
+                    <tr><th>Tuổi</th><td>@deletedPet.Age</td></tr>
+                    <tr><th>Cân nặng</th><td>@deletedPet.Weight</td></tr>
+                    <tr><th>Ghi chú</th><td>Đã bị xóa</td></tr>
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">
+                            Các thông tin khác không còn hiển thị vì thú cưng đã bị xóa.
+                        </td>
+                    </tr>
+                </table>
+            }
+            else
+            {
+                <p>Không có thông tin thú cưng</p>
+            }
+        </div>
+    </div>
+
+    <!-- Lịch sử dịch vụ của thú cưng -->
+    <div class="card mb-4 shadow-sm" style="border:2px solid #FF6185;">
+        <div class="card-header" style="background-color:#FF6185; color:white;">
+            <i class="fas fa-history"></i> Lịch sử dịch vụ của thú cưng
+        </div>
+        <div class="card-body">
+            @if (Model.Pet?.ServiceRecords != null && Model.Pet.ServiceRecords.Any())
+            {
+                <table class="table table-bordered table-hover">
+                    <thead style="background-color:#FFB6C1; color:white;">
+                        <tr>
+                            <th>Dịch vụ</th>
+                            <th>Ngày sử dụng</th>
+                            <th>Ghi chú</th>
+                            <th>Giá</th>
+                            <th>Phản hồi AI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in Model.Pet.ServiceRecords.OrderByDescending(r => r.DateUsed))
+                        {
+                            <tr>
+                                <td>@(record.Service?.Name ?? "N/A")</td>
+                                <td>@record.DateUsed.ToString("dd/MM/yyyy")</td>
+                                <td>@(string.IsNullOrEmpty(record.Notes) ? "Không có" : record.Notes)</td>
+                                <td>@(record.PriceAtThatTime.HasValue? record.PriceAtThatTime.Value.ToString("C") : "-")</td>
+                                <td>@(string.IsNullOrEmpty(record.AI_Feedback) ? "-" : record.AI_Feedback)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else if (Model.DeletedPet != null)
+            {
+                @* Nếu pet đã bị xóa, hiển thị thông tin cơ bản, nhưng không có lịch sử dịch vụ *@
+                <p>Thú cưng đã bị xóa nên lịch sử dịch vụ không còn hiển thị.</p>
+            }
+            else
+            {
+                <p>Chưa có lịch sử dịch vụ</p>
+            }
+        </div>
+    </div>
+
+    <div class="mt-3 text-center">
+        <a asp-action="CustomerAppointmentHistory" class="btn" style="background-color:#FF6185; color:white;">Quay lại lịch sử đặt lịch</a>
+    </div>
+</div>
+
+<style>
+    .appointment-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    h2 {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #FF6185;
+        margin-bottom: 40px;
+    }
+
+    .card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.2);
+    }
+
+    .card-header {
+        font-weight: bold;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .card-header i {
+            font-size: 1.2rem;
+        }
+
+    .table th {
+        background-color: #fff0f5;
+        color: #FF6185;
+        width: 200px;
+        vertical-align: middle;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #FFE0EC;
+    }
+
+    .btn {
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 12px;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn:hover {
+            background-color: #e75478 !important;
+        }
+
+    @@media (max-width: 768px) {
+        h2
+
+    {
+        font-size: 1.5rem;
+    }
+
+    .card-header {
+        font-size: 1rem;
+    }
+
+    .table th, .table td {
+        font-size: 0.95rem;
+        padding: 8px;
+    }
+
+    }
+</style>

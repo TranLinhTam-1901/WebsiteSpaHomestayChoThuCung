@@ -1,0 +1,191 @@
+﻿@model DoAnCoSo.ViewModels.HomestayBookingViewModel
+@using DoAnCoSo.Models
+
+@{
+    bool isUpdate = Model.IsUpdate;
+    ViewData["Title"] = isUpdate ? "✏️ Cập nhật lịch Homestay cho thú cưng 🐾" : "🏨 Đặt lịch Homestay cho thú cưng 🐶🐱";
+    var userPets = ViewBag.UserPets as List<Pet> ?? new List<Pet>();
+    var services = ViewBag.HomestayServices as List<Service> ?? new List<Service>();
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <form asp-action="@(isUpdate ? "UpdateAppointmentHomestay" : "BookAppointmentHomestay")" method="post">
+            <input type="hidden" asp-for="AppointmentId" />
+            <!-- 1️⃣ Chủ nuôi -->
+            <h5><span class="section-icon">👤</span>Thông tin chủ nuôi</h5>
+            <div class="mb-3">
+                <label asp-for="OwnerPhoneNumber" class="form-label">Số điện thoại</label>
+                <input asp-for="OwnerPhoneNumber" class="form-control" required />
+            </div>
+
+            <!-- 2️⃣ Thú cưng -->
+            <h5><span class="section-icon">🐾</span>Chọn thú cưng</h5>
+            <div class="mb-3">
+                <label class="form-label">Thú cưng có sẵn</label>
+                <select id="existingPetSelect" class="form-select">
+                    @foreach (var pet in userPets.OrderBy(p => p.Name))
+                    {
+                        <option value="@pet.PetId"
+                                data-name="@pet.Name"
+                                data-type="@pet.Type"
+                                data-breed="@pet.Breed"
+                                data-age="@pet.Age"
+                                data-weight="@pet.Weight"
+                                selected="@(Model.ExistingPetId == pet.PetId ? "selected" : "")">
+                            @pet.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PetName" class="form-label">Tên thú cưng</label>
+                    <input asp-for="PetName" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PetType" class="form-label">Loại</label>
+                    <input asp-for="PetType" class="form-control" readonly />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PetBreed" class="form-label">Giống</label>
+                    <input asp-for="PetBreed" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PetAge" class="form-label">Tuổi</label>
+                    <input asp-for="PetAge" class="form-control" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="PetWeight" class="form-label">Cân nặng</label>
+                    <div class="input-group">
+                        <input asp-for="PetWeight" class="form-control" id="PetWeight" readonly />
+                        <span class="input-group-text">kg</span>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" asp-for="ExistingPetId" id="ExistingPetId" />
+
+            <!-- 3️⃣ Loại phòng -->
+            <h5><span class="section-icon">🛏️</span>Chọn loại phòng Homestay</h5>
+            <div class="mb-3">
+                <label asp-for="ServiceId" class="form-label">Loại phòng</label>
+                <select asp-for="ServiceId" class="form-select" id="serviceSelect" required
+                        asp-items="@(new SelectList(services, "ServiceId", "Name"))">
+                </select>
+            </div>
+
+            <!-- 4️⃣ Thời gian -->
+            <h5><span class="section-icon">📅</span>Thời gian lưu trú</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="StartDate" class="form-label">Ngày bắt đầu</label>
+                    <input asp-for="StartDate"
+                           type="text"
+                           id="startPicker"
+                           class="form-control"
+                           placeholder="Chọn ngày bắt đầu..."
+                           required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="EndDate" class="form-label">Ngày kết thúc</label>
+                    <input asp-for="EndDate"
+                           type="text"
+                           id="endPicker"
+                           class="form-control"
+                           placeholder="Chọn ngày kết thúc..."
+                           required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-pink w-100 mt-4">
+                @(isUpdate ? "💾 Cập nhật lịch" : "📦 Đặt lịch ngay")
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- JS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // ------------------ StartDate / EndDate ------------------
+        const startPicker = flatpickr("#startPicker", {
+            dateFormat: "Y/m/d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "vn",
+            disableMobile: true,
+            minDate: "today",
+            defaultDate: "@(Model.StartDate.ToString("yyyy/MM/dd"))",
+            onChange: function(selectedDates) {
+                if (selectedDates.length > 0) endPicker.set('minDate', selectedDates[0]);
+            }
+        });
+
+        const endPicker = flatpickr("#endPicker", {
+            dateFormat: "Y/m/d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "vn",
+            disableMobile: true,
+            minDate: "today",
+            defaultDate: "@(Model.EndDate.ToString("yyyy/MM/dd"))",
+            onChange: function(selectedDates) {
+                if (selectedDates.length > 0) startPicker.set('maxDate', selectedDates[0]);
+            }
+        });
+
+        // ------------------ Chọn thú cưng ------------------
+    const petSelect = document.getElementById("existingPetSelect");
+        const existingPetIdInput = document.getElementById("ExistingPetId");
+        const petName = document.getElementById("PetName");
+        const petType = document.getElementById("PetType");
+        const petBreed = document.getElementById("PetBreed");
+        const petAge = document.getElementById("PetAge");
+        const petWeight = document.getElementById("PetWeight");
+
+        function parseWeight(weightStr) {
+            if (!weightStr) return 0;
+            const cleaned = weightStr.replace(",", ".").replace(/[^\d.]/g, "");
+            return parseFloat(cleaned) || 0;
+        }
+
+        function updatePetInfo() {
+            const selectedPet = petSelect.selectedOptions[0];
+            if (!selectedPet) return;
+
+            petName.value = selectedPet.dataset.name || "";
+            petType.value = selectedPet.dataset.type || "";
+            petBreed.value = selectedPet.dataset.breed || "";
+            petAge.value = selectedPet.dataset.age || "";
+            petWeight.value = parseWeight(selectedPet.dataset.weight);
+            existingPetIdInput.value = selectedPet.value;
+        }
+
+        if (petSelect) {
+            petSelect.addEventListener("change", updatePetInfo);
+
+            // Khi vào trang, nếu có pet => chọn pet đầu tiên
+            if (!existingPetIdInput.value && petSelect.options.length > 0) {
+                petSelect.selectedIndex = 0;
+                updatePetInfo();
+            }
+            // Nếu ExistingPetId có sẵn, chọn pet tương ứng
+            else if (existingPetIdInput.value) {
+                for (let i = 0; i < petSelect.options.length; i++) {
+                    if (petSelect.options[i].value === existingPetIdInput.value) {
+                        petSelect.selectedIndex = i;
+                        updatePetInfo();
+                        break;
+                    }
+                }
+            }
+        }
+    });
+</script>
+

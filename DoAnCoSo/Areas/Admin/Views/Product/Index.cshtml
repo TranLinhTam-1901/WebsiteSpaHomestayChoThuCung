@@ -1,0 +1,560 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Product>
+@{
+    ViewData["Title"] = "📦 Quản lý sản phẩm";
+    int pageSize = 16;
+    int totalItems = Model.Count();
+    int currentPage = string.IsNullOrEmpty(Context.Request.Query["page"]) ? 1 : int.Parse(Context.Request.Query["page"]);
+    int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+    var products = Model.Skip((currentPage - 1) * pageSize).Take(pageSize);
+    bool showDeleted = ViewBag.ShowDeleted == true;
+}
+
+<div class="product-wrapper py-5">
+    <h2 class="section-title">📦 Quản lý sản phẩm</h2>
+
+    <div class="admin-product-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách sản phẩm</h4>
+            <div>
+                <a asp-area="Admin" asp-controller="Product" asp-action="Add" class="btn-add">
+                    <i class="fas fa-plus-circle"></i> Thêm sản phẩm
+                </a>
+                <a href="javascript:void(0);"
+                   class="btn-add toggle-deleted @(showDeleted ? "active" : "outline")"
+                   data-show="@showDeleted.ToString().ToLower()">
+
+                    <i class="fa @(showDeleted ? "fa-eye" : "fa-eye-slash")"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center product-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width: 5%">ID</th>
+                            <th style="width: 10%">Tên sản phẩm</th>
+                            <th style="width: 10%">Hình ảnh</th>
+                            <th style="width: 10%">Giá</th>
+                            <th style="width: 10%">Tồn kho</th>
+                            <th style="width: 15%">Mô tả</th>
+                            <th style="width: 10%">Danh mục</th>
+                            <th style="width: 10%">Trạng thái</th>
+                            <th style="width: 30%">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (products.Any())
+                        {
+                            foreach (var product in products)
+                            {
+                                <tr data-id="@product.Id">
+                                    <td>@product.Id</td>
+                                    <td>@product.Name</td>
+                                    <td>
+                                        <img src="@product.ImageUrl" alt="@product.Name" class="product-img" />
+                                    </td>
+                                    <td>
+                                        @if (product.PriceReduced.HasValue && product.PriceReduced < product.Price)
+                                        {
+                                            <span class="text-decoration-line-through text-muted d-block">@product.Price.ToString("N0")đ</span>
+                                            <span class="fw-bold text-pink">@product.PriceReduced.Value.ToString("N0")đ</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@product.Price.ToString("N0")đ</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @product.StockQuantity
+                                        @if (product.StockQuantity <= product.LowStockThreshold)
+                                        {
+                                            <span class="badge bg-danger ms-2">Sắp hết</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success ms-2">OK</span>
+                                        }
+                                    </td>
+                                    <td class="text-truncate" style="max-width:220px;">@product.Description</td>
+                                    <td>@product.Category?.Name</td>
+                                    <td class="status-cell">
+                                        @if (product.IsActive)
+                                        {
+                                            <span class="badge bg-success">Đang bán</span>
+                                        }
+                                        else
+                                        {
+
+                                            <span class="badge bg-secondary">Ngừng bán</span>
+                                        }
+                                    </td>
+                                    <td class="actions-cell">
+                                        <div class="actions">
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn-detail btn-sm">
+                                                <i class="bi bi-eye"></i> Xem
+                                            </a>
+                                            <a asp-area="Admin" asp-controller="Product" asp-action="Update" asp-route-id="@product.Id" class="btn-edit btn-sm">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </a>
+                                            @if (!product.IsDeleted)
+                                            {
+                                                <button type="button" class="btn-hide btn-sm js-hide" data-id="@product.Id" data-name="@product.Name">
+                                                    <i class="bi bi-eye-slash"></i> Ẩn
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn-show btn-sm js-unhide" data-id="@product.Id">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Hiện
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="no-product">Chưa có sản phẩm nào</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
+                <nav>
+                    <ul class="pagination pagination-pink mb-0">
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = i })">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal Ẩn sản phẩm -->
+<div class="modal fade" id="hideModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-2 border-pink rounded-16 shadow-sm">
+            <div class="modal-header bg-lightpink">
+                <h5 class="modal-title fw-bold">Ẩn sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn ẩn <b id="hideName"></b> (ID: <span id="hideIdText"></span>) không?
+            </div>
+            <div class="modal-footer">
+                <form id="hideForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="hideId" name="id" />
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Huỷ</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Ẩn sản phẩm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Container */
+    .product-wrapper {
+        max-width: 100%; 
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    /* Section title */
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    /* Card wrapper */
+    .admin-product-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    /* Card header */
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .btn-add {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        margin-right: 10px;
+        transition: 0.3s;
+    }
+
+        .btn-add:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    /* Table */
+    .product-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .product-table thead.table-pink {
+            background-color: #FFE4E9;
+        }
+
+        .product-table th, .product-table td {
+            vertical-align: middle;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .product-table tbody tr:nth-child(even) {
+            background-color: #FFF7F9;
+        }
+
+        .product-table tbody tr:nth-child(odd) {
+            background-color: #FFFFFF;
+        }
+
+    /* Product image */
+    .product-img {
+        width: 75px;
+        height: 75px;
+        object-fit: cover;
+        border-radius: 8px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .product-img:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+    /* Status badge */
+    .status-cell .badge {
+        font-size: 0.85rem;
+        padding: 0.35em 0.6em;
+    }
+
+    /* Actions */
+    .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-detail, .btn-edit, .btn-hide, .btn-show {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    /* Buttons */
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-edit {
+        border: 2px solid green;
+        color: green;
+        background-color: transparent;
+    }
+
+        .btn-edit:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .btn-hide {
+        border: 2px solid red;
+        color: red;
+        background-color: transparent;
+    }
+
+        .btn-hide:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .btn-show {
+        border: 2px solid #5B21B6;
+        color: #5B21B6;
+        background-color: transparent;
+    }
+
+        .btn-show:hover {
+            background-color: #5B21B6;
+            color: #fff;
+        }
+
+    /* No product message */
+    .no-product {
+        text-align: center;
+        color: #777;
+        padding: 20px 0;
+        font-style: italic;
+    }
+
+    /* Pagination */
+    .pagination-pink .page-link {
+        color: #FF6185;
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination-pink .page-link:hover {
+            background-color: #FFB6C1;
+            color: #fff;
+        }
+
+    .pagination-pink .active .page-link {
+        background-color: #FF6185;
+        border-color: #FF6185;
+        color: #fff;
+    }
+
+    /* Modal đồng bộ giao diện product */
+    .modal-content {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3);
+    }
+
+    .modal-header {
+        border-radius: 20px;
+        background-color: #FFF0F5;
+        border-bottom: 1px solid #FFB6C1;
+        padding: 12px 20px;
+    }
+
+    .modal-title {
+        color: #FF6185;
+        font-weight: bold;
+    }
+
+    .modal-footer .btn-secondary {
+        border-radius: 20px;
+        font-weight: bold;
+        padding: 4px 12px;
+        transition: 0.3s;
+    }
+
+        .modal-footer .btn-secondary:hover {
+            background-color: #FFE4E9;
+            color: #000;
+        }
+
+    .modal-footer .btn-danger {
+        border-radius: 20px;
+        font-weight: bold;
+        padding: 4px 12px;
+        background-color: #FF6185;
+        border-color: #FF6185;
+        transition: 0.3s;
+    }
+
+        .modal-footer .btn-danger:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    /* Màu nền tiện ích */
+    .bg-lightpink {
+        background-color: #FFF0F5 !important;
+    }
+
+    .border-pink {
+        border-color: #FFB6C1 !important;
+    }
+
+    .rounded-16 {
+        border-radius: 16px !important;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 6px 16px rgba(255,182,193,0.3) !important;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .product-table th, .product-table td
+
+    {
+        font-size: 12px;
+        padding: 4px;
+    }
+
+    .product-img {
+        width: 55px;
+        height: 55px;
+    }
+
+    .actions {
+        gap: 4px;
+    }
+
+    .btn-add {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    }
+</style>
+
+@section Scripts {
+    <script>
+        (() => {
+            const hideModalEl = document.getElementById('hideModal');
+            const hideNameEl  = document.getElementById('hideName');
+            const hideIdText  = document.getElementById('hideIdText');
+            const hideIdInput = document.getElementById('hideId');
+            const hideForm    = document.getElementById('hideForm');
+            const bsModal     = new bootstrap.Modal(hideModalEl);
+
+            const getToken = () => hideForm.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            document.addEventListener('click', e => {
+                const btn = e.target.closest('.js-hide');
+                if (!btn) return;
+                const id = btn.dataset.id;
+                const name = btn.dataset.name;
+                hideNameEl.textContent = name;
+                hideIdText.textContent = id;
+                hideIdInput.value = id;
+                bsModal.show();
+            });
+
+            hideForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const id = hideIdInput.value;
+                const token = getToken();
+                try {
+                    const res = await fetch('@Url.Action("Hide", "Product", new { area = "Admin" })', {
+                        method: 'POST',
+                        headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({ id, __RequestVerificationToken: token })
+                    });
+                    const data = await res.json();
+                if (data.success) {
+                        const row = document.querySelector(`tr[data-id="${id}"]`);
+                        if (row) {
+                            row.remove();   // 💥 Xóa khỏi bảng ngay lập tức
+                        }
+                        bsModal.hide();
+                    } else { alert(data.message || 'Ẩn thất bại'); }
+                } catch { alert('Có lỗi khi ẩn sản phẩm'); }
+            });
+
+            document.addEventListener("click", async e => {
+                const btn = e.target.closest(".toggle-deleted");
+                if (!btn) return;
+
+                const showDeleted = btn.dataset.show === "true";
+
+                const icon = btn.querySelector("i");
+                const text = btn.querySelector(".text");
+
+                try {
+                    const res = await fetch('@Url.Action("Index", "Product", new { area = "Admin" })?showDeleted=' + (!showDeleted), {
+                        method: "GET",
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    });
+
+                    const html = await res.text();
+
+                    // Replace tbody
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const newTbody = doc.querySelector("tbody");
+                    document.querySelector("tbody").innerHTML = newTbody.innerHTML;
+
+                    // Update trạng thái
+                    btn.dataset.show = (!showDeleted).toString();
+
+                    // 🔥 UPDATE ICON
+                    icon.className = "fa " + (showDeleted ? "fa-eye-slash" : "fa-eye");
+
+                    // Update style
+                    btn.classList.toggle("active", !showDeleted);
+                    btn.classList.toggle("outline", showDeleted);
+
+                } catch (err) {
+                    alert("Lỗi khi tải danh sách!");
+                }
+            });
+
+            document.addEventListener('click', async e => {
+                const btn = e.target.closest('.js-unhide');
+                if (!btn) return;
+                const id = btn.dataset.id;
+                const token = getToken();
+                try {
+                    const res = await fetch('@Url.Action("Unhide", "Product", new { area = "Admin" })', {
+                        method: 'POST',
+                        headers: { 'Content-Type':'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({ id, __RequestVerificationToken: token })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        const row = document.querySelector(`tr[data-id="${id}"]`);
+                        if (row) {
+                            row.querySelector('.status-cell').innerHTML = '<span class="badge bg-success">Đang bán</span>';
+                            row.querySelector('.js-unhide').outerHTML = `<button type="button" class="btn-hide btn-sm js-hide" data-id="${id}" data-name="${row.querySelector('td:nth-child(2)').textContent}"><i class="bi bi-eye-slash"></i> Ẩn</button>`;
+                        }
+                    } else { alert(data.message || 'Phục hồi thất bại'); }
+                } catch { alert('Có lỗi khi phục hồi sản phẩm'); }
+            });
+        })();
+    </script>
+}

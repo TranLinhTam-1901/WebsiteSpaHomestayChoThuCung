@@ -1,0 +1,601 @@
+﻿@model DoAnCoSo.Models.Product
+@using System.Globalization
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "🌸 Chỉnh sửa sản phẩm";
+    var hasVariants = Model.Variants != null && Model.Variants.Any();
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">✏️ Chỉnh sửa sản phẩm</h2>
+
+        <form asp-action="Update" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="Name" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="CategoryId" class="form-label">Loại sản phẩm</label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select border-pink"></select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Price" class="form-label">Giá</label>
+                    <input asp-for="Price" type="number" min="0" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PriceReduced" class="form-label">Giá giảm</label>
+                    <input asp-for="PriceReduced" type="number" min="0" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="StockQuantity" class="form-label">Tồn kho</label>
+                    <input asp-for="StockQuantity" type="number" class="form-control border-pink" readonly disabled />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="LowStockThreshold" class="form-label">Ngưỡng cảnh báo</label>
+                    <input asp-for="LowStockThreshold" type="number" min="0" class="form-control border-pink" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Trademark" class="form-label">Thương hiệu</label>
+                    <input asp-for="Trademark" class="form-control border-pink" />
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="col-md-6">
+                    <label class="form-label">Trạng thái</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input pink-switch" asp-for="IsActive" />
+                        <label class="form-check-label pink-label">
+                            Kinh doanh
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Ảnh -->
+                <div class="col-md-6">
+                    <label class="form-label">Ảnh đại diện mới</label>
+                    <input type="file" name="imageUrl" class="form-control" id="imageInput" />
+                </div>
+
+                <!-- Ảnh phụ mới -->
+                <div class="col-md-6">
+                    <label class="form-label">Ảnh phụ mới</label>
+                    <input type="file" name="images" class="form-control" multiple />
+                </div>
+
+                <div class="text-center mt-4">
+                    <h5>Ảnh hiện tại</h5>
+                    <img src="@Model.ImageUrl" id="previewImage" style="max-width: 200px;" class="rounded shadow border-pink" />
+                </div>
+
+                @foreach (var img in Model.Images)
+                {
+                    <div class="col-6 col-md-4 text-center">
+                        <img src="@img.Url"
+                             class="img-thumbnail mb-2"
+                             style="max-height: 120px; object-fit: cover;" />
+
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="DeleteImageIds"
+                                   value="@img.Id"
+                                   id="del_@img.Id" />
+
+                            <label class="form-check-label" for="del_@img.Id">
+                                Xoá ảnh này
+                            </label>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- =============== NHÓM BIẾN THỂ (OPTION GROUPS) ================= -->
+            @if (Model.OptionGroups != null)
+            {
+                <div class="mt-4 p-3 border rounded shadow-sm">
+                    <h5 class="fw-bold mb-3 text-brand">⚙️ Nhóm biến thể</h5>
+
+                    <div id="optionGroupsArea">
+                        @{
+                            var groups = Model.OptionGroups.ToList();
+                        }
+
+                        @for (int g = 0; g < groups.Count; g++)
+                        {
+                            var group = groups[g];
+                            <div class="mb-4 p-2 border rounded bg-light" data-group-index="@g">
+                                <div class="d-flex justify-content-between">
+                                    <input type="hidden" name="OptionGroupIds[@g]" value="@group.Id" />
+                                    <input class="form-control w-50 border-pink"
+                                           name="OptionGroupNames[@g]"
+                                           value="@group.Name" />
+
+                                    <button type="button"
+                                            class="btn btn-danger btn-sm"
+                                            onclick="removeGroup(this)">
+                                        X
+                                    </button>
+                                </div>
+
+                                <div class="mt-2 ms-4">
+                                    <label class="fw-semibold">Giá trị:</label>
+
+                                    <div class="values-area">
+                                        @{
+                                            var values = group.Values.ToList();
+                                        }
+
+                                        @for (int v = 0; v < values.Count; v++)
+                                        {
+                                            var val = values[v];
+                                            <div class="input-group mt-2">
+                                                <input type="hidden"
+                                                       name="OptionValueIds[@g][@v]"
+                                                       value="@val.Id" />
+
+                                                <input class="form-control border-pink"
+                                                       name="OptionValueNames[@g][@v]"
+                                                       value="@val.Value" />
+
+                                                <button type="button"
+                                                        class="btn btn-outline-danger btn-sm"
+                                                        onclick="removeValue(this)">
+                                                    X
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-primary mt-2"
+                                            onclick="addValue(this, @g)">
+                                        + Thêm giá trị
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <button type="button"
+                            id="btnAddGroup"
+                            class="btn btn-brand btn-sm mt-3">
+                        + Thêm nhóm biến thể
+                    </button>
+                </div>
+            }
+
+            <!-- Nút tạo preview biến thể -->
+            <button type="button"
+                    class="btn btn-success mt-3"
+                    id="btnGenerateVariants">
+                🔄 Tạo biến thể
+            </button>
+
+            <!-- Bảng preview biến thể mới -->
+            <div id="variantPreview" class="mt-3" style="display:none;">
+                <h5 class="fw-semibold text-success">Biến thể mới sẽ được tạo:</h5>
+
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                           
+                            <th>Tên biến thể</th>
+                            <th>Xoá</th>
+                            @* <th>Giá trị ValueIds</th> *@
+                            @* <th>Tồn</th> *@
+                            @* <th>Ngưỡng</th> *@
+                        </tr>
+                    </thead>
+
+                    <tbody id="variantPreviewBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Bảng biến thể hiện có -->
+            @if (Model.Variants != null)
+            {
+                var variants = Model.Variants.ToList();
+
+                <div class="mt-4">
+                    <label class="form-label fw-semibold mb-2">Biến thể hiện có</label>
+
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tên biến thể</th>
+                                <th>SKU</th>
+                                @* <th>Giá override</th> *@
+                                @* <th>Tồn kho</th> *@
+                                @* <th>Ngưỡng cảnh báo</th> *@
+                                <th>Hoạt động</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="existingVariantBody">
+                            @for (int i = 0; i < variants.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" name="ExistingVariantNames[@i]" value="@variants[i].Name" />
+                                        @variants[i].Name</td>
+
+                                    <td>
+                                        <input name="VariantSkus[@i]"
+                                               value="@variants[i].Sku"
+                                               class="form-control border-pink" />
+                                        <input type="hidden" name="VariantIds[@i]" value="@variants[i].Id" />
+
+                                        @{
+                                            int j = 0;
+                                        }
+
+                                        @foreach (var ov in variants[i].OptionValues)
+                                        {
+                                            <input type="hidden"
+                                                   name="VariantOptionValueIds[@i][@j]"
+                                                   value="@ov.ProductOptionValueId" />
+                                            j++;
+                                        }
+                                    </td>
+
+                                    @* <td>
+                                        <input type="number"
+                                               name="VariantPriceOverrides[@i]"
+                                               value="@variants[i].PriceOverride"
+                                               step="0.01"
+                                               class="form-control border-pink" />
+                                    </td> *@
+
+                                    @* <td>
+                                        <input type="number"
+                                               min="0"
+                                               name="VariantStocks[@i]"
+                                               value="@variants[i].StockQuantity"
+                                               class="form-control border-pink" />
+                                    </td> *@
+
+                                    @* <td>
+                                        <input type="number"
+                                               min="0"
+                                               name="VariantThresholds[@i]"
+                                               value="@variants[i].LowStockThreshold"
+                                               class="form-control border-pink" />
+                                    </td> *@
+
+                                    <td>
+                                        <span class="badge @(variants[i].IsActive ? "bg-success" : "bg-secondary")">
+                                            @(variants[i].IsActive ? "Đang bán" : "Tạm tắt")
+                                        </span>
+                                    </td>
+
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <!-- Mô tả -->
+            <div class="mb-3 mt-3">
+                <label asp-for="Description" class="form-label">Mô tả sản phẩm</label>
+                <textarea asp-for="Description" class="form-control border-pink" rows="3"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .booking-card {
+        border-radius: 1rem;
+        background: white;
+        padding: 2rem;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+
+    .booking-title {
+        color: #FF6185;
+    }
+
+    .form-control {
+        border-radius: .5rem;
+    }
+
+    .form-switch .form-check-input.pink-switch {
+        background-color: #e0c7cd;
+        border-color: #e0c7cd;
+        transition: background-color 0.25s, border-color 0.25s;
+    }
+
+        .form-switch .form-check-input.pink-switch:checked {
+            background-color: #FF6185 !important;
+            border-color: #FF6185 !important;
+        }
+
+        .form-switch .form-check-input.pink-switch:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+    .pink-label {
+        color: #000 !important;
+        font-weight: 500;
+    }
+
+    .form-switch .form-check-input.pink-switch:focus:not(:checked) {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23FF6185'/%3e%3c/svg%3e");
+    }
+
+    .form-switch .form-check-input.pink-switch:checked {
+        background-color: #FF6185;
+        border-color: #FF6185;
+    }
+
+        .form-switch .form-check-input.pink-switch:checked:focus {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+        }
+
+    .btn-detail {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: 0.3s;
+        background-color: #FFB6C1;
+        color: #000;
+        font-size: 16px;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        console.log("🔥 JS Loaded OK");
+
+        const previewUrl = '@Url.Action("PreviewVariantOptions", "Product", new { area = "Admin" })';
+
+        // ==============================
+        // NÚT THÊM NHÓM
+        // ==============================
+        document.getElementById("btnAddGroup")?.addEventListener("click", () => {
+
+            const g = document.querySelectorAll("#optionGroupsArea > div").length;
+
+            const div = document.createElement("div");
+            div.className = "mb-4 p-2 border rounded bg-light";
+            div.dataset.groupIndex = g;
+
+            div.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <input type="hidden" name="OptionGroupIds[${g}]" value="0" />
+                    <input class="form-control w-50 border-pink"
+                           name="OptionGroupNames[${g}]" />
+
+                    <button type="button" onclick="removeGroup(this)"
+                        class="btn btn-danger btn-sm">X</button>
+                </div>
+
+                <div class="mt-2 ms-4">
+                    <label class="fw-semibold">Giá trị:</label>
+
+                    <div class="values-area"></div>
+
+                    <button type="button" class="btn btn-sm btn-primary mt-2 add-value-btn"
+                            onclick="addValue(this, ${g})">
+                        + Thêm giá trị
+                    </button>
+                </div>
+            `;
+
+            document.getElementById("optionGroupsArea").appendChild(div);
+        });
+
+
+
+        // ==============================
+        // NÚT TẠO BIẾN THỂ
+        // ==============================
+        document.getElementById("btnGenerateVariants")?.addEventListener("click", async () => {
+
+            const groupDivs = [...document.querySelectorAll("#optionGroupsArea > div")];
+
+            const groupsReq = groupDivs.map(div => {
+                const gIndex = div.dataset.groupIndex;
+
+                const groupId = parseInt(div.querySelector(`input[name="OptionGroupIds[${gIndex}]"]`)?.value || "0");
+                const name = div.querySelector(`input[name="OptionGroupNames[${gIndex}]"]`)?.value.trim();
+
+                const valueRows = [...div.querySelectorAll(".values-area .input-group")];
+                const values = valueRows.map(row => {
+                    const id = parseInt(row.querySelector('input[type="hidden"]')?.value || "0");
+                    const text = row.querySelector('input.form-control')?.value.trim();
+                    return { id, text };
+                }).filter(v => v.text !== "");
+
+                return { groupId, name, values };
+            });
+
+            if (groupsReq.length === 0 || groupsReq.some(g => g.values.length === 0)) {
+                alert("⚠️ Mỗi nhóm biến thể phải có ít nhất 1 giá trị!");
+                return;
+            }
+
+            const payload = {
+                productId: @Model.Id,
+                groups: groupsReq
+            };
+
+            try {
+                const res = await fetch(previewUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    alert("❌ Lỗi Preview!");
+                    return;
+                }
+
+                const data = await res.json();
+
+                const groupValues = data.map(g => g.values);
+
+                const cartesian = (a, b) => a.flatMap(x => b.map(y => x.concat(y)));
+
+                let combos = groupValues.reduce(
+                    (acc, curr) => cartesian(acc, curr.map(c => c)),
+                    [[]]
+                );
+
+                const tbody = document.getElementById("variantPreviewBody");
+                tbody.innerHTML = "";
+
+                combos.forEach((combo, i) => {
+                    tbody.insertAdjacentHTML("beforeend", `
+                        <tr>                           
+                            <td>
+
+                            ${combo.map(c => c.text).join(" - ")}
+                             ${combo.map((c, j) =>
+                                    `<input type="hidden" name="GeneratedVariantValueNames[${i}][${j}]" value="${c.text}">`
+                                ).join("")}
+
+                            </td>
+
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        onclick="removePreviewRow(this)">X</button>
+                            </td>
+                                                     
+                        </tr>
+                    `);
+                });
+
+                document.getElementById("variantPreview").style.display = "block";
+
+            } catch (err) {
+                console.error(err);
+                alert("❌ Lỗi JS khi tạo preview!");
+            }
+        });
+    }); // END DOMContentLoaded
+
+
+
+    // ==============================
+    // HÀM: THÊM VALUE
+    // ==============================
+    function addValue(btn, g) {
+        const valuesArea = btn.parentElement.querySelector(".values-area");
+        const v = valuesArea.children.length;
+
+        const html = `
+            <div class="input-group mt-2">
+                <input type="hidden" name="OptionValueIds[${g}][${v}]" value="0" />
+                <input class="form-control border-pink" name="OptionValueNames[${g}][${v}]" />
+                <button type="button" onclick="removeValue(this)"
+                        class="btn btn-outline-danger btn-sm">X</button>
+            </div>
+        `;
+
+        valuesArea.insertAdjacentHTML("beforeend", html);
+    }
+
+    function removeValue(btn) {
+        btn.closest(".input-group").remove();
+    }
+
+
+
+    // ==============================
+    // FIX: HÀM removeGroup DUY NHẤT – CHUẨN
+    // ==============================
+    function removeGroup(btn) {
+        btn.closest("[data-group-index]").remove();
+
+        // Reindex toàn bộ group còn lại
+        const groups = document.querySelectorAll("#optionGroupsArea > div");
+
+        groups.forEach((groupDiv, newIndex) => {
+
+            groupDiv.dataset.groupIndex = newIndex;
+
+            // Update ID + NAME input
+            const groupIdInput = groupDiv.querySelector("input[name^='OptionGroupIds']");
+            const groupNameInput = groupDiv.querySelector("input[name^='OptionGroupNames']");
+
+            groupIdInput.name = `OptionGroupIds[${newIndex}]`;
+            groupNameInput.name = `OptionGroupNames[${newIndex}]`;
+
+            // Update nút Add Value
+            const btnAddValue = groupDiv.querySelector(".add-value-btn");
+            btnAddValue.setAttribute("onclick", `addValue(this, ${newIndex})`);
+
+            // Reindex Values
+            groupDiv.querySelectorAll(".values-area .input-group").forEach((valueDiv, vIndex) => {
+                const idInput = valueDiv.querySelector("input[name^='OptionValueIds']");
+                const nameInput = valueDiv.querySelector("input[name^='OptionValueNames']");
+
+                idInput.name = `OptionValueIds[${newIndex}][${vIndex}]`;
+                nameInput.name = `OptionValueNames[${newIndex}][${vIndex}]`;
+            });
+        });
+    }
+
+        function removePreviewRow(btn) {
+        btn.closest("tr").remove();
+    }
+
+</script>

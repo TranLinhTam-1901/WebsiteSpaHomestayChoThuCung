@@ -1,0 +1,27 @@
+# ===== COMMON =====
+.env
+*.log
+
+# ===== ASP.NET =====
+bin/
+obj/
+.vs/
+appsettings.json
+appsettings.Development.json
+
+# ===== FLUTTER =====
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+.idea/
+.metadata
+
+# ===== ANDROID =====
+.gradle/
+local.properties
+
+# ===== VS CODE =====
+.vscode/
