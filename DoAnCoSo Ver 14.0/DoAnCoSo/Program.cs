@@ -91,27 +91,28 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 });
 
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFlutter",
-        policy =>
-        {
-            policy
-                .WithOrigins("http://localhost:62844") // port Flutter Web
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
 //builder.Services.AddCors(options =>
 //{
-//    options.AddPolicy("AllowAll",
+//    options.AddPolicy("AllowFlutter",
 //        policy =>
 //        {
-//            policy.AllowAnyOrigin()
-//                  .AllowAnyMethod()
-//                  .AllowAnyHeader();
+//            policy
+//                .WithOrigins("http://localhost:62844") // port Flutter Web
+//                .AllowAnyHeader()
+//                .AllowAnyMethod();
 //        });
 //});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
 
 builder.Services.AddControllers();
 // Add services to the container.
@@ -183,7 +184,7 @@ app.UseHttpsRedirection();
 //app.UseStaticFiles();
 app.UseRouting();
 
-app.UseCors("AllowFlutter");
+app.UseCors("AllowAll");
 app.UseStaticFiles();
 
 app.UseAuthentication();
