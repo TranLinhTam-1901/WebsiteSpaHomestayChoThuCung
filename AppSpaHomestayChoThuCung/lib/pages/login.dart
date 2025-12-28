@@ -8,7 +8,7 @@ import '../auth_gate.dart';
 import 'Register.dart';
 import 'product/admin_add_product.dart';
 import 'package:get/get.dart';
-import '../model/user_profile.dart'; // Để dùng class UserProfile (thay đổi đường dẫn cho đúng với project của bạn)
+import '../model/user/user_profile.dart'; // Để dùng class UserProfile (thay đổi đường dẫn cho đúng với project của bạn)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -178,19 +178,40 @@ class _LoginPageState extends State<LoginPage> {
                             final user = userCredential.user;
 
                             if (user != null) {
-                              await AuthService.googleLogin(
-                                email: user.email!,
-                                fullName: user.displayName ?? "",
-                                firebaseUid: user.uid,
-                                avatarUrl: user.photoURL,
-                              );
-                              print("✅ Google login Firebase + Backend login SQL");
+                              print("✅ Google login thành công");
                               print("Email: ${user.email}");
 
+                              // 1. Lưu thông tin lên Firestore (giữ nguyên code của bạn)
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(user.uid)
+                                  .set({
+                                'email': user.email,
+                                'role': 'User',
+                                'createdAt': FieldValue.serverTimestamp(),
+                              }, SetOptions(merge: true));
+
+                              print("🔥 Firestore user created");
 
                               // 2. Lưu trạng thái vào bộ nhớ máy để không bị văng khi F5
                               final prefs = await SharedPreferences.getInstance();
                               await prefs.setBool('isLoggedIn', true);
+                              await prefs.setString('login_type', 'google'); // Để App biết đây là khách Google
+
+                              // 3. ĐÂY LÀ PHẦN QUAN TRỌNG: Gán dữ liệu vào UserController
+                              // để App Bar và Drawer có dữ liệu hiển thị ngay lập tức
+                              final userController = Get.find<UserController>();
+
+                              userController.profile.value = UserProfile(
+                                id: user.uid, // Dùng UID của Firebase làm ID
+                                // userName: user.displayName ?? "Người dùng Google",
+                                fullName: user.displayName ?? "Người dùng Google", // Thêm thuộc tính này
+                                email: user.email ?? "",
+                                phone: "",
+                                address: "",
+                                avatarUrl: user.photoURL ?? "",
+                                role: 'User',
+                              );
 
                               // 4. Chuyển trang về AuthGate
                               Get.offAll(() => const AuthGate());

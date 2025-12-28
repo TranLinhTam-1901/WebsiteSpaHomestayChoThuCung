@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // ⭐ Thêm import này
 import '../Api/UserApiService.dart';
 import '../Api/auth_service.dart';
-import '../model/user_profile.dart';
+import '../model/user/user_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // ⭐ Nhớ thêm import này
 class UserController extends GetxController {
   var isLoading = false.obs;
@@ -42,7 +42,27 @@ class UserController extends GetxController {
         print("✅ Đã load Profile từ API bằng JWT");
         return; // Thoát hàm nếu đã có dữ liệu
       }
-      // print("❌ Không tìm thấy JWT và cũng không có User Firebase");
+
+      // 2. Nếu không có JWT, kiểm tra Firebase User (Dành cho đăng nhập Google)
+      // Firebase sẽ mất một chút thời gian để khôi phục session sau khi F5
+      final firebaseUser = FirebaseAuth.instance.currentUser;
+
+      if (firebaseUser != null) {
+        print("ℹ️ Đang khôi phục dữ liệu từ Firebase cho: ${firebaseUser.email}");
+        profile.value = UserProfile(
+          id: firebaseUser.uid,
+          // userName: firebaseUser.displayName ?? "Người dùng Google",
+          fullName: firebaseUser.displayName ?? "Người dùng Google",
+          email: firebaseUser.email ?? "",
+          phone: "",
+          address: "",
+          avatarUrl: firebaseUser.photoURL ?? "",
+          role: 'User',
+        );
+        return;
+      }
+
+      print("❌ Không tìm thấy JWT và cũng không có User Firebase");
     } catch (e) {
       print("❌ loadProfile error: $e");
     } finally {
