@@ -5,9 +5,9 @@ import '../Controller/user_controller.dart';
 import '../pages/service/homestay_page.dart';
 import '../pages/service/spa_page.dart';
 import '../pages/service/vet_page.dart';
-import '../pages/booking/booking_select_page.dart';
-import '../pages/history/booking_history.dart';
-import '../pages/history/order_history.dart';
+import '../pages/booking/booking_select.dart';
+import '../pages/history/booking/booking_history.dart';
+import '../pages/history/order/order_history.dart';
 import '../pages/profile/profile_page.dart';
 
 class PawHouseDrawer extends StatelessWidget {

@@ -2,8 +2,7 @@
   import 'package:flutter/foundation.dart';
   import 'package:http/http.dart' as http;
   import 'dart:io';
-
-  import '../model/user_profile.dart';
+  import '../model/user/user_profile.dart';
 
   class UserApiService {
     static String get baseUrl {

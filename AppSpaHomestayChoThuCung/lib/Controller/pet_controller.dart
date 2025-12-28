@@ -5,23 +5,49 @@ class Pet {
   final String name;
   final String type;
   final String breed;
-  final double weight;
-  final String gender; // male / female / unknown
+  final double? weight;
+  final double? height;
+  final String gender;
   final DateTime? dateOfBirth;
+  final String? imageUrl;
+  final int? age;
+  final String? color;
+  final String? distinguishingMarks;
+  final String? vaccinationRecords;
+  final String? medicalHistory;
+  final String? allergies;
+  final String? dietPreferences;
+  final String? healthNotes;
+  final String? aiAnalysisResult;
 
   Pet({
     required this.id,
     required this.name,
     required this.type,
     required this.breed,
-    required this.weight,
+    this.weight,
+    this.height,
     required this.gender,
     this.dateOfBirth,
+    this.imageUrl,
+    this.age,
+    this.color,
+    this.distinguishingMarks,
+    this.vaccinationRecords,
+    this.medicalHistory,
+    this.allergies,
+    this.dietPreferences,
+    this.healthNotes,
+    this.aiAnalysisResult,
   });
 }
 
 class PetController extends GetxController {
-  final pets = <Pet>[].obs;
+  RxList<Pet> pets = <Pet>[].obs;
+
+  void deletePetByIndex(int index) {
+    pets.removeAt(index);
+  }
 
   @override
   void onInit() {

@@ -1,4 +1,3 @@
-import 'package:baitap1/pages/product/product_detail_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -8,14 +7,11 @@ import 'package:baitap1/widgets/chat_floating.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import '../Api/auth_service.dart';
-import '../Controller/product_controller.dart';
 import '../Controller/user_controller.dart';
 import '../auth_gate.dart';
 import '../pages/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 
 const kPrimaryPink = Color(0xFFFFB6C1);
 const kBackgroundPink = Color(0xFFFFF0F5);
@@ -124,8 +120,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    final productController = Get.put(ProductController());
-
     super.initState();
 
     userController = Get.find<UserController>();
@@ -236,146 +230,41 @@ class _HomePageState extends State<HomePage> {
 
   /// TAB PRODUCT
   Widget _productTab() {
-    final productController = Get.find<ProductController>();
-
-    String formatPrice(num price) {
-      final formatter = NumberFormat('#,###', 'vi_VN');
-      return '${formatter.format(price)}đ';
-    }
-
-    return Obx(() {
-      // ⏳ Đang load API
-      if (productController.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      final list = productController.products;
-
-      // ❌ Không có sản phẩm
-      if (list.isEmpty) {
-        return const Center(
-          child: Text("Chưa có sản phẩm nào"),
+    final list = widget.model.catProducts + widget.model.dogProducts;
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: list.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemBuilder: (_, i) {
+        final p = list[i];
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: Image.network(p.imageUrl, fit: BoxFit.cover),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  p.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         );
-      }
-
-      // ✅ Có dữ liệu → render Grid
-      return GridView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: list.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.75,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemBuilder: (_, i) {
-          final p = list[i];
-          return InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Get.to(() => ProductDetailPage(productId: p.id));
-              },
-
-              child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 3,
-
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 🖼 ẢNH
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    child: Image.network(
-                      'https://localhost:7051${p.imageUrl}',
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.image_not_supported),
-                    ),
-                  ),
-                ),
-
-                // 📄 INFO
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 🏷 TÊN
-                      Text(
-                        p.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-
-                      const SizedBox(height: 4),
-
-                      // 🏭 THƯƠNG HIỆU
-                      Text(
-                        p.trademark,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      // 💰 GIÁ
-                      if (p.priceReduced != null && p.priceReduced! < p.price)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              formatPrice(p.priceReduced!),
-                              style: const TextStyle(
-                                color: Colors.pink,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            Text(
-                              formatPrice(p.price),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        Text(
-                          formatPrice(p.price),
-                          style: const TextStyle(
-                            color: Colors.pink,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-              )
-          );                    // 🔒 đóng InkWell
-
-        },
-      );
-    });
+      },
+    );
   }
-
 
   /// TAB PROMOTION
   Widget _promotionTab() {
@@ -411,10 +300,14 @@ class _HomePageState extends State<HomePage> {
         viewportFraction: 1,
       ),
       items: [
-        "https://i.imgur.com/8w0YpQO.jpeg",
-        "https://i.imgur.com/Qk8jE1z.jpeg",
+        "assets/images/pro_service_1.webp",
+        "assets/images/pro_service_2.webp",
+        "assets/images/pro_service_3.webp",
+        "assets/images/pro_service_4.webp",
+        "assets/images/pro_service_5.webp",
+        "assets/images/pro_service_6.webp",
       ].map((url) {
-        return Image.network(url, fit: BoxFit.cover, width: double.infinity);
+        return Image.network(url, fit: BoxFit.fill, width: double.infinity);
       }).toList(),
     );
   }

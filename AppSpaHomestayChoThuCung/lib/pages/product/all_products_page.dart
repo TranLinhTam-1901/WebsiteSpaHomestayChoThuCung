@@ -85,10 +85,10 @@ class _AllProductsPageState extends State<AllProductsPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Image.network(
-                      'https://localhost:7051${p.imageUrl}',
-                      fit: BoxFit.cover,
-                    )
-                    ,
+                      p.imageUrl,
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                    ),
                   ),
                 ),
 

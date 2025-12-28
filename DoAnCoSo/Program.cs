@@ -31,14 +31,12 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 });
 
-
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 //options.UseMySql(
 //    builder.Configuration.GetConnectionString("DefaultConnection"),
 //    new MySqlServerVersion(new Version(8, 0, 36))
 //));
-
 
 // Đặt trước AddControllersWithViews();
 builder.Services.AddDistributedMemoryCache();
@@ -48,7 +46,6 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
  .AddDefaultTokenProviders()
@@ -75,8 +72,6 @@ builder.Services.AddAuthentication()
         };
     });
 
-
-
 //hien thi thong bao quyen han truy cap admin 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -90,27 +85,14 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.Zero; // Kiểm tra mỗi request
 });
 
-
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowFlutter",
-//        policy =>
-//        {
-//            policy
-//                .WithOrigins("http://localhost:62844") // port Flutter Web
-//                .AllowAnyHeader()
-//                .AllowAnyMethod();
-//        });
-//});
-
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    options.AddPolicy("AllowFlutter",
         policy =>
         {
             policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
         });
 });
 
@@ -142,8 +124,6 @@ builder.Services.AddScoped<EmailService>();
 
 // ✅ Đăng ký BlockchainService
 builder.Services.AddScoped<BlockchainService>();
-
-builder.Services.AddScoped<IProductApiService, ProductApiService>();
 
 builder.Services.AddSingleton<GeminiVisionService>();
 
@@ -181,12 +161,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-//app.UseStaticFiles();
-app.UseRouting();
-
-app.UseCors("AllowAll");
 app.UseStaticFiles();
-
+app.UseRouting();
+app.UseCors("AllowFlutter");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
@@ -195,13 +172,10 @@ app.MapControllers(); // bắt API
 
 app.MapRazorPages();
 
-
-
 // Route cho khu vực Admin
 app.MapControllerRoute(
     name: "Admin",
     pattern: "{area:exists}/{controller=Revenue}/{action=Index}/{id?}");
-
 
 // Route mặc định
 app.MapControllerRoute(
@@ -210,6 +184,5 @@ app.MapControllerRoute(
 
 // Route cho SignalR Hub
 app.MapHub<ChatHub>("/chathub");
-
 
 app.Run();

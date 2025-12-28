@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../model/user_profile.dart';
+import '../../model/user/user_profile.dart';
 
 const kPrimaryPink = Color(0xFFFFB6C1);
 
