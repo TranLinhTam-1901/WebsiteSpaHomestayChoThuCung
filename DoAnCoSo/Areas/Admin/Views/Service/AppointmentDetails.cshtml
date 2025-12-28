@@ -1,0 +1,241 @@
+﻿@model DoAnCoSo.Models.Appointment
+@using DoAnCoSo.Extensions
+@using System
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Chi tiết lịch đặt";
+
+    TimeZoneInfo vietnamTimeZone = null;
+    bool timeZoneFound = false;
+    try
+    {
+        vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        timeZoneFound = true;
+    }
+    catch { }
+
+    var displayPetName = Model.Pet?.Name ?? Model.DeletedPet?.Name ?? "[Đã xóa]";
+    var displayPetType = Model.Pet?.Type ?? Model.DeletedPet?.Type ?? "-";
+}
+
+<div class="appointment-detail-wrapper py-5">
+    <h2 class="section-title">📋 Chi tiết lịch đặt</h2>
+
+    <div class="appointment-card">
+        <div class="card-header">
+            <h4 class="mb-0 fw-bold">Thông tin chi tiết</h4>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-4">Mã lịch đặt:</dt>
+                <dd class="col-sm-8">@Model.AppointmentId</dd>
+
+                <dt class="col-sm-4">Thú cưng:</dt>
+                <dd class="col-sm-8">@displayPetName (@displayPetType)</dd>
+
+                <dt class="col-sm-4">Dịch vụ:</dt>
+                <dd class="col-sm-8">@(Model.Service?.Name ?? "N/A")</dd>
+
+                <dt class="col-sm-4">Trạng thái:</dt>
+                <dd class="col-sm-8">
+                    @if (Model.Status.GetDisplayName() == "Đã hủy")
+                    {
+                        <span class="badge status-cancelled">Đã hủy</span>
+                    }
+                    else if (Model.Status.GetDisplayName() == "Đã xác nhận")
+                    {
+                        <span class="badge status-confirmed">Đã xác nhận</span>
+                    }
+                    else if (Model.Status.GetDisplayName() == "Đã xóa")
+                    {
+                        <span class="badge status-deleted">Đã xóa</span>
+                    }
+                    else
+                    {
+                        <span class="badge status-pending">@Model.Status.GetDisplayName()</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Tên khách:</dt>
+                <dd class="col-sm-8">@(Model.User?.FullName ?? "N/A")</dd>
+
+                <dt class="col-sm-4">Số điện thoại liên hệ:</dt>
+                <dd class="col-sm-8">@(Model.OwnerPhoneNumber ?? "N/A")</dd>
+
+                @* Nếu ServiceId <= 3 thì hiển thị ngày nhận/trả phòng *@
+                @if (Model.ServiceId >= 1 && Model.ServiceId <= 3)
+                {
+                    <dt class="col-sm-4">Ngày nhận phòng:</dt>
+                    <dd class="col-sm-8">
+                        @(Model.StartDate != default(DateTime)
+                                            ? Model.StartDate.ToString("dd/MM/yyyy")
+                                            : "N/A")
+                                                </dd>
+
+                    <dt class="col-sm-4">Ngày trả phòng:</dt>
+                    <dd class="col-sm-8">
+                        @(Model.EndDate != default(DateTime)
+                                            ? Model.EndDate.ToString("dd/MM/yyyy")
+                                            : "N/A")
+                </dd>
+                                }
+                else
+                {
+                    <dt class="col-sm-4">Thời gian hẹn:</dt>
+                    <dd class="col-sm-8">
+                        @{
+                            string dateDisplay = Model.AppointmentDate != default(DateTime)
+                            ? Model.AppointmentDate.ToString("dd/MM/yyyy")
+                            : "N/A";
+
+                            string timeDisplay = Model.AppointmentTime != TimeSpan.Zero
+                            ? Model.AppointmentTime.ToString(@"hh\:mm")
+                            : "N/A";
+                        }
+
+                        @if (dateDisplay == "N/A" && timeDisplay == "N/A")
+                        {
+                            @:N/A
+                        }
+                        else if (dateDisplay == "N/A")
+                        {
+                            @timeDisplay
+                        }
+                        else if (timeDisplay == "N/A")
+                        {
+                            @dateDisplay
+                        }
+                        else
+                        {
+                            @($"{dateDisplay} {timeDisplay}")
+                        }
+                    </dd>
+                }
+
+                <dt class="col-sm-4">Thời điểm đặt lịch:</dt>
+                <dd class="col-sm-8">
+                    @if (Model.CreatedDate != default(DateTime) && timeZoneFound)
+                    {
+                        var vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(Model.CreatedDate, vietnamTimeZone);
+                        @vietnamTime.ToString("dd/MM/yyyy HH:mm")
+                    }
+                    else if (Model.CreatedDate != default(DateTime))
+                    {
+                        @(Model.CreatedDate.ToString("dd/MM/yyyy HH:mm") + " UTC")
+                    }
+                    else
+                    {
+                        @:N/A
+                    }
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3 text-end">
+        <a asp-action="PendingAppointments" class="btn-detail me-2">
+            <i class="fas fa-arrow-left"></i> Quay lại đơn chờ xác nhận
+        </a>
+        <a asp-action="AppointmentHistory" class="btn-detail">
+            <i class="fas fa-history"></i> Quay lại lịch sử xác nhận
+        </a>
+    </div>
+</div>
+
+<style>
+    .appointment-detail-wrapper {
+        max-width: 800px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 70px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .appointment-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        font-weight: 600;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    dt {
+        font-weight: 600;
+        color: #444;
+    }
+
+    dd {
+        margin-bottom: 12px;
+    }
+
+    /* Badge trạng thái */
+    .badge {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 12px;
+    }
+
+    .status-confirmed {
+        background-color: #28a745;
+        color: #fff;
+    }
+    /* xanh lá */
+    .status-cancelled {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    /* đỏ */
+    .status-pending {
+        background-color: #FFC107;
+        color: #000;
+    }
+    /* vàng */
+    .status-deleted {
+        background-color: #6c757d;
+        color: #fff;
+    }
+    /* xám */
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        text-decoration: none;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+</style>

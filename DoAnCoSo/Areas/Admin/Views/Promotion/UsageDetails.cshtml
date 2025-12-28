@@ -1,0 +1,107 @@
+﻿@model List<DoAnCoSo.ViewModels.PromotionUsageViewModel>
+@{
+    ViewData["Title"] = "Chi tiết sử dụng mã khuyến mãi";
+    var promo = ViewBag.Promotion as DoAnCoSo.Models.Promotion;
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 850px;">
+        <!-- Header -->
+        <h2 class="booking-title text-center mb-4">💸 Chi tiết sử dụng mã: @promo.Code</h2>
+
+        <!-- Thông tin khuyến mãi -->
+        <h5><span class="section-icon">📌</span> Thông tin khuyến mãi</h5>
+        <div class="row mb-3">
+            <div class="col-md-6 mb-2"><strong>Tên khuyến mãi:</strong> @promo.Title</div>
+            <div class="col-md-6 mb-2"><strong>Số lượng phát hành:</strong> @(promo.MaxUsage ?? 0)</div>
+            <div class="col-md-6 mb-2"><strong>Đã sử dụng:</strong> @promo.OrderPromotions.Count()</div>
+            <div class="col-md-6 mb-2"><strong>Còn lại:</strong> @((promo.MaxUsage ?? 0) - promo.OrderPromotions.Count())</div>
+        </div>
+
+        <hr />
+
+        <!-- Người dùng đã sử dụng -->
+        <h5><span class="section-icon">👥</span> Người dùng đã sử dụng</h5>
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center mt-3">
+                    <thead class="table-header">
+                        <tr>
+                            <th>Người dùng</th>
+                            <th>Email</th>
+                            <th>Mã đơn hàng</th>
+                            <th>Giảm giá áp dụng</th>
+                            <th>Ngày dùng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var usage in Model)
+                        {
+                            <tr>
+                                <td>@usage.UserName</td>
+                                <td>@usage.Email</td>
+                                <td>#@usage.OrderId</td>
+                                <td>@usage.DiscountApplied.ToString("N0") đ</td>
+                                <td>@usage.UsedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center mt-3">Chưa có ai sử dụng mã này.</div>
+        }
+
+        <!-- Nút quay lại -->
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại danh sách</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --pink-main: #FF6185;
+        --pink-accent: #FFB6C1;
+    }
+
+    .booking-card {
+        border-radius: 16px;
+        border: 2px solid var(--pink-accent);
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        padding: 2rem;
+    }
+
+    .booking-title {
+        color: var(--pink-main);
+        font-weight: bold;
+        font-size: 1.8rem;
+    }
+
+    .section-icon {
+        margin-right: 0.5rem;
+    }
+
+    .table-header {
+        background-color: #ffe6ed;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #fff0f5;
+    }
+
+    .alert-info {
+        background-color: #fff0f5;
+        border-color: #ffb6c1;
+        color: #333;
+        border-radius: 0.6rem;
+    }
+</style>

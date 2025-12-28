@@ -1,0 +1,194 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Category>
+
+@{
+    ViewData["Title"] = "📂 Quản lý danh mục";
+}
+
+<div class="category-wrapper py-5">
+    <h2 class="section-title">📂 Quản lý Danh mục</h2>
+
+    <div class="category-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold">Danh sách danh mục</h4>
+            <a asp-area="Admin" asp-controller="Categories" asp-action="Add" class="btn-add">
+                <i class="bi bi-plus-circle me-1"></i> Thêm danh mục
+            </a>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center category-table">
+                    <thead class="table-pink">
+                        <tr>
+                            <th style="width: 15%">ID</th>
+                            <th style="width: 55%">Tên danh mục</th>
+                            <th style="width: 30%">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var category in Model)
+                            {
+                                <tr>
+                                    <td class="text-muted">@category.Id</td>
+                                    <td class="fw-semibold">@category.Name</td>
+                                    <td class="actions-cell">
+                                        <div class="actions">
+                                            <a asp-area="Admin" asp-controller="Categories" asp-action="Display"
+                                               asp-route-id="@category.Id" class="btn-view btn-sm">
+                                                <i class="bi bi-eye"></i> Xem
+                                            </a>
+                                            <a asp-area="Admin" asp-controller="Categories" asp-action="Update"
+                                               asp-route-id="@category.Id" class="btn-edit btn-sm">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </a>
+                                            <a asp-area="Admin" asp-controller="Categories" asp-action="Delete"
+                                               asp-route-id="@category.Id" class="btn-delete btn-sm">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="3" class="no-category">Chưa có danh mục nào</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .category-wrapper {
+        max-width: 1000px;
+        margin: auto;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .category-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #FFF0F5;
+        padding: 12px 20px;
+        border-bottom: 1px solid #FFB6C1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-add {
+        background-color: #FF6185;
+        color: #fff;
+        font-weight: bold;
+        padding: 6px 14px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+        .btn-add:hover {
+            background-color: #FFB6C1;
+            color: #000;
+        }
+
+    .category-table thead.table-pink {
+        background-color: #FFE4E9;
+    }
+
+    .category-table th, .category-table td {
+        vertical-align: middle;
+    }
+
+    .category-table tbody tr:nth-child(even) {
+        background-color: #FFF7F9;
+    }
+
+    .category-table tbody tr:nth-child(odd) {
+        background-color: #FFFFFF;
+    }
+
+    .actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-view, .btn-edit, .btn-delete {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: 0.3s;
+    }
+
+    .btn-view {
+        background-color: #FFB6C1;
+        color: #000;
+    }
+
+        .btn-view:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-edit {
+        border: 2px solid green;
+        background-color: transparent;
+        color: green;
+    }
+
+        .btn-edit:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .no-category {
+        text-align: center;
+        color: #777;
+        padding: 20px 0;
+    }
+</style>

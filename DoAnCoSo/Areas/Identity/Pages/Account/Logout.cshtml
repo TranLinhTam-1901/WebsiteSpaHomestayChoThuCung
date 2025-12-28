@@ -1,0 +1,24 @@
+﻿@page
+@model LogoutModel
+
+@{
+    // 🔥 Layout an toàn cho trang Identity, tránh bị kéo layout Admin
+    Layout = "/Areas/Identity/Pages/_Layout.cshtml";
+
+    ViewData["Title"] = "Đăng xuất";
+}
+<header>
+    <h1>@ViewData["Title"]</h1>
+    @{
+        if (User.Identity?.IsAuthenticated ?? false)
+        {
+            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                <button type="submit" class="nav-link btn btn-link text-dark">Nhấp vào đây để Đăng xuất</button>
+            </form>
+        }
+        else
+        {
+            <p>Bạn đã đăng xuất khỏi ứng dụng thành công.</p>
+        }
+    }
+</header>

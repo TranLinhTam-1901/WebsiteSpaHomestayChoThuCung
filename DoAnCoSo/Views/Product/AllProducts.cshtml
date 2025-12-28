@@ -1,0 +1,348 @@
+﻿@model List<DoAnCoSo.Models.Product>
+@{
+    ViewData["Title"] = "🏪 Tất Cả Sản Phẩm";
+}
+@if (ViewBag.AppliedPromo != null)
+{
+    <div class="alert alert-success text-center">
+        🎁 <b>@ViewBag.AppliedPromo.Title</b>
+        (Mã: <code>@ViewBag.AppliedPromo.Code</code>)
+        – Giảm @ViewBag.AppliedPromo.Discount@(ViewBag.AppliedPromo.IsPercent ? "%" : "đ")
+    </div>
+}
+<div class="all-product-page py-5">
+    <h2 class="section-title">🏪 Tất cả sản phẩm</h2>
+
+    @if (Model != null && Model.Count > 0)
+    {
+        <div id="productContainer" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var item in Model)
+            {
+                var detailsUrl = Url.Action("Details", "Product", new { id = item.Id });
+
+                <div class="col product-item">
+                    <div class="card product-card h-100">
+                        <div class="product-img-wrapper">
+                            <img src="@item.ImageUrl" alt="@item.Name" onclick="window.location.href='@detailsUrl'" />
+                            <button class="btn favorite-btn @(ViewBag.FavoriteIds != null && ((List<int>)ViewBag.FavoriteIds).Contains(item.Id) ? "btn-danger" : "btn-outline-danger")"
+                                    data-id="@item.Id"
+                                    data-authenticated="@User.Identity.IsAuthenticated.ToString().ToLower()"
+                                    onclick="event.stopPropagation();">
+                                <i class="@(ViewBag.FavoriteIds != null && ((List<int>)ViewBag.FavoriteIds).Contains(item.Id) ? "bi-heart-fill" : "bi-heart")"></i>
+                            </button>
+                        </div>
+
+                        <div class="card-body text-center">
+                            <h5 onclick="window.location.href='@detailsUrl'">@item.Name</h5>
+                            <p>Thương hiệu: <span class="fw-semibold text-pink">@item.Trademark</span></p>
+
+                            <div class="price-box">
+                                @if (item.PriceReduced != null && item.PriceReduced > 0 && item.PriceReduced < item.Price)
+                                {
+                                    <span class="price-current">@($"{item.PriceReduced:N0}đ")</span>
+                                    <span class="price-old">@($"{item.Price:N0}đ")</span>
+                                    <span class="badge discount-badge">@item.DiscountPercentage.ToString("0.##")%</span>
+                                }
+                                else
+                                {
+                                    <span class="price-current">@($"{item.Price:N0}đ")</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Phân trang -->
+        <nav>
+            <ul id="pagination" class="pagination justify-content-center mt-4"></ul>
+        </nav>
+    }
+    else
+    {
+        <p class="text-center mt-3 text-muted">
+            Không tìm thấy sản phẩm nào phù hợp với từ khóa tìm kiếm.
+        </p>
+    }
+</div>
+
+<style>
+    :root {
+        --pink-main: #ff7aa2;
+        --pink-light: #ffe3ec;
+        --pink-dark: #e74c7b;
+    }
+
+    body {
+        background-color: #FFF0F5;
+    }
+
+    .all-product-page {
+        max-width: 1350px;
+        margin: auto;
+        padding: 15px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    /* CARD */
+    .product-card {
+        border: none;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(255, 122, 162, 0.25);
+        background-color: #fff;
+        transition: none !important;
+        position: relative;
+        height: 100%;
+        cursor: default;
+    }
+
+        .product-card:hover {
+            transform: none !important;
+            box-shadow: 0 3px 10px rgba(255, 122, 162, 0.25) !important;
+        }
+
+    /* ẢNH */
+    .product-img-wrapper {
+        width: 100%;
+        height: 260px; /* to hơn 1 chút */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+        .product-img-wrapper img {
+            max-height: 100%;
+            width: auto;
+            object-fit: contain;
+            transition: none !important;
+        }
+
+    /* NÚT YÊU THÍCH */
+    .favorite-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        border: 2px solid var(--pink-dark);
+        transition: none;
+    }
+
+        .favorite-btn i {
+            font-size: 1.3rem;
+        }
+
+    /* TEXT */
+    .product-card h5 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 10px 0 6px 0;
+        text-align: center;
+        color: #444;
+        cursor: pointer;
+    }
+
+        .product-card h5:hover {
+            color: var(--pink-dark);
+        }
+
+    .product-card p {
+        text-align: center;
+        color: #777;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
+    }
+
+    /* GIÁ */
+    .price-box {
+        background-color: var(--pink-light);
+        border-radius: 10px;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .price-current {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--pink-dark);
+    }
+
+    .price-old {
+        text-decoration: line-through;
+        color: #999;
+        margin-left: 6px;
+        font-size: 0.9rem;
+    }
+
+    .discount-badge {
+        background-color: var(--pink-main);
+        font-size: 0.8rem;
+        color: #fff;
+        margin-left: 6px;
+        border-radius: 8px;
+    }
+
+    /* PAGINATION */
+    .pagination .page-link {
+        color: var(--pink-dark);
+        border-color: #FFB6C1;
+        font-weight: bold;
+    }
+
+        .pagination .page-link:hover {
+            background-color: #FFB6C1;
+            color: white;
+        }
+
+    .pagination .active .page-link {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        color: white;
+    }
+
+        /* 👉 BỎ FOCUS */
+        .pagination .page-link:focus,
+        .pagination .active .page-link:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ------------------- FAVORITE -------------------
+        const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenInput ? tokenInput.value : '';
+
+        document.querySelectorAll('.favorite-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                btn.blur();
+                const productId = btn.getAttribute('data-id');
+                const isAuthenticated = btn.getAttribute('data-authenticated') === 'true';
+
+                if (!isAuthenticated) {
+                    window.location.href = '/Identity/Account/Login';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/Favorite/Toggle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify({ id: productId })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        btn.classList.toggle('btn-danger', data.isFavorited);
+                        btn.classList.toggle('btn-outline-danger', !data.isFavorited);
+
+                        const icon = btn.querySelector('i');
+                        icon.classList.toggle('bi-heart-fill', data.isFavorited);
+                        icon.classList.toggle('bi-heart', !data.isFavorited);
+
+                        const countElement = document.querySelector('.js-wishlist-count');
+                        if (countElement && !isNaN(data.count)) {
+                            countElement.textContent = data.count;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Toggle yêu thích lỗi:', err);
+                }
+            });
+        });
+
+        // Cập nhật icon yêu thích khi load trang
+        fetch('/Favorite/GetFavoriteStatus')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelectorAll('.favorite-btn').forEach(btn => {
+                    const productId = btn.getAttribute('data-id');
+                    const isFavorited = data.favoriteIds.includes(parseInt(productId));
+
+                    btn.classList.toggle('btn-danger', isFavorited);
+                    btn.classList.toggle('btn-outline-danger', !isFavorited);
+
+                    const icon = btn.querySelector('i');
+                    icon.classList.toggle('bi-heart-fill', isFavorited);
+                    icon.classList.toggle('bi-heart', !isFavorited);
+                });
+            });
+
+        // ------------------- PAGINATION -------------------
+        const itemsPerPage = 16;
+        const items = document.querySelectorAll(".product-item");
+        const totalItems = items.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pagination = document.getElementById("pagination");
+
+        function showPage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            items.forEach((item, index) => {
+                item.style.display = (index >= start && index < end) ? "block" : "none";
+            });
+
+            document.querySelectorAll("#pagination li").forEach(li => li.classList.remove("active"));
+            const currentPage = document.querySelector(`#pagination li[data-page='${page}']`);
+            if (currentPage) currentPage.classList.add("active");
+
+            // 👇 Thêm cuộn về đầu trang
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        if (totalPages > 1) {
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement("li");
+                li.classList.add("page-item");
+                li.setAttribute("data-page", i);
+
+                const a = document.createElement("a");
+                a.classList.add("page-link");
+                a.href = "#";
+                a.textContent = i;
+
+                li.appendChild(a);
+                li.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    showPage(i);
+                });
+                pagination.appendChild(li);
+            }
+        }
+
+        // Hiển thị trang đầu tiên khi load
+        showPage(1);
+    });
+</script>

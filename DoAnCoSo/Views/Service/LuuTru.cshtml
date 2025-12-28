@@ -1,0 +1,247 @@
+﻿<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-sm-12">
+            <div class="card">
+                <div class="card-header text-center fw-bold">CÁC DỊCH VỤ</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <a asp-controller="Service" asp-action="Spa" class="text-decoration-none text-dark">Dịch vụ spa</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a asp-controller="Service" asp-action="LuuTru" class="text-decoration-none text-dark">Homestay Thú Cưng</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Cột phải-->
+        <div class="col-md-9">
+            <div class="intro-section">
+                <h2>🐶 Dịch vụ Homestay tại PawHouse 🐾</h2>
+                <p>
+                    Paw House cung cấp dịch vụ lưu trú cao cấp cho thú cưng với không gian sạch sẽ, an toàn và tiện
+                    nghi.
+                    Chúng tôi có các phòng riêng, khu vui chơi thoải mái và đội ngũ nhân viên giàu kinh nghiệm luôn
+                    sẵn sàng chăm sóc.
+                    Bạn có thể yên tâm khi gửi thú cưng tại đây, vì chúng tôi đảm bảo môi trường thân thiện, chế độ
+                    ăn uống khoa học
+                    và hoạt động vui chơi mỗi ngày. 🌟
+                </p>
+
+                <div class="text-center mt-4">
+                    <img src="~/images/hotel thú cưng 2.jpg" alt="Dịch vụ spa thú cưng" class="img-fluid rounded">
+                </div>
+
+                <div class="text-center mt-4">
+                    <img src="~/images/hotel thú cưng 3.jpg" alt="Dịch vụ spa thú cưng" class="img-fluid rounded">
+                </div>
+            </div>
+
+            <!-- Bảng giá dịch vụ -->
+            <div class="container mt-5">
+                <div class="row  g-4 ">
+                    <h2 class="text-center fw-bold mb-4"> 🐶 Dog Homestay 🏠 </h2>
+                    <!-- Table Daycare -->
+                    <div class="col-md-12">
+                        <div class="card  bg-light">
+                            <div class="card-header text-center text-white fw-bold bg-dark">Daycare</div>
+                            <div class="card-body">
+                                <table class="table table-bordered text-center">
+                                    <thead class="table">
+                                        <tr>
+                                            <th>Trọng lượng</th>
+                                            <th>Giá (VND)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Dưới 5kg</td>
+                                            <td>190.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>5kg - 8kg</td>
+                                            <td>210.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>8kg - 12kg</td>
+                                            <td>240.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>12kg - 18kg</td>
+                                            <td>280.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>18kg - 25kg</td>
+                                            <td>320.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Trên 25kg</td>
+                                            <td>375.000</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="text-center">
+                                    <button class="btn btn-info" data-bs-toggle="collapse" data-bs-target="#condoInfo3 ">Mô tả chi tiết</button>
+                                </div>
+
+                                <div id="condoInfo3" class="collapse mb-3">
+                                    <p>
+                                        DayCare là dịch vụ chăm sóc thú cưng trong ngày, không bao gồm qua đêm.
+                                        Giá thấp hơn so với hai dịch vụ trên, bắt đầu từ 190.000 (dưới 5kg) và lên
+                                        đến 375.000 (trên 25kg).
+                                        Có thể dành cho những chủ nuôi chỉ muốn gửi thú cưng trong một khoảng thời
+                                        gian ngắn mà không cần lưu trú dài hạn.
+                                    </p>
+                                    <div class="text-center mt-3">
+                                        <img src="~/images/Daycare.jpg" alt="Daycare" class="img-fluid rounded">
+                                    </div>
+                                    <!-- Nút Đặt lịch, điều hướng đến trang khác -->
+                                    <div class="text-center mt-3">
+                                        <a asp-controller ="Appointments" asp-action="BookAppointmentHomestay" class="btn btn-warning">📅 Đặt lịch ngay ➜</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phần Điều khoảng áp dụng -->
+                    <div class="text-center mt-5">
+                        <button class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#policyNote">📌 Điều khoản áp dụng</button>
+                    </div>
+
+                    <div id="policyNote" class="collapse mt-3">
+                        <div class="alert alert-info">
+                            <strong>GÓI LƯU TRÚ DÀI HẠN</strong>
+                            <ul>
+                                <li>1 TUẦN ---------------- OFF 10%</li>
+                                <li>2 TUẦN ---------------- OFF 15%</li>
+                                <li>1 THÁNG --------------- OFF 20% & FREE 1 Spa</li>
+                            </ul>
+                            <strong>ĐIỀU KHOẢN ÁP DỤNG:</strong>
+                            <ul>
+                                <li><strong>Giờ check-in:</strong> 9:00 AM</li>
+                                <li><strong>Giờ check-out:</strong> 11:00 AM (checkout sau 11:00 AM sẽ tính phí Daycare 1 ngày).</li>
+                                <li><strong>Đối với Daycare:</strong> Check-out 7:00 PM.</li>
+                                <li><strong>Check-in/check-out ngoài khung 9AM - 8PM:</strong> Phụ thu 50.000đ/h.</li>
+                                <li>Giá phòng áp dụng cho 1 bé/phòng.</li>
+                                <li>Giá phòng đã bao gồm thức ăn tiêu chuẩn (2 bữa chính, 1 bữa phụ).</li>
+                                <li>Nếu khách hàng không dùng phần ăn tiêu chuẩn, có thể đổi sang phần ăn theo khẩu phần riêng.</li>
+                                <li>PetBuddy khuyến khích khách hàng mang theo đồ chơi, giường hoặc chăn để bé có mùi quen thuộc, giúp giảm stress.</li>
+                                <li>Bảng giá này không áp dụng vào các dịp Lễ, Tết.</li>
+                            </ul>
+                            <strong>📍 Địa chỉ:</strong> SH.A0012, Đường B2, Tòa Sarina Block A, Khu đô thị Sala, TP. Thủ Đức, HCMC.<br>
+                            <strong>📞 Hotline:</strong> 0946 246 401.
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <h2 class="text-center fw-bold hotel-title">🐱 Cat Homestay 🏨</h2>
+                        <div class="card text-white bg-pink">
+                            <!-- <div class="card-header text-center text-dark fw-bold">Cat Hotel</div> -->
+                            <div class="card-body">
+                                <!-- Bảng giá phòng -->
+                                <table class="table table-bordered table-hover cat-hotel-table text-center bg-white text-dark">
+                                    <thead>
+                                        <tr>
+                                            <th>Loại phòng</th>
+                                            <th>Số lượng mèo</th>
+                                            <th>Giá (VND)</th>
+                                            <th>Mô tả chi tiết</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Standard Room -->
+                                        <tr>
+                                            <td>Standard Room</td>
+                                            <td>1 cat</td>
+                                            <td>200.000</td>
+                                            <td>
+                                                <button class="btn btn-info btn-sm" data-bs-toggle="collapse" data-bs-target="#standardInfo">
+                                                    Xem mô tả
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="p-0">
+                                                <div id="standardInfo" class="collapse">
+                                                    <div class="p-3 bg-light">
+                                                        <p>Phòng tiêu chuẩn, phù hợp cho một chú mèo. Được trang bị đầy đủ tiện nghi cơ bản như chỗ ngủ, khay vệ sinh, và đồ chơi.</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Deluxe Room -->
+                                        <tr>
+                                            <td rowspan="2">Deluxe Room</td>
+                                            <td>1 cat</td>
+                                            <td>250.000</td>
+                                            <td rowspan="2">
+                                                <button class="btn btn-info btn-sm" data-bs-toggle="collapse" data-bs-target="#deluxeInfo">
+                                                    Xem mô tả
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>2 cats</td>
+                                            <td>375.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="p-0">
+                                                <div id="deluxeInfo" class="collapse">
+                                                    <div class="p-3 bg-light">
+                                                        <p>Phòng cao cấp hơn, phù hợp cho một hoặc hai chú mèo. Có thêm giường êm ái, khu vực vui chơi riêng, và không gian rộng rãi.</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Superior Room -->
+                                        <tr>
+                                            <td rowspan="3">Superior Room</td>
+                                            <td>1 cat</td>
+                                            <td>350.000</td>
+                                            <td rowspan="3">
+                                                <button class="btn btn-info btn-sm" data-bs-toggle="collapse" data-bs-target="#superiorInfo">
+                                                    Xem mô tả
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>2 cats</td>
+                                            <td>525.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>3 cats</td>
+                                            <td>700.000</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="p-0">
+                                                <div id="superiorInfo" class="collapse">
+                                                    <div class="p-3 bg-light">
+                                                        <p>Phòng sang trọng nhất, phù hợp cho một đến ba chú mèo. Có khu vực leo trèo, cửa sổ view đẹp, và đồ chơi đa dạng.</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <!-- Ưu đãi Daycare -->
+                                <div class="mt-4 p-3 bg-light text-dark rounded">
+                                    <h5 class="fw-bold">Ưu đãi Daycare</h5>
+                                    <p>Giảm <strong>25%</strong> trên giá full-day khi sử dụng dịch vụ Daycare.</p>
+                                    <div class="text-center mt-3">
+                                        <a asp-controller="Appointments" asp-action="BookAppointmentHomestay" class="btn btn-warning">📅 Đặt lịch ngay ➜</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

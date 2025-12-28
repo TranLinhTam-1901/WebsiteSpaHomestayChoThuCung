@@ -1,0 +1,275 @@
+﻿@model DoAnCoSo.Models.Order
+
+@{
+    ViewData["Title"] = "📦 Chi tiết đơn hàng #" + Model.Id;
+}
+@functions {
+    string ShowOption(DoAnCoSo.Models.OrderDetail d)
+    {
+        if (d.VariantId.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(d.VariantName))
+                return d.VariantName;
+
+            var name = d.Product?.Variants?
+                .FirstOrDefault(v => v.Id == d.VariantId.Value)?.Name;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            return $"Variant #{d.VariantId.Value}";
+        }
+        if (!string.IsNullOrWhiteSpace(d.SelectedFlavor))
+            return d.SelectedFlavor;
+
+        return "Không có";
+    }
+}
+
+<div class="order-wrapper py-5">
+    <div class="order-detail-box">
+        <h2 class="order-detail-title">📦 Chi tiết đơn hàng #@Model.Id</h2>
+
+        <div>
+            <!-- 🟩 Thông tin tổng quan -->
+            <h4 class="section-title">📋 Thông tin tổng quan</h4>
+            <hr />
+            <dl class="row">
+                <dt class="col-sm-4">Mã đơn hàng:</dt>
+                <dd class="col-sm-8">@Model.Id</dd>
+
+                <dt class="col-sm-4">Ngày đặt:</dt>
+                <dd class="col-sm-8">@Model.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+
+                <dt class="col-sm-4">Tổng tiền:</dt>
+                <dd class="col-sm-8">
+                    @if (Model.OrderPromotions != null && Model.OrderPromotions.Any())
+                    {
+                        var discount = Model.OrderPromotions.Sum(op => op.DiscountApplied);
+                        <span class="text-muted text-decoration-line-through">@((Model.TotalPrice + discount).ToString("N0")) đ</span>
+                        <span class="text-danger fw-bold ms-2">@Model.TotalPrice.ToString("N0") đ</span>
+                        <br />
+                        <small class="text-success">
+                            (Đã giảm: <strong>@discount.ToString("N0") đ</strong>)
+                        </small>
+                    }
+                    else
+                    {
+                        <span class="fw-bold">@Model.TotalPrice.ToString("N0") đ</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Trạng thái:</dt>
+                <dd class="col-sm-8">
+                    @if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                    {
+                        <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                    }
+                    else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                    {
+                        <span class="badge bg-success">Đã xác nhận</span>
+                    }
+                    else if (Model.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
+                    {
+                        <span class="badge bg-danger">Đã hủy</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">@Model.Status.ToString()</span>
+                    }
+                </dd>
+            </dl>
+
+            <!-- 🟩 Thông tin giao hàng -->
+            <h4 class="section-title">🚚 Thông tin người nhận & giao hàng</h4>
+            <hr />
+            <dl class="row">
+                <dt class="col-sm-4">Tên người nhận:</dt>
+                <dd class="col-sm-8">@Model.CustomerName</dd>
+
+                <dt class="col-sm-4">Số điện thoại:</dt>
+                <dd class="col-sm-8">@Model.PhoneNumber</dd>
+
+                <dt class="col-sm-4">Địa chỉ giao hàng:</dt>
+                <dd class="col-sm-8">@Model.ShippingAddress</dd>
+
+                <dt class="col-sm-4">Phương thức thanh toán:</dt>
+                <dd class="col-sm-8">@Model.PaymentMethod</dd>
+
+                <dt class="col-sm-4">Ghi chú:</dt>
+                <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Notes) ? "Không có" : Model.Notes)</dd>
+            </dl>
+
+            <!-- 🟩 Chi tiết sản phẩm -->
+            <h4 class="section-title">🧾 Chi tiết dịch vụ / sản phẩm</h4>
+            <hr />
+            @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+            {
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Tên sản phẩm / dịch vụ</th>
+                            <th>Số lượng</th>
+                            <th>Giá gốc</th>
+                            <th>Giá sau giảm</th>
+                            <th>Phân loại</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderDetails)
+                        {
+                            <tr>
+                                <td>@item.Product.Name</td>
+                                <td>@item.Quantity</td>
+                                <td>
+                                    @if (item.DiscountedPrice < item.OriginalPrice)
+                                    {
+                                        <span class="text-muted text-decoration-line-through">@item.OriginalPrice.ToString("N0") đ</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@item.OriginalPrice.ToString("N0") đ</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="text-danger fw-bold">@item.DiscountedPrice.ToString("N0") đ</span>
+                                </td>
+                                <td>@ShowOption(item)</td>
+                                <td>@((item.Quantity * item.DiscountedPrice).ToString("N0")) đ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">Không có sản phẩm nào trong đơn hàng này.</p>
+            }
+
+            <!-- 🟩 Thông tin khuyến mãi -->
+            @if (Model.OrderPromotions != null && Model.OrderPromotions.Any())
+            {
+                var promo = Model.OrderPromotions.FirstOrDefault()?.Promotion;
+                <h4 class="section-title">🎁 Thông tin khuyến mãi</h4>
+                <hr />
+                <dl class="row">
+                    <dt class="col-sm-4">Mã khuyến mãi:</dt>
+                    <dd class="col-sm-8">@promo?.Code</dd>
+
+                    <dt class="col-sm-4">Loại giảm:</dt>
+                    <dd class="col-sm-8">
+                        @(promo?.IsPercent == true ? $"{promo.Discount}%" : $"{promo?.Discount.ToString("N0")} đ")
+                    </dd>
+
+                    <dt class="col-sm-4">Giá trị đã giảm:</dt>
+                    <dd class="col-sm-8">@Model.OrderPromotions.Sum(op => op.DiscountApplied).ToString("N0") đ</dd>
+                </dl>
+            }
+
+            <div class="text-center mt-4">
+                <a asp-action="Index" class="btn-back">🔙 Quay lại danh sách đơn hàng</a>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .order-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .order-detail-box {
+        background-color: #fff;
+        border: 2px solid #FFB6C1;
+        border-radius: 20px;
+        box-shadow: 0 8px 20px rgba(255, 182, 193, 0.3);
+        padding: 30px;
+    }
+
+    .order-detail-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .order-detail-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #FF6185;
+        margin-bottom: 15px;
+    }
+
+    .table th {
+        background-color: #fff0f5;
+        color: #FF6185;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .badge {
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 12px;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: white;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 12px;
+        border: none;
+        transition: background-color 0.3s ease;
+        text-decoration: none;
+    }
+
+        .btn-back:hover {
+            background-color: #e75478;
+            color: #fff;
+        }
+
+    dt {
+        font-weight: 600;
+        color: #444;
+    }
+
+    dd {
+        margin-bottom: 10px;
+    }
+
+    .text-decoration-line-through {
+        opacity: 0.8;
+    }
+
+    @@media (max-width: 768px) {
+        .table th, .table td {
+            font-size: 0.9rem;
+            padding: 8px;
+        }
+
+        .btn-back {
+            font-size: 0.95rem;
+            padding: 8px 16px;
+        }
+    }
+</style>

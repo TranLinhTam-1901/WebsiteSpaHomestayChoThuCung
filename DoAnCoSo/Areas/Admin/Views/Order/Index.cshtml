@@ -1,0 +1,320 @@
+﻿@model IEnumerable<DoAnCoSo.Models.Order>
+
+@{
+    ViewData["Title"] = "📦 Quản lý đơn hàng";
+}
+
+@functions {
+    // Trả về tên "Vị" hợp lệ cho 1 OrderDetail
+    string ShowOption(DoAnCoSo.Models.OrderDetail d)
+    {
+        // Ưu tiên biến thể (nếu có)
+        if (d.VariantId.HasValue)
+        {
+            if (!string.IsNullOrWhiteSpace(d.VariantName))
+                return d.VariantName;
+
+            // Fallback: tra theo Product.Variants (đã Include ở controller)
+            var name = d.Product?.Variants?
+                .FirstOrDefault(v => v.Id == d.VariantId.Value)?.Name;
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            return $"Variant #{d.VariantId.Value}";
+        }
+
+        // Không có biến thể -> dùng SelectedFlavor
+        if (!string.IsNullOrWhiteSpace(d.SelectedFlavor))
+            return d.SelectedFlavor;
+
+        return "Không có";
+    }
+}
+<div class="order-wrapper py-5">
+    <h2 class="section-title">📦 Quản lý đơn hàng</h2>
+
+    @* @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    } *@
+
+    @if (!Model.Any())
+    {
+        <p class="no-orders">Không có đơn hàng nào trong hệ thống.</p>
+    }
+    else
+    {
+        @foreach (var order in Model)
+        {
+            <div class="order-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong><i class="fas fa-receipt me-1"></i> Mã đơn:</strong> @order.Id <br />
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i> Ngày đặt: @order.OrderDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                        </small><br />
+                        <small class="text-muted"><i class="fas fa-user me-1"></i> Người đặt: @order.User?.FullName</small>
+                    </div>
+                    <div class="text-end">
+                        @* <p class="mb-1"><strong>Tổng tiền:</strong> <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span></p> *@
+                        @if (order.OrderPromotions != null && order.OrderPromotions.Any())
+                        {
+                            var totalDiscount = order.OrderPromotions.Sum(op => op.DiscountApplied);
+                            var originalPrice = order.TotalPrice + totalDiscount;
+
+                            <p class="mb-1">
+                                <strong>Giá gốc:</strong>
+                                <span class="text-muted">@originalPrice.ToString("N0") VNĐ</span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Đã giảm:</strong>
+                                <span class="text-danger fw-bold">-@totalDiscount.ToString("N0") VNĐ</span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Thành tiền:</strong>
+                                <span class="text-success fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span>
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="mb-1">
+                                <strong>Tổng tiền:</strong>
+                                <span class="text-danger fw-bold">@order.TotalPrice.ToString("N0") VNĐ</span>
+                            </p>
+                        }
+
+                        @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                        {
+                            <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                        }
+                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                        {
+                            <span class="badge bg-success">Đã xác nhận</span>
+                        }
+                        else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaHuy)
+                        {
+                            <span class="badge bg-danger">Đã hủy</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@order.Status.ToString()</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <strong><i class="fas fa-box-open me-1"></i> Chi tiết sản phẩm:</strong>
+                    @if (order.OrderDetails != null && order.OrderDetails.Any())
+                    {
+                        <ul class="list-group list-group-flush mt-2">
+                            @foreach (var item in order.OrderDetails)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-semibold">@item.Product.Name</span>
+                                        <span class="text-muted">(Vị: @ShowOption(item))</span>
+                                        <br />
+                                        <small>Số lượng: @item.Quantity</small>
+                                    </div>
+                                    <span>@item.Price.ToString("N0") VNĐ</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted mt-2">Không có chi tiết sản phẩm.</p>
+                    }
+                </div>
+
+                <div class="card-footer text-end">
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn-detail me-2">
+                        <i class="fas fa-eye me-1"></i> Xem chi tiết
+                    </a>
+
+                    @if (order.Status == DoAnCoSo.Models.OrderStatusEnum.ChoXacNhan)
+                    {
+                        <form asp-action="Confirm" asp-route-id="@order.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận đơn hàng này?');">
+                            <button type="submit" class="btn-accept me-2">
+                                <i class="fas fa-check-circle"></i> Xác nhận
+                            </button>
+                        </form>
+
+                        <form asp-action="Cancel" asp-route-id="@order.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?');">
+                            <button type="submit" class="btn-cancel">
+                                <i class="fas fa-times-circle"></i> Hủy đơn
+                            </button>
+                        </form>
+                    }
+                    else if (order.Status == DoAnCoSo.Models.OrderStatusEnum.DaXacNhan)
+                    {
+                        <!-- Nút hủy sau khi đã xác nhận (hoàn kho) -->
+                        <form asp-action="Cancel" asp-route-id="@order.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Hủy đơn đã xác nhận và hoàn kho?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-cancel">
+                                <i class="fas fa-times-circle"></i> Hủy (hoàn kho)
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+<style>
+    .order-wrapper {
+        max-width: 960px;
+        margin: auto;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+
+    .order-card {
+        border-radius: 16px;
+        border: 2px solid #FFB6C1;
+        box-shadow: 0 6px 16px rgba(255, 182, 193, 0.3);
+        background-color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background-color: #fff0f5;
+        font-weight: 500;
+        font-size: 1rem;
+        padding: 15px 20px;
+        border-bottom: 1px solid #FFB6C1;
+    }
+
+    .card-body {
+        font-size: 0.95rem;
+        color: #333;
+        padding: 15px 20px;
+    }
+
+    .card-footer {
+        background-color: #fff;
+        padding: 12px 20px;
+        border-top: 1px solid #FFB6C1;
+    }
+
+    .badge {
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 12px;
+    }
+
+    .btn-detail {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-cancel {
+        border: 2px solid red;
+        color: red;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        background-color: transparent;
+    }
+
+        .btn-cancel:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    .btn-accept {
+        border: 2px solid green;
+        color: green;
+        font-weight: bold;
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: 25px;
+        background-color: transparent;
+    }
+
+        .btn-accept:hover {
+            background-color: green;
+            color: #fff;
+        }
+
+    .list-group-item {
+        font-size: 0.9rem;
+    }
+
+    .no-orders {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #666;
+        margin-top: 40px;
+    }
+
+    @@media (max-width: 768px) {
+        .section-title {
+            font-size: 1.6rem;
+        }
+
+        .card-header, .card-body, .card-footer {
+            padding: 12px;
+        }
+
+        .btn-detail, .btn-cancel {
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // ✅ Tự ẩn thông báo sau 3 giây
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.classList.add('fade');
+                    alert.style.transition = 'opacity 0.6s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 600); // Xóa sau khi mờ dần
+                }, 3000);
+            });
+        });
+    </script>
+}

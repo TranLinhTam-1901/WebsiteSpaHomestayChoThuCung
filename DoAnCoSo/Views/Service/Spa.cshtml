@@ -1,0 +1,108 @@
+﻿@{
+    ViewData["Title"] = "Spa";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Cột trái: Danh sách dịch vụ -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header text-center fw-bold">CÁC DỊCH VỤ</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <a asp-controller="Service" asp-action="Spa" class="text-decoration-none text-dark">Dịch vụ spa</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a asp-controller="Service" asp-action="LuuTru" class="text-decoration-none text-dark">Homestay Thú Cưng</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Cột phải: Bảng giá dịch vụ -->
+        <div class="col-md-9">
+            <div class="intro-section">
+                <h2>🐾 Dịch Vụ Spa Cho Thú Cưng - Chăm Sóc Toàn Diện 🐾</h2>
+                <p>
+                    Tại Paw House , chúng tôi cung cấp dịch vụ spa cao cấp giúp thú cưng của bạn thư giãn và
+                    khỏe mạnh. Với đội ngũ chuyên gia giàu kinh nghiệm, không gian sạch sẽ, an toàn cùng các sản
+                    phẩm chăm sóc tự nhiên, chúng tôi cam kết mang lại trải nghiệm tốt nhất cho thú cưng của bạn.
+                </p>
+
+                <div class="text-center mt-4">
+					<img src="/images/cắt tỉa 2.png" alt="Dịch vụ spa thú cưng" class="img-fluid w-100 rounded">
+                    <p class="mt-2 image-caption"><em>Thú cưng được chăm sóc</em></p>
+                </div>
+
+
+                <div class="text-center mt-4">
+                    <img src="/images/hotel thú cưng 2.jpg" alt="Dịch vụ spa thú cưng" class="img-fluid rounded">
+                    <p class="mt-2 image-caption"><em>Thú cưng cắt tỉa lông </em></p>
+                </div>
+            </div>
+
+            <table class="table table-bordered text-center mt-4">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Trọng lượng</th>
+                        <th>Spa(Tắm sấy vệ sinh)</th>
+                        <th>Grooming(Spa + Cắt tạo kiểu)</th>
+                        <th>Shave(Spa + Cạo lông)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Dưới 5kg</td>
+                        <td>330.000</td>
+                        <td>500.000</td>
+                        <td>420.000</td>
+                    </tr>
+                    <tr>
+                        <td>5kg - 12kg</td>
+                        <td>440.000</td>
+                        <td>690.000</td>
+                        <td>570.000</td>
+                    </tr>
+                    <tr>
+                        <td>12kg - 25kg</td>
+                        <td>610.000</td>
+                        <td>930.000</td>
+                        <td>770.000</td>
+                    </tr>
+                    <tr>
+                        <td>Trên 25kg</td>
+                        <td>850.000</td>
+                        <td>1.300.000</td>
+                        <td>1.000.000</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 class="mt-5">DỊCH VỤ KHÁC</h4>
+            <ul class="list-group">
+                <li class="list-group-item">Cắt móng - 80.000</li>
+                <li class="list-group-item">Vệ sinh tai - 60.000</li>
+                <li class="list-group-item">Vệ sinh răng miệng - 55.000</li>
+                <li class="list-group-item">Gỡ rối - 50.000 - 700.000</li>
+                <li class="list-group-item">Tắm đặc trị - 50.000</li>
+                <li class="list-group-item">Phụ thu check-in trễ - 70.000</li>
+            </ul>
+
+            <h4 class="mt-5">GÓI TẮM THÁNG</h4>
+            <p>10 lần tắm spa - Giảm 15% (Sử dụng trong 90 ngày)</p>
+
+            <!-- Khu vực Đặt lịch ở cuối trang -->
+            <section class="cta-section">
+                <h2>Bạn đã sẵn sàng làm đẹp cho thú cưng?</h2>
+                <p>Hãy đặt lịch ngay để nhận dịch vụ tốt nhất!</p>
+                <a asp-controller="Appointments" asp-action="BookAppointmentSpa" class=" btn btn-warning">📅 Đặt lịch ngay ➜</a>
+            </section>
+
+        </div>
+
+
+
+    </div>
+</div>
+
+

@@ -1,0 +1,916 @@
+﻿@model DoAnCoSo.ViewModels.ProductDetailViewModel
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Hình ảnh sản phẩm -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0">
+                <img id="mainProductImage" src="@Model.Product.ImageUrl" class="card-img-top" alt="Product Image">
+                <div class="card-body">
+                    <div class="row g-2">
+                        @if (Model.Product.Images != null && Model.Product.Images.Any())
+                        {
+                            foreach (var productImage in Model.Product.Images)
+                            {
+                                <div class="col-3">
+                                    <img src="@productImage.Url" class="img-thumbnail" alt="Thumbnail" style="cursor:pointer;">
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-12 text-center text-muted">Không có ảnh phụ nào.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chi tiết sản phẩm -->
+        <div class="col-md-6">
+            <h1 class="h2 mb-3">@Model.Product.Name</h1>
+
+            @if (TempData["ErrorMessage"] is string stockMsg)
+            {
+                <div class="alert alert-danger" role="alert">@stockMsg</div>
+            }
+
+            <!-- Giá -->
+            <div class="mb-3">
+                @if (Model.Product.PriceReduced != null && Model.Product.PriceReduced > 0 && Model.Product.PriceReduced < Model.Product.Price)
+                {
+                    <span class="fw-bold text-danger fs-4">@Model.Product.PriceReduced.Value.ToString("N0")đ</span>
+                    <del class="text-muted">@Model.Product.Price.ToString("N0")đ</del>
+                    <span class="badge bg-success">@Model.Product.DiscountPercentage.ToString("0.##")%</span>
+                }
+                else
+                {
+                    <span class="fw-bold text-danger fs-4">@Model.Product.Price.ToString("N0")đ</span>
+                }
+            </div>
+
+            <!-- Rating -->
+            <div class="mb-3 d-flex align-items-center">
+                <div class="text-warning me-2">
+                    @{
+                        double rounded = Math.Round(Model.AverageRating * 2) / 2;
+                        for (int i = 1; i <= 5; i++)
+                        {
+                            if (rounded >= i)
+                            {
+                                <i class="fas fa-star"></i>
+                                ;
+                            }
+                            else if (rounded >= i - 0.5)
+                            {
+
+                                <i class="fas fa-star-half-alt"></i>
+                                ;
+                            }
+                            else
+                            {
+
+                                <i class="far fa-star"></i>
+                                ;
+                            }
+                        }
+                    }
+                </div>
+                <span class="text-muted">(@Model.TotalReviews đánh giá)</span>
+            </div>
+
+            <p class="fw-semibold mb-4">Thương hiệu: <span class="text-primary">@Model.Product.Trademark</span></p>
+
+            <!-- Actions -->
+            <div class="product-detail-actions-container">
+
+                @{
+                    // Dùng list biến thể đã được controller lọc sẵn
+                    var activeVariants = Model.Variants ?? new List<DoAnCoSo.Models.ProductVariant>();
+                    bool hasVariants = activeVariants.Any();
+
+                    // Tồn cho sản phẩm (khi KHÔNG có biến thể)
+                    int productAvailable = Math.Max(0,
+                    (Model.Product?.StockQuantity ?? 0) - (Model.Product?.ReservedQuantity ?? 0));
+
+                    string StockLabel(int stock) => stock switch
+                    {
+                        0 => "Hết hàng",
+                        <= 5 => $"Còn {stock}",
+                        _ => "Còn hàng"
+                    };
+                }
+
+
+                <!-- (A) Khối chọn biến thể nếu có -->
+                @if (hasVariants)
+                {
+                    @if (Model.OptionGroups != null && Model.OptionGroups.Any())
+                    {
+                        @for (int g = 0; g < Model.OptionGroups.Count; g++)
+                        {
+                            var group = Model.OptionGroups[g];
+
+                            <h6 class="mt-3">@group.GroupName</h6>
+                            <div class="mb-2 option-group" data-group="@g">
+                                @foreach (var val in group.Values)
+                                {
+                                    var valId = $"opt{g}_{val.OptionValueId}";
+                                    <input type="radio"
+                                           class="btn-check option-value-radio"
+                                           name="group_@g"
+                                           id="@valId"
+                                           value="@val.OptionValueId"
+                                           data-group-index="@g"
+                                           @(val.IsAvailable ? "" : "disabled") />
+
+                                    <label class="flavor-option-label @(val.IsAvailable ? "" : "disabled")"
+                                           for="@valId">
+                                        @val.Value
+                                    </label>
+                                }
+                            </div>
+                        }
+                    }
+                }
+
+                <!-- (B) Khối hương vị: chỉ hiện khi KHÔNG có biến thể -->
+                @if (!hasVariants && Model.Product.FlavorsList != null && Model.Product.FlavorsList.Any())
+                {
+                    <h6 class="mb-2">Hương vị</h6>
+                    <div class="mb-3">
+                        @for (int i = 0; i < Model.Product.FlavorsList.Count; i++)
+                        {
+                            var id = $"flavor{i}";
+                            <input type="radio" class="btn-check flavor-radio" name="SelectedFlavor" id="@id" value="@Model.Product.FlavorsList[i]" @(i == 0 ? "checked" : "")>
+                            <label class="flavor-option-label" for="@id">@Model.Product.FlavorsList[i]</label>
+                        }
+                    </div>
+                }
+
+                <!-- Số lượng -->
+                @{
+                    int uiAvailable = hasVariants
+                    ? Math.Max(0, activeVariants.First().StockQuantity - activeVariants.First().ReservedQuantity)
+                    : productAvailable;
+
+                    int maxUiQty = Math.Min(5, Math.Max(0, uiAvailable));
+                    string stockLabel = StockLabel(uiAvailable);
+                }
+
+                <div class="mb-4 d-flex align-items-center">
+                    <label class="me-2">Số lượng</label>
+                    @if (maxUiQty > 0)
+                    {
+                        <select class="form-select w-auto" id="quantitySelect" data-available="@uiAvailable">
+                            @for (int i = 1; i <= maxUiQty; i++)
+                            {
+                                <option>@i</option>
+                            }
+                        </select>
+                        <small class="ms-2 text-muted" id="stockLabelTxt">@stockLabel</small>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Hết hàng</span>
+                    }
+                </div>
+
+                <form id="buyNowForm" asp-action="BuyNow" asp-controller="ShoppingCart" method="post" class="d-none">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.Product.Id" />
+                    <input type="hidden" id="buyNowQty" name="quantity" value="1" />
+                    <input type="hidden" id="buyNowVariantId" name="variantId" value="@(hasVariants? activeVariants.First().Id : (int?)null)" />
+                    <input type="hidden" id="buyNowFlavor" name="buyNowFlavor" value="" />
+                </form>
+
+                <!-- Nút hành động -->
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary flex-grow-1 py-2" onclick="submitBuyNow()">Mua Ngay</button>
+
+
+                    <form id="addToCartForm"
+                          asp-controller="ShoppingCart"
+                          asp-action="AddToCart"
+                          method="post"
+                          class="flex-grow-1">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Product.Id" />
+                        <input type="hidden" id="hiddenQuantity" name="quantity" value="1" />
+                        <input type="hidden" id="hiddenSelectedFlavor" name="SelectedFlavor" value="" />
+                        <input type="hidden" id="hiddenVariantId" name="variantId" value="" />
+
+
+                        <button type="submit" class="btn btn-outline-dark w-100">
+                            <i class="bi-cart-fill me-1"></i> Thêm vào giỏ
+                        </button>
+                    </form>
+                </div>
+
+                @if (maxUiQty == 0)
+                {
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            document.querySelectorAll('.product-detail-actions-container a.btn, .product-detail-actions-container button.btn')
+                                .forEach(function (btn) { btn.disabled = true; btn.classList.add('disabled'); });
+                        });
+                    </script>
+                }
+            </div>
+
+            <!-- Hotline -->
+            <div class="mt-4 d-flex align-items-center">
+                <i class="fas fa-shield-alt text-primary me-2"></i>
+                <p class="mb-0">Gọi đặt mua: <strong>098.765.4321</strong> (8h30 - 22h30)</p>
+            </div>
+        </div>
+    </div>
+    <!-- Mô tả -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>Mô tả sản phẩm</h2>
+            <hr />
+            <div class="product-description">
+                @Html.Raw(Model.Product.Description ?? "<i>Sản phẩm chưa có mô tả.</i>")
+            </div>
+        </div>
+    </div>
+
+    <!-- Bình luận -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>Bình luận & Đánh giá</h2>
+            <hr />
+
+            @if (Model.Reviews?.Any() == true)
+            {
+                @foreach (var review in Model.Reviews)
+                {
+                    <div class="review-box mb-4">
+                        <p class="mb-1">
+                            <strong>@(review.User?.FullName ?? "Ẩn danh")</strong>
+                            <span class="text-muted"> - @review.CreatedDate.ToString("dd/MM/yyyy HH:mm")</span>
+                        </p>
+
+                        <!-- Hiển thị sao -->
+                        <div class="mb-2 text-warning">
+                            @for (int i = 0; i < review.Rating; i++)
+                            {
+                                <i class="fas fa-star"></i>
+                            }
+                            @for (int i = review.Rating; i < 5; i++)
+                            {
+                                <i class="far fa-star"></i>
+                            }
+                        </div>
+
+                        <p>@review.Comment</p>
+
+                        <!-- Ảnh review -->
+                        @if (review.Images?.Any() == true)
+                        {
+                            <div class="row g-2 mt-2">
+                                @foreach (var img in review.Images)
+                                {
+                                    <div class="col-auto">
+                                        <img src="@img.ImageUrl" class="img-thumbnail" style="max-width:100px;border:2px solid #FFB6C1;border-radius:6px;" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="no-review">Chưa có bình luận nào cho sản phẩm này.</p>
+            }
+
+            <!-- Form nhận xét -->
+            <h3 class="mt-4">Viết bình luận</h3>
+
+            <form asp-action="AddReview" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="TargetId" value="@Model.Product.Id" />
+                <input type="hidden" name="TargetType" value="Product" />
+
+                <!-- Rating input -->
+                <div class="mb-3">
+                    <label class="form-label">Đánh giá:</label>
+                    <div class="rating-input">
+                        <input type="hidden" name="Rating" id="ratingValue" value="0" />
+
+                        <i class="star far fa-star" data-value="1"></i>
+                        <i class="star far fa-star" data-value="2"></i>
+                        <i class="star far fa-star" data-value="3"></i>
+                        <i class="star far fa-star" data-value="4"></i>
+                        <i class="star far fa-star" data-value="5"></i>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nội dung bình luận:</label>
+                    <textarea class="form-control" name="Comment" rows="4"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Thêm hình ảnh:</label>
+                    <input type="file" class="form-control" name="ReviewImages" multiple accept="image/*">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Gửi bình luận</button>
+            </form>
+
+
+
+        </div>
+    </div>
+
+    <h2 class="related-title-section text-center mt-5 mb-3">
+        🔗 Sản phẩm liên quan
+    </h2>
+
+    <div class="related-carousel-wrapper">
+        <button class="carousel-btn left" onclick="scrollRelated(-1)">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="related-carousel" id="relatedCarousel">
+            @foreach (var item in Model.RelatedProducts)
+            {
+                <div class="related-card" onclick="window.location.href='/Product/Details/@item.Id'">
+
+                    <div class="related-img-wrapper">
+                        <img src="@item.ImageUrl" class="related-img" />
+                    </div>
+
+                    <div class="related-body">
+                        <div class="related-name text-truncate">@item.Name</div>
+
+                        <div class="related-brand">
+                            Thương hiệu: <span>@item.Trademark</span>
+                        </div>
+
+                        <div class="related-price-box">
+                            @if (item.PriceReduced != null && item.PriceReduced > 0 && item.PriceReduced < item.Price)
+                            {
+                                <span class="price-current">@($"{item.PriceReduced:N0}đ")</span>
+                                <span class="price-old">@($"{item.Price:N0}đ")</span>
+                                <span class="badge discount-badge">@item.DiscountPercentage.ToString("0.##")%</span>
+                            }
+                            else
+                            {
+                                <span class="price-current">@($"{item.Price:N0}đ")</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button class="carousel-btn right" onclick="scrollRelated(1)">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+
+
+   
+
+</div>
+
+<style>
+    :root {
+        --pink: #FF6185; /* hồng chủ đạo */
+        @* --pink-2: #FFB6C1; /* hồng nhạt (hiện chưa dùng, có thể bỏ nếu muốn) */ *@
+    }
+
+    /* ===== Nút chọn hương vị / biến thể (tone hồng nổi) ===== */
+    .flavor-option-label {
+        display: inline-block;
+        background: #fff;
+        color: #333;
+        border: 2px solid var(--pink);
+        padding: 8px 14px;
+        margin: 6px 8px 0 0;
+        border-radius: 22px;
+        font-weight: 600;
+        line-height: 1;
+        cursor: pointer;
+        user-select: none;
+        transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+
+        .flavor-option-label:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(255,97,133,.25);
+            border-color: var(--pink);
+            background: #ffe8ef; /* hồng rất nhạt khi hover */
+        }
+
+    /* Trạng thái đang chọn + focus (áp dụng cho mọi input.btn-check) */
+    .btn-check:checked + .flavor-option-label {
+        background: var(--pink);
+        color: #fff;
+        border-color: var(--pink);
+        box-shadow: 0 6px 18px rgba(255,97,133,.35);
+    }
+
+    .btn-check:focus + .flavor-option-label {
+        box-shadow: 0 0 0 .2rem rgba(255,97,133,.25);
+    }
+
+    /* Hộp hành động: bỏ viền, thay bằng bóng nhẹ */
+    .product-detail-actions-container {
+        background-color: #FFF0F5;
+        padding: 15px;
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(255,97,133,.08);
+    }
+
+        .product-detail-actions-container .flavor-option-label {
+            margin-bottom: 8px;
+        }
+
+    /* Review box */
+    .review-box {
+        background-color: #fff;
+        border-left: 4px solid #FF6185;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    /* Rating input */
+    .rating-input .star {
+        font-size: 1.8rem;
+        color: #FF6185;
+        cursor: pointer;
+        transition: transform .2s ease, opacity .2s ease;
+    }
+
+        .rating-input .star:hover {
+            transform: scale(1.15);
+        }
+
+    .no-review {
+        color: #999;
+        font-style: italic;
+    }
+
+
+
+      .related-title-section {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #222;
+    }
+
+
+
+    .related-card {
+        flex: 0 0 280px;
+        margin-right: 22px;
+      
+        background: #fff;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 2px solid #ffe0ea;
+        cursor: pointer;
+        transition: 0.25s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .related-card:hover {
+        transform: translateY(-6px);
+        border-color: #ff9fb7;
+        box-shadow: 0 8px 18px rgba(255, 97, 133, 0.25);
+    }
+
+    .related-img-wrapper {
+        width: 100%;
+        height: 200px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .related-img {
+        max-height: 100%;
+        width: auto;
+        object-fit: contain;
+        padding: 10px;
+    }
+
+    .related-body {
+        padding: 14px;
+        text-align: center;
+    }
+
+    .related-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #444;
+        min-height: 40px;
+    }
+
+    .related-name:hover {
+        color: #ff6185;
+    }
+
+    .related-brand {
+        font-size: 0.85rem;
+        color: #777;
+        margin-bottom: 8px;
+    }
+
+    .related-brand span {
+        font-weight: 600;
+        color: #ff6185;
+    }
+
+    .related-price-box {
+        background-color: #ffeaf0;
+        border-radius: 10px;
+        padding: 8px;
+    }
+
+    .price-current {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #ff3f72;
+    }
+
+    .price-old {
+        text-decoration: line-through;
+        color: #999;
+        margin-left: 6px;
+        font-size: 0.85rem;
+    }
+
+    .discount-badge {
+        background-color: #ff7aa2;
+        font-size: 0.75rem;
+        color: #fff;
+        margin-left: 6px;
+        border-radius: 8px;
+        padding: 2px 6px;
+    }
+
+    .related-carousel-wrapper {
+        position: relative;
+        margin-top: 20px;
+        overflow-x: visible; 
+        overflow-y: hidden;
+        padding: 0 30px;
+    }
+
+
+        .carousel-btn {
+            position: absolute;
+            top: 45%;
+            transform: translateY(-50%);
+            background: #ff7aa2;
+            color: #fff;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 10;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+
+        .carousel-btn:hover {
+            background: #ff4d84;
+        }
+
+        .carousel-btn.left {
+            left: 0;
+        }
+
+        .carousel-btn.right {
+            right: 0;
+        }
+
+
+    .related-carousel {
+        display: flex;
+        transition: transform 0.4s ease;
+    }
+
+        .related-carousel.centered {
+            justify-content: center;
+        }
+
+</style>
+
+<script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+        const qSel = document.getElementById('quantitySelect');
+        const hasVariants = document.querySelector('.option-value-radio') !== null;
+
+        if (!hasVariants && qSel) {
+            // ÉP JS biết tồn kho ngay từ đầu
+            qSel.dataset.available = "@uiAvailable";
+        }
+    });
+       function updateHiddenInputs() {
+        const qSel = document.getElementById('quantitySelect');
+        if (!qSel) return;
+
+        const hasVariants = document.querySelector('.option-value-radio') !== null;
+
+        /* ====== LUÔN cập nhật quantity ====== */
+        document.getElementById('hiddenQuantity').value = qSel.value;
+
+        /* ====== KHÔNG có variant ====== */
+           if (!hasVariants) {
+        document.getElementById('hiddenVariantId').value = "";
+
+        // set flavor cho non-variant
+        const flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
+        document.getElementById('hiddenSelectedFlavor').value =
+            flavorRadio ? flavorRadio.value : "";
+
+        return;
+    }
+
+
+        @* /* ====== CÓ variant ====== */
+        const variantId =
+            Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count
+                ? document.getElementById('hiddenVariantId').value
+                : "";
+
+        document.getElementById('hiddenVariantId').value = variantId; *@
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1) change thumbnail
+        var mainImage = document.getElementById('mainProductImage');
+        document.querySelectorAll('.img-thumbnail').forEach(function (t) {
+            t.addEventListener('click', function () { mainImage.src = this.src; });
+        });
+
+        // 2) change quantity
+        var qSel = document.getElementById('quantitySelect');
+        if (qSel) qSel.addEventListener('change', updateHiddenInputs);
+
+        // 3) change flavor
+        document.querySelectorAll('input[name="SelectedFlavor"]').forEach(function (r) {
+            r.addEventListener('change', updateHiddenInputs);
+        });
+
+        // 4) AddToCart check
+        var form = document.getElementById('addToCartForm');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                updateHiddenInputs();
+                let qty = parseInt(document.getElementById('hiddenQuantity').value || '1');
+                let available = parseInt(qSel.dataset.available);
+
+
+                if (qty > available) {
+                    e.preventDefault();
+                    alert(`Số lượng vượt quá tồn kho (${available})`);
+                    return;
+                }
+
+                let hasVariants = document.querySelector('.option-value-radio') !== null;
+                let variantId = document.getElementById('hiddenVariantId').value;
+                if (hasVariants && !variantId) {
+                    e.preventDefault();
+                    alert("Vui lòng chọn đủ các tuỳ chọn!");
+                }
+            });
+        }
+    });
+
+    function submitBuyNow() {
+        updateHiddenInputs();
+        let qSel = document.getElementById('quantitySelect');
+        let qty = parseInt(qSel.value || '1');
+        let available = parseInt((qSel?.dataset?.available) || '0');
+        if (qty > available) {
+            alert(`Số lượng vượt quá (${available})`);
+            return;
+        }
+
+        let variantId = document.getElementById('hiddenVariantId').value;
+        let hasVariants = document.querySelector('.option-value-radio') !== null;
+        if (hasVariants && !variantId) {
+            alert("Bạn chưa chọn đầy đủ tuỳ chọn!");
+            return;
+        }
+
+        document.getElementById('buyNowQty').value = qty;
+        document.getElementById('buyNowVariantId').value = variantId;
+
+        let flavorRadio = document.querySelector('input[name="SelectedFlavor"]:checked');
+        document.getElementById('buyNowFlavor').value =
+            hasVariants ? '' : (flavorRadio?.value || '');
+
+        document.getElementById('buyNowForm').submit();
+    }
+
+    // ⭐ Rating Logic
+    document.addEventListener('DOMContentLoaded', function () {
+        const stars = document.querySelectorAll('.rating-input .star');
+        const ratingInput = document.getElementById('ratingValue');
+        let currentRating = parseInt(ratingInput.value) || 0;
+
+        function render(rating) {
+            stars.forEach(s => {
+                let v = parseInt(s.dataset.value);
+                if (v <= rating) {
+                    s.classList.add("fas");
+                    s.classList.remove("far");
+                } else {
+                    s.classList.add("far");
+                    s.classList.remove("fas");
+                }
+            });
+        }
+
+        render(currentRating);
+
+        stars.forEach(s => {
+            s.addEventListener("mouseover", () => render(parseInt(s.dataset.value)));
+            s.addEventListener("mouseout", () => render(currentRating));
+            s.addEventListener("click", () => {
+                currentRating = parseInt(s.dataset.value);
+                ratingInput.value = currentRating;
+                render(currentRating);
+            });
+        });
+    });
+
+    // ================= VARIANT SELECTING =================
+    let selectedOptionValues = {}; // { groupIndex: valueId }
+    let variantData = {};
+
+    @* Load Variant Data *@
+    @{
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    Model.Variants.Select(v => new
+                    {
+                            VariantId = v.Id,
+                            Stock = Math.Max(0, v.StockQuantity - v.ReservedQuantity),
+                            OptionValueIds = v.OptionValues?.Select(ov => ov.ProductOptionValueId).ToList()
+                    })
+            );
+    }
+    variantData = @Html.Raw(json);
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.option-value-radio:checked').forEach(rd => {
+            selectedOptionValues[rd.dataset.groupIndex] = parseInt(rd.value);
+        });
+
+            const hasVariants = document.querySelector('.option-value-radio') !== null;
+
+    if (hasVariants &&
+        Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count) {
+        updateSelectedVariantAndStock();
+    }
+
+    });
+
+    document.querySelectorAll('.option-value-radio').forEach(el => {
+        el.addEventListener('change', function () {
+            selectedOptionValues[this.dataset.groupIndex] = parseInt(this.value);
+
+            updateAvailableOptions();
+            updateSelectedVariantAndStock();
+        });
+    });
+
+    function updateAvailableOptions() {
+        document.querySelectorAll('.option-group').forEach(groupEl => {
+            groupEl.querySelectorAll('.option-value-radio').forEach(rd => {
+                let id = parseInt(rd.value);
+                let enabled = Object.values(variantData).some(v => v.OptionValueIds.includes(id));
+                rd.disabled = !enabled;
+            });
+        });
+    }
+
+        function updateSelectedVariantAndStock() {
+             const hasVariants = document.querySelector('.option-value-radio') !== null;
+            if (!hasVariants) return;   // ⛔ CHẶN BÊN TRONG
+
+        if (Object.keys(selectedOptionValues).length !== @Model.OptionGroups?.Count) return;
+
+        let selected = Object.values(selectedOptionValues);
+        let found = Object.values(variantData).find(v =>
+            selected.every(id => v.OptionValueIds.includes(id))
+        );
+
+        let stockLabel = document.getElementById('stockLabelTxt');
+        let select = document.getElementById('quantitySelect');
+        let buyBtn = document.querySelector(".product-detail-actions-container button.btn-primary");
+        let cartBtn = document.querySelector("#addToCartForm button");
+
+        if (!found) {
+            document.getElementById('hiddenVariantId').value = "";
+            stockLabel.innerText = "Hết hàng";
+
+            // Disable actions
+            buyBtn.disabled = true;
+            cartBtn.disabled = true;
+            select.disabled = true;
+
+            return;
+        }
+
+        document.getElementById('hiddenVariantId').value = found.VariantId;
+        let available = found.Stock;
+
+        // Update quantity dropdown
+        select.dataset.available = available;
+        select.innerHTML = "";
+        if (available > 0) {
+            select.disabled = false;
+            for (let i = 1; i <= Math.min(5, available); i++) {
+                select.innerHTML += `<option value="${i}">${i}</option>`;
+            }
+            stockLabel.innerText =
+                available <= 5 ? `Còn ${available}` : "Còn hàng";
+
+            // Enable buttons
+            buyBtn.disabled = false;
+            cartBtn.disabled = false;
+        } else {
+            select.disabled = true;
+            select.innerHTML = `<option value="0">0</option>`;
+            stockLabel.innerText = "Hết hàng";
+
+            buyBtn.disabled = true;
+            cartBtn.disabled = true;
+        }
+    }
+
+
+    let currentIndex = 0;
+    const cardsPerView = 3;
+        // 🔁 Fix lỗi Back button (bfcache)
+    window.addEventListener("pageshow", function (event) {
+      
+            // Reset state JS
+            selectedOptionValues = {};
+
+            // Đọc lại radio đã checked từ DOM
+            document.querySelectorAll('.option-value-radio:checked').forEach(rd => {
+                selectedOptionValues[rd.dataset.groupIndex] = parseInt(rd.value);
+            });
+
+            // Nếu đã chọn đủ option → set lại variant + tồn kho
+            if (Object.keys(selectedOptionValues).length === @Model.OptionGroups?.Count) {
+                updateSelectedVariantAndStock();
+            }
+        
+    });
+
+    const cardWidth = 302; // 280 + 22 gap
+
+    function scrollRelated(direction) {
+        const carousel = document.getElementById("relatedCarousel");
+        const totalCards = carousel.children.length;
+
+        // Tính tổng số nhóm
+        const maxIndex = Math.ceil(totalCards / cardsPerView) - 1;
+
+        currentIndex += direction;
+
+        if (currentIndex < 0) currentIndex = 0;
+        if (currentIndex > maxIndex) currentIndex = maxIndex;
+
+        const offset = -(currentIndex * cardWidth * cardsPerView);
+        carousel.style.transform = `translateX(${offset}px)`;
+    }
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+        const carousel = document.getElementById("relatedCarousel");
+        const cards = carousel.children.length;
+        const wrapper = document.querySelector(".related-carousel-wrapper");
+        const leftBtn = wrapper.querySelector(".carousel-btn.left");
+        const rightBtn = wrapper.querySelector(".carousel-btn.right");
+
+        if (cards <= cardsPerView) {
+            // Ít sản phẩm → căn giữa + ẩn mũi tên
+            carousel.classList.add("centered");
+            leftBtn.style.display = "none";
+            rightBtn.style.display = "none";
+        }
+    });
+
+</script>
+

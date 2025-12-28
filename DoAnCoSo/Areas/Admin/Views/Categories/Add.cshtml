@@ -1,0 +1,78 @@
+﻿@model DoAnCoSo.Models.Category
+
+@{
+    ViewData["Title"] = "🌸 Thêm loại sản phẩm";
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <form asp-action="Add" method="post">
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+            <div class="row g-3 mb-3">
+                <div class="col-md-12">
+                    <label asp-for="Name" class="form-label">Tên loại sản phẩm</label>
+                    <input asp-for="Name" class="form-control" placeholder="Nhập tên loại sản phẩm..." required />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">
+                    ← Quay lại
+                </a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">
+                    💾 Lưu loại sản phẩm
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Khung booking-card giống thêm thú cưng */
+    .booking-card {
+        background-color: #fff;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+
+    .booking-title {
+        font-weight: 600;
+        color: #FF6185;
+    }
+
+    /* Button hồng */
+    .btn-pink {
+        background-color: #FFB6C1;
+        color: #000;
+        font-weight: bold;
+        border: none;
+        transition: 0.25s;
+    }
+
+        .btn-pink:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    /* Label */
+    label {
+        font-weight: 500;
+    }
+
+    /* Card responsive */
+    @@media (max-width: 768px) {
+        .booking-card
+
+    {
+        padding: 1.5rem;
+    }
+
+    }
+</style>

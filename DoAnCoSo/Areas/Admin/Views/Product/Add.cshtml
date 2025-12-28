@@ -1,0 +1,355 @@
+﻿@model DoAnCoSo.Models.Product
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "🌸 Thêm sản phẩm";
+    var hasVariants = (bool?)ViewBag.HasVariants == true;
+    var vNames = (IEnumerable<string>)(ViewBag.VariantNames ?? new List<string>());
+    var vStocks = (IEnumerable<int>)(ViewBag.VariantStocks ?? new List<int>());
+    var vThresholds = (IEnumerable<int>)(ViewBag.VariantThresholds ?? new List<int>());
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <form asp-action="Add" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label">Tên sản phẩm</label>
+                    <input asp-for="Name" class="form-control" placeholder="Nhập tên sản phẩm..." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="CategoryId" class="form-label">Loại sản phẩm</label>
+                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"></select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Price" class="form-label">Giá</label>
+                    <input asp-for="Price" type="number" min="0" class="form-control" placeholder="Nhập giá..." />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PriceReduced" class="form-label">Giá giảm</label>
+                    <input asp-for="PriceReduced" type="number" min="0" class="form-control" placeholder="Nhập giá giảm..." />
+                </div>
+
+                <!-- Toggle: Có biến thể? -->
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input pink-switch" id="hasVariants" name="HasVariants" value="true" @(hasVariants ? "checked" : "") />
+                        <label class="form-check-label pink-label" for="hasVariants">Sản phẩm có biến thể</label>
+                    </div>
+                </div>
+
+                <!-- Tồn kho tổng -->
+                <div class="col-md-6" id="blockStockTotal">
+                    <label asp-for="StockQuantity" class="form-label">Tồn kho ban đầu</label>
+                    <input asp-for="StockQuantity" type="number" min="0" class="form-control border-pink" placeholder="VD: 10" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="LowStockThreshold" class="form-label">Ngưỡng cảnh báo</label>
+                    <input asp-for="LowStockThreshold" type="number" min="0" class="form-control" placeholder="VD: 5" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Trademark" class="form-label">Thương hiệu</label>
+                    <input asp-for="Trademark" class="form-control" placeholder="Nhập thương hiệu..." />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Trạng thái</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input pink-switch" asp-for="IsActive" />
+                        <label class="form-check-label pink-label">Kinh doanh</label>
+                    </div>
+                </div>
+
+                <!-- Ảnh sản phẩm -->
+                <div class="col-md-6">
+                    <label for="imageInput" class="form-label">Ảnh đại diện</label>
+                    <input type="file" name="imageUrl" class="form-control" id="imageInput" />
+                </div>
+                <div class="col-md-6">
+                    <label for="additionalImagesInput" class="form-label">Ảnh khác</label>
+                    <input type="file" name="images" class="form-control" multiple />
+                </div>
+            </div>
+
+            <!-- Cấu hình nhóm biến thể -->
+            <div id="blockOptionGroups" class="mb-3 mt-3" style="display:none;">
+                <label class="form-label">Nhóm biến thể cho sản phẩm</label>
+
+                <div id="optionGroupContainer"></div>
+
+                <button type="button" class="btn btn-detail mt-2" id="btnAddOptionGroup">
+                    + Thêm loại biến thể
+                </button>
+                <div class="form-text">
+                    Ví dụ: Hương vị (Bò, Gà, Cá hồi), Size (S, M, L), Khối lượng (500g, 1kg)...
+                </div>
+
+                <button type="button" class="btn btn-pink mt-3" onclick="generateVariants()">
+                    ✨ Tạo biến thể
+                </button>
+
+            </div>
+
+
+            <div class="mb-3 mt-3">
+                <label asp-for="Description" class="form-label">Mô tả sản phẩm</label>
+                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Nhập mô tả..."></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Lưu sản phẩm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .booking-card { border-radius: 1rem; background:white; padding:2rem; box-shadow:0 6px 16px rgba(0,0,0,0.1); }
+    .booking-title { color:#FF6185; }
+    .form-control { border-radius:.5rem; }
+
+    /* Nút switch màu hồng khi bật, trắng khi tắt */
+    .form-switch .form-check-input.pink-switch {
+        background-color: #e0c7cd; /* màu khi tắt */
+        border-color: #e0c7cd;
+        transition: background-color 0.25s, border-color 0.25s;
+    }
+
+        /* Khi bật: màu hồng */
+        .form-switch .form-check-input.pink-switch:checked {
+            background-color: #FF6185 !important;
+            border-color: #FF6185 !important;
+        }
+
+        /* Bỏ viền focus */
+        .form-switch .form-check-input.pink-switch:focus {
+            box-shadow: none;
+            outline: none;
+        }
+
+    /* Label chữ màu đen */
+    .pink-label {
+        color: #000 !important;
+        font-weight: 500;
+    }
+
+    /* Khi focus nhưng chưa tick: knob màu hồng mờ */
+    .form-switch .form-check-input.pink-switch:focus:not(:checked) {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23FF6185'/%3e%3c/svg%3e");
+    }
+
+    /* Khi tick: knob màu trắng */
+    .form-switch .form-check-input.pink-switch:checked {
+        background-color: #FF6185; /* track màu hồng */
+        border-color: #FF6185;
+    }
+
+        /* Khi tick + focus: knob vẫn trắng */
+        .form-switch .form-check-input.pink-switch:checked:focus {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+        }
+
+    .btn-detail {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        border: none;
+        transition: 0.3s;
+        background-color: #FFB6C1;
+        color: #000;
+        font-size: 16px;
+    }
+
+        .btn-detail:hover {
+            background-color: #FF6185;
+            color: #fff;
+        }
+
+    .btn-delete {
+        border: 2px solid red;
+        background-color: transparent;
+        color: red;
+    }
+
+        .btn-delete:hover {
+            background-color: red;
+            color: #fff;
+        }
+
+    /* Ẩn mũi tên trong input type=number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const hasVariants = document.getElementById('hasVariants');
+        const blockStockTotal = document.getElementById('blockStockTotal');
+        const stockInput = blockStockTotal.querySelector('input[name="StockQuantity"]');
+
+        const blockOptionGroups = document.getElementById('blockOptionGroups');
+        const optionGroupContainer = document.getElementById('optionGroupContainer');
+
+        // 👉 NEW: Khối danh sách biến thể sinh ra
+        const blockGeneratedVariants = document.createElement("div");
+        blockGeneratedVariants.id = "blockGeneratedVariants";
+        blockGeneratedVariants.style.display = "none";
+        blockGeneratedVariants.innerHTML = `
+            <h6 class="mt-3 fw-bold">Danh sách biến thể được tạo</h6>
+            <table class="table table-bordered mt-2">
+                <thead>
+                    <tr>
+                        <th>Biến thể</th>
+                        <th style="width:120px">Tồn kho</th>
+                        <th style="width:120px">Ngưỡng cảnh báo</th>
+                    </tr>
+                </thead>
+                <tbody id="variantGeneratedRows"></tbody>
+            </table>
+        `;
+        blockOptionGroups.insertAdjacentElement("afterend", blockGeneratedVariants);
+
+        const variantGeneratedRows = document.getElementById("variantGeneratedRows");
+
+        /* Toggle UI */
+        function toggleVariantUI() {
+            const enabled = hasVariants.checked;
+            if (enabled) stockInput.setAttribute("disabled", "disabled");
+            else stockInput.removeAttribute("disabled");
+
+            blockOptionGroups.style.display = enabled ? 'block' : 'none';
+            blockGeneratedVariants.style.display = enabled ? 'block' : 'none';
+        }
+        hasVariants.addEventListener("change", toggleVariantUI);
+
+
+        /* Thêm nhóm biến thể */
+        function addOptionGroup(name = "", values = [""]) {
+            const groupIdx = optionGroupContainer.children.length;
+            const groupHtml = `
+                <div class="card border-pink p-3 mb-3" data-group-idx="${groupIdx}">
+                    <div class="d-flex justify-content-between mb-2">
+                        <input class="form-control fw-bold" placeholder="Tên nhóm (VD: Hương vị, Size)"
+                            name="OptionGroupNames[${groupIdx}]" value="${name}" />
+                        <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeOptionGroup(this)">X</button>
+                    </div>
+                    <label>Giá trị biến thể</label>
+                    <div class="option-values"></div>
+                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addOptionValue(this)">+ Giá trị</button>
+                </div>
+            `;
+            optionGroupContainer.insertAdjacentHTML("beforeend", groupHtml);
+            const container = optionGroupContainer.lastElementChild.querySelector(".option-values");
+            values.forEach(v => addOptionValue(container, v));
+            renumberAll();
+        }
+
+        function addOptionValue(containerOrBtn, value = "") {
+            const container = containerOrBtn.classList.contains("option-values")
+                ? containerOrBtn
+                : containerOrBtn.closest(".card").querySelector(".option-values");
+
+            container.insertAdjacentHTML("beforeend", `
+                <div class="d-flex align-items-center mb-2">
+                    <input class="form-control me-2" value="${value}" placeholder="VD: Gà, Bò, Heo..." />
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeOptionValue(this)">×</button>
+                </div>
+            `);
+            renumberAll();
+        }
+
+        function removeOptionGroup(btn) {
+            btn.closest(".card").remove();
+            renumberAll();
+        }
+
+        function removeOptionValue(btn) {
+            btn.closest(".d-flex").remove();
+            renumberAll();
+        }
+
+
+        /* Cập nhật name[] sau mỗi thao tác */
+        function renumberAll() {
+            [...optionGroupContainer.children].forEach((group, gIdx) => {
+                const groupName = group.querySelector('input[name^="OptionGroupNames"]');
+                groupName.name = `OptionGroupNames[${gIdx}]`;
+
+                const valueInputs = group.querySelectorAll(".option-values input");
+                valueInputs.forEach((inp, vIdx) => {
+                    inp.name = `OptionGroupValues[${gIdx}][${vIdx}]`;
+                });
+            });
+        }
+
+
+        /* 🌟 TẠO BIẾN THỂ KHI NHẤN NÚT */
+        function generateVariants() {
+            variantGeneratedRows.innerHTML = "";
+
+            let groups = [...optionGroupContainer.children]
+                .map(card => {
+                    let name = card.querySelector('input[name^="OptionGroupNames"]').value.trim();
+                    let values = [...card.querySelectorAll(".option-values input")]
+                        .map(v => v.value.trim())
+                        .filter(v => v.length > 0);
+                    return { name, values };
+                })
+                .filter(g => g.name.length > 0 && g.values.length > 0);
+
+            if (groups.length === 0) {
+                alert("Vui lòng nhập ít nhất 1 nhóm biến thể và giá trị!");
+                return;
+            }
+
+            let combos = [[]];
+            groups.forEach(g => {
+                combos = combos.flatMap(c => g.values.map(v => [...c, v]));
+            });
+
+            combos.forEach((c, i) => {
+                variantGeneratedRows.insertAdjacentHTML("beforeend", `
+                    <tr>
+                        <td>
+                            <input name="VariantGeneratedNames[${i}]" class="form-control" value="${c.join(' - ')}" readonly />
+                        </td>
+                        <td><input name="VariantGeneratedStocks[${i}]" type="number" min="0" value="0" class="form-control" /></td>
+                        <td><input name="VariantGeneratedThresholds[${i}]" type="number" min="0" value="0" class="form-control" /></td>
+                    </tr>
+                `);
+            });
+
+            blockGeneratedVariants.style.display = "block";
+            alert("Đã tạo " + combos.length + " biến thể!");
+        }
+
+        const btnAddOptionGroup = document.getElementById('btnAddOptionGroup');
+        btnAddOptionGroup.addEventListener("click", () => {
+            addOptionGroup("", [""]);
+        });
+        toggleVariantUI();
+    </script>
+}

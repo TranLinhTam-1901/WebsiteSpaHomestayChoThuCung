@@ -1,0 +1,300 @@
+﻿@model DoAnCoSo.ViewModels.MasterViewModel
+@using DoAnCoSo.Extensions
+@{
+    ViewData["Title"] = "Trang Quản Lý Tổng Hợp";
+
+    // Lấy filter từ query string
+    string orderStatus = Context.Request.Query["orderStatus"];
+    string customerName = Context.Request.Query["customerName"];
+    string productName = Context.Request.Query["productName"];
+
+    string appointmentStatus = Context.Request.Query["appointmentStatus"];
+    string appointmentCustomerName = Context.Request.Query["appointmentCustomerName"];
+
+    string userRoleFilter = Context.Request.Query["userRole"];
+
+    // Chuẩn bị dữ liệu lọc đơn hàng
+    var filteredOrders = Model.Orders.AsQueryable();
+
+    if (!string.IsNullOrEmpty(customerName))
+    {
+        filteredOrders = filteredOrders.Where(o => o.User != null && o.User.FullName.ToLower().Contains(customerName.ToLower()));
+    }
+
+    if (!string.IsNullOrEmpty(productName))
+    {
+        filteredOrders = filteredOrders.Where(o => o.OrderDetails.Any(od => od.Product != null && od.Product.Name.ToLower().Contains(productName.ToLower())));
+    }
+
+    if (!string.IsNullOrEmpty(orderStatus))
+    {
+        filteredOrders = filteredOrders.Where(o => o.Status.ToString().ToLower() == orderStatus.ToLower());
+    }
+
+    // Lọc lịch hẹn
+    var filteredAppointments = Model.PendingAppointments.AsQueryable();
+
+    if (!string.IsNullOrEmpty(appointmentCustomerName))
+    {
+        filteredAppointments = filteredAppointments.Where(a => a.User != null && a.User.FullName.ToLower().Contains(appointmentCustomerName.ToLower()));
+    }
+
+    if (!string.IsNullOrEmpty(appointmentStatus))
+    {
+        filteredAppointments = filteredAppointments.Where(a => a.Status.ToString().ToLower() == appointmentStatus.ToLower());
+    }
+
+    // Lọc người dùng
+    var filteredUsers = Model.Users.AsQueryable();
+
+    if (!string.IsNullOrEmpty(userRoleFilter))
+    {
+        filteredUsers = filteredUsers.Where(u => u.Role.ToLower() == userRoleFilter.ToLower());
+    }
+
+    // Các biến kiểm tra trạng thái để hiển thị option selected
+    bool isOrderStatusEmpty = string.IsNullOrEmpty(orderStatus);
+    bool isOrderPending = orderStatus == "ChoXacNhan";
+    bool isOrderPaid = orderStatus == "DaXacNhan";
+    bool isOrderCancelled = orderStatus == "DaHuy";
+
+    bool isAppointmentStatusEmpty = string.IsNullOrEmpty(appointmentStatus);
+    bool isAppointmentPending = appointmentStatus == "Pending";
+    bool isAppointmentProcessed = appointmentStatus == "Processed";
+
+    bool isUserRoleEmpty = string.IsNullOrEmpty(userRoleFilter);
+    bool isUserAdmin = userRoleFilter?.ToLower() == "admin";
+    bool isUserCustomer = userRoleFilter?.ToLower() == "customer";
+}
+<div class="container py-5">
+    <h2 class="section-title">Trang quản lý tổng hợp</h2>
+
+    <!-- Tổng quan thống kê -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-black bg-primary shadow">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng danh mục</h5>
+                    <h3>@Model.Categories.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-black bg-success shadow">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng sản phẩm</h5>
+                    <h3>@Model.Products.Count()</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-black bg-warning shadow">
+                <div class="card-body">
+                    <h5 class="card-title">Lịch hẹn chờ xử lý</h5>
+                    <h3>@Model.PendingAppointmentsCount</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-black bg-info shadow">
+                <div class="card-body">
+                    <h5 class="card-title">Lịch hẹn đã xử lý</h5>
+                    <h3>@Model.ProcessedAppointmentsCount</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Đơn hàng -->
+    <h4 style="color: black">Lọc đơn hàng</h4>
+    <form method="get" class="row g-3 align-items-center mb-4">
+        <input type="hidden" name="appointmentCustomerName" value="@appointmentCustomerName" />
+        <input type="hidden" name="appointmentStatus" value="@appointmentStatus" />
+        <input type="hidden" name="userRole" value="@userRoleFilter" />
+
+        <div class="col-auto">
+            <input type="text" name="customerName" value="@customerName" placeholder="Tên khách hàng" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <select name="orderStatus" class="form-select">
+                <option value="" selected="@(string.IsNullOrWhiteSpace(orderStatus))">-- Tất cả --</option>
+                <option value="ChoXacNhan" selected="@(orderStatus == "ChoXacNhan")">Chờ xác nhận</option>
+                <option value="DaXacNhan" selected="@(orderStatus == "DaXacNhan")">Đã xác nhận</option>
+                <option value="DaHuy" selected="@(orderStatus == "DaHuy")">Đã hủy</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Lọc</button>
+        </div>
+    </form>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var order in filteredOrders.OrderByDescending(o => o.OrderDate).Take(5))
+        {
+            var cardClass = ((int)order.Status) switch
+            {
+                1 => "border-warning",
+                2 => "border-success",
+                3 => "border-danger",
+                _ => "border-secondary"
+            };
+            <div class="col">
+                <div class="card h-100 shadow-sm border-start border-4 @cardClass">
+                    <div class="card-body">
+                        <h6 class="card-title text-dark fw-bold">@order.User?.FullName</h6>
+                        <p class="card-text mb-1"><strong>Tổng tiền:</strong> @order.TotalPrice.ToString("N0") VNĐ</p>
+                        <p class="card-text mb-1"><strong>Ngày đặt:</strong> @order.OrderDate.ToString("dd/MM/yyyy")</p>
+                        <span class="badge @(
+                        (int)order.Status == 1 ? "bg-warning text-dark" :
+                        (int)order.Status == 2 ? "bg-success" :
+                        (int)order.Status == 3 ? "bg-danger" :
+                        "bg-secondary"
+                    )">
+                            @(order.Status == OrderStatusEnum.ChoXacNhan ? "Chờ xác nhận" :
+                                order.Status == OrderStatusEnum.DaXacNhan ? "Đã xác nhận" :
+                                order.Status == OrderStatusEnum.DaHuy ? "Đã hủy" :
+                                "Không xác định")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Filter Lịch hẹn -->
+    <h4 style=" padding-top: 20px; color: black">
+        Lọc lịch hẹn
+    </h4>
+    @{
+        var selectedStatus = Model.AppointmentStatusFilter ?? "";
+    }
+
+    <form method="get" class="row g-3 align-items-center mb-4">
+        <!-- Giữ filter khác bằng hidden input -->
+        <input type="hidden" name="customerName" value="@customerName" />
+        <input type="hidden" name="orderStatus" value="@orderStatus" />
+        <input type="hidden" name="userRole" value="@userRoleFilter" />
+
+        <div class="col-auto">
+            <input type="text" name="appointmentCustomerName" value="@appointmentCustomerName" placeholder="Tên khách hàng" class="form-control" />
+        </div>
+        <div class="col-auto">
+            <select name="appointmentStatus" class="form-select">
+                <option value="" selected="@(string.IsNullOrEmpty(selectedStatus))">-- Tất cả --</option>
+                <option value="Pending" selected="@(selectedStatus == "pending")">Chờ xác nhận</option>
+                <option value="Confirmed" selected="@(selectedStatus == "confirmed")">Đã xác nhận</option>
+                <option value="Completed" selected="@(selectedStatus == "completed")">Đã hoàn thành</option>
+                <option value="Cancelled" selected="@(selectedStatus == "cancelled")">Đã hủy</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Lọc</button>
+        </div>
+    </form>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var appointment in Model.PendingAppointments.Concat(Model.AppointmentHistory))
+        {
+            var cardClass = appointment.Status switch
+            {
+                DoAnCoSo.Models.AppointmentStatus.Pending => "border-warning",
+                DoAnCoSo.Models.AppointmentStatus.Confirmed => "border-success",
+                DoAnCoSo.Models.AppointmentStatus.Completed => "border-info",
+                DoAnCoSo.Models.AppointmentStatus.Cancelled => "border-danger",
+                _ => "border-secondary"
+            };
+
+            var badgeClass = appointment.Status switch
+            {
+                DoAnCoSo.Models.AppointmentStatus.Pending => "bg-warning text-dark",
+                DoAnCoSo.Models.AppointmentStatus.Confirmed => "bg-success",
+                DoAnCoSo.Models.AppointmentStatus.Completed => "bg-info text-white",
+                DoAnCoSo.Models.AppointmentStatus.Cancelled => "bg-danger",
+                _ => "bg-secondary"
+            };
+
+            <div class="col">
+                <div class="card h-100 shadow-sm border-start border-4 @cardClass">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary fw-bold">@appointment.User?.FullName</h6>
+                        <p class="card-text mb-1"><strong>Dịch vụ:</strong> @appointment.Service?.Name</p>
+                        <p class="card-text mb-1"><strong>Thú cưng:</strong> @appointment.Pet?.Name</p>
+                        <p class="card-text mb-1"><strong>Thời gian:</strong> @appointment.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        <span class="badge @badgeClass">@appointment.Status.GetDisplayName()</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Filter Người dùng -->
+    <h4 style=" padding-top: 20px; color: black">
+        Lọc người dùng
+    </h4>
+    <form method="get" class="row g-3 align-items-center mb-4">
+        <!-- Giữ filter khác -->
+        <input type="hidden" name="customerName" value="@customerName" />
+        <input type="hidden" name="orderStatus" value="@orderStatus" />
+        <input type="hidden" name="appointmentCustomerName" value="@appointmentCustomerName" />
+        <input type="hidden" name="appointmentStatus" value="@appointmentStatus" />
+
+        <div class="col-auto">
+            <select name="userRole" class="form-select">
+                <option value="" selected="@isUserRoleEmpty">-- Tất cả --</option>
+                <option value="admin" selected="@isUserAdmin">Admin</option>
+                <option value="customer" selected="@isUserCustomer">Customer</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Lọc</button>
+        </div>
+    </form>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var user in filteredUsers)
+        {
+            var cardClass = user.Role?.ToLower().Contains("admin") == true ? "border-danger" :
+            user.Role?.ToLower().Contains("customer") == true ? "border-success" : "border-secondary";
+
+            var badgeClass = user.Role?.ToLower().Contains("admin") == true ? "bg-danger" :
+            user.Role?.ToLower().Contains("customer") == true ? "bg-success" : "bg-secondary";
+            <div class="col">
+                <div class="card h-100 shadow-sm border-start border-4 @cardClass">
+                    <div class="card-body">
+                        <h6 class="card-title @(
+                            user.Role?.ToLower().Contains("admin") == true ? "text-danger fw-bold" :
+                            user.Role?.ToLower().Contains("customer") == true ? "text-success fw-bold" :
+                            ""
+                        )">
+                            @user.FullName
+                        </h6>
+                        <p class="card-text mb-1"><strong>Email:</strong> @user.Email</p>
+                        <p class="card-text mb-1"><strong>Tài khoản:</strong> @user.UserName</p>
+                        <span class="badge @badgeClass">@user.Role</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .section-title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #FF6185;
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 4px;
+            background-color: #FFB6C1;
+            margin: 12px auto 0;
+            border-radius: 2px;
+        }
+</style>

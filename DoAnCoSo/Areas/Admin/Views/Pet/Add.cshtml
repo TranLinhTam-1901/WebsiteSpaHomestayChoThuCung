@@ -1,0 +1,324 @@
+﻿@model DoAnCoSo.Models.Pet
+
+@{
+    ViewData["Title"] = "🐶 Thêm hồ sơ thú cưng";
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto" style="max-width: 750px;">
+        <h2 class="booking-title text-center mb-4">@ViewData["Title"]</h2>
+
+        <form asp-action="Add" method="post" enctype="multipart/form-data">
+            <!-- Thông tin cơ bản -->
+            <h5><span class="section-icon">📋</span> Thông tin cơ bản</h5>
+            <div class="row g-3">
+                <!-- Chủ sở hữu -->
+                <div class="col-md-5">
+                    <label asp-for="UserId" class="form-label">Chủ sở hữu</label>
+                    <select asp-for="UserId" class="form-select" asp-items="ViewBag.UserId">
+                    </select>
+                </div>
+
+                <!-- Tên thú cưng -->
+                <div class="col-md-5">
+                    <label asp-for="Name" class="form-label">Tên thú cưng</label>
+                    <input asp-for="Name" class="form-control" required />
+                </div>
+
+                <!-- Loại -->
+                <div class="col-md-2">
+                    <label asp-for="Type" class="form-label">Loại</label>
+                    <select asp-for="Type" id="PetType"  class="form-select">
+                        <option value="Chó">Chó</option>
+                        <option value="Mèo">Mèo</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Breed" class="form-label">Giống</label>
+                    <input asp-for="Breed" id="PetBreed"  class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+                    <input asp-for="DateOfBirth"
+                           type="text"
+                           id="datePicker"
+                           class="form-control readonly-input"
+                           placeholder="Chọn ngày sinh..." readonly />
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Gender" class="form-label">Giới tính</label>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="Male">Đực</option>
+                        <option value="Female">Cái</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="Age" class="form-label">Tuổi</label>
+                    <input asp-for="Age" type="text" class="form-control readonly-input" id="age" readonly />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Color" id="PetColor" class="form-label">Màu sắc</label>
+                    <input asp-for="Color" class="form-control" />
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="DistinguishingMarks" class="form-label">Dấu hiệu nhận dạng</label>
+                    <input asp-for="DistinguishingMarks" id="PetMarks" class="form-control" />
+                </div>
+            </div>
+
+            <!-- Thông tin thể chất -->
+            <h5 class="mt-4"><span class="section-icon">⚖️</span> Thông tin thể chất</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Weight" class="form-label">Cân nặng (kg)</label>
+                    <input asp-for="Weight" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Height" class="form-label">Chiều cao (cm)</label>
+                    <input asp-for="Height" class="form-control" />
+                </div>
+            </div>
+
+            <!-- Thông tin sức khỏe -->
+            <h5 class="mt-4"><span class="section-icon">🩺</span> Thông tin sức khỏe</h5>
+            <div class="mb-3">
+                <label asp-for="VaccinationRecords" class="form-label">Hồ sơ tiêm phòng</label>
+                <textarea asp-for="VaccinationRecords" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MedicalHistory" class="form-label">Tiền sử bệnh</label>
+                <textarea asp-for="MedicalHistory" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Allergies" class="form-label">Dị ứng</label>
+                <textarea asp-for="Allergies" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="DietPreferences" class="form-label">Chế độ ăn</label>
+                <textarea asp-for="DietPreferences" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="HealthNotes" class="form-label">Ghi chú sức khỏe</label>
+                <textarea asp-for="HealthNotes" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- Hình ảnh -->
+            <div class="mb-3">
+                <label asp-for="ImageUrl" class="form-label">Ảnh thú cưng</label>
+                <input  id="petImage" name="imageFile" type="file" class="form-control" />
+            </div>
+
+            <!-- Nút phân tích AI -->
+            <button type="button" id="btnAI" class="btn btn-warning w-100 mb-3">
+                🔍 Phân tích ảnh bằng AI
+            </button>
+
+            <!-- AI -->
+            <div class="mb-3">
+                <label asp-for="AI_AnalysisResult" class="form-label">Kết quả phân tích AI</label>
+                <textarea asp-for="AI_AnalysisResult" id="AI_AnalysisResult" class="form-control readonly-input" rows="2" readonly placeholder="Tự động cập nhật sau"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">
+                    ← Quay lại
+                </a>
+                <button type="submit" class="btn btn-pink px-4 py-2 rounded-pill shadow-sm">💾 Lưu hồ sơ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Ẩn mũi tên trong input type=number */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+
+    /* .readonly-input {
+        background-color: #f1f3f5 !important;
+        color: #6c757d;
+    } */
+
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ageInput = document.getElementById("age");
+        const dobInput = document.getElementById("datePicker");
+
+        if (!dobInput) return;
+
+        // Khởi tạo flatpickr riêng cho input ngày sinh
+        const dobPicker = flatpickr(dobInput, {
+            dateFormat: "Y/m/d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "vn",
+            maxDate: "today",
+            disableMobile: true,
+            onChange: function (selectedDates) {
+                if (selectedDates.length) updateAge(selectedDates[0]);
+            }
+        });
+
+        // Khi load form, tính tuổi ngay nếu đã chọn
+        if (dobPicker.selectedDates.length) {
+            updateAge(dobPicker.selectedDates[0]);
+        }
+
+        function updateAge(dob) {
+            if (!dob) {
+                ageInput.value = '';
+                ageInput.dataset.realAge = '';
+                return;
+            }
+
+            const today = new Date();
+            let years = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            const d = today.getDate() - dob.getDate();
+
+            if (m < 0 || (m === 0 && d < 0)) years--;
+
+            ageInput.dataset.realAge = years >= 0 ? years : 0;
+            ageInput.value = years > 0 ? years : "<1";
+        }
+
+        // Khi submit form, gửi giá trị thật
+        const form = ageInput.closest("form");
+        if (form) {
+            form.addEventListener("submit", function () {
+                ageInput.value = ageInput.dataset.realAge || '';
+            });
+        }
+    });
+
+        // AI PHÂN TÍCH ẢNH (ADMIN)
+
+    function cleanText(text) 
+    {
+        if (!text) return "";
+        return text
+            .replace(/[\[\]\"]/g, "")
+            .replace(/\s+/g, " ")
+            .replace(/,$/, "")
+            .trim();
+    }
+
+    async function translate(text) {
+        let res = await fetch("@Url.Action("Translate", "AI", new { area = "" })", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text })
+        });
+
+        let raw = await res.text();
+        let data = JSON.parse(raw);
+
+        // return cleanText(
+        //     data?.candidates?.[0]?.content?.parts?.[0]?.text || text );
+
+        return cleanText(data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text);
+
+    }
+
+    document.getElementById("btnAI").onclick = async () => {
+        let file = document.getElementById("petImage").files[0];
+        if (!file) {
+            alert("⚠️ Vui lòng chọn ảnh trước!");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("image", file);
+
+        let res = await fetch("@Url.Action("Analyze", "AI", new { area = "" })", 
+        {
+        method: "POST",
+        body: formData
+        });
+
+        let raw = await res.text();
+        console.log("RAW RESPONSE:", raw);
+
+        let data;
+        try {
+            data = JSON.parse(raw);
+        } catch {
+            alert("❌ API không trả JSON hợp lệ!");
+            return;
+        }
+
+        let aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!aiText) {
+            alert("❌ Không đọc được dữ liệu AI!");
+            return;
+        }
+
+        document.getElementById("AI_AnalysisResult").value = aiText;
+
+        let petInfo;
+        try {
+            petInfo = JSON.parse(aiText);
+        } catch {
+            alert("❌ AI trả JSON không hợp lệ!");
+            return;
+        }
+
+        if (petInfo.isPet === false) {
+            alert("❌ Ảnh này không phải thú cưng.");
+            document.getElementById("AI_AnalysisResult").value = "";
+            return;
+        }
+
+        // ===== FILL FORM ADMIN =====
+
+        if (petInfo.type) {
+            translate(petInfo.type).then(vi => {
+                let cleaned = cleanText(vi);
+                if (cleaned.includes("Mèo")) document.getElementById("PetType").value = "Mèo";
+                else document.getElementById("PetType").value = "Chó";
+            });
+        }
+
+        if (petInfo.breed) {
+            translate(petInfo.breed).then(v => {
+                document.getElementById("PetBreed").value = cleanText(v);
+            });
+        }
+
+        if (petInfo.color) {
+            translate(petInfo.color).then(v => {
+                document.getElementById("PetColor").value = cleanText(v);
+            });
+        }
+
+        if (petInfo.marks) {
+            translate(petInfo.marks).then(v => {
+                document.getElementById("PetMarks").value = cleanText(v);
+            });
+        }
+
+        alert("AI đã phân tích xong!");
+    };
+
+</script>

@@ -1,0 +1,156 @@
+﻿@model DoAnCoSo.Models.Blockchain.BlockchainRecord
+
+@{
+    ViewData["Title"] = "🔍 Block #" + Model.BlockNumber;
+
+    // Convert to Vietnam timezone
+    TimeZoneInfo vnZone = null;
+    try { vnZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); } catch { }
+    DateTime vnTime = vnZone != null
+        ? TimeZoneInfo.ConvertTimeFromUtc(Model.Timestamp.ToUniversalTime(), vnZone)
+        : Model.Timestamp;
+}
+
+<div class="bc-wrapper py-5">
+    <h2 class="section-title">🧱 Chi tiết Block #@Model.BlockNumber</h2>
+
+    <div class="bc-card">
+        <div class="card-header">
+            <h4 class="mb-0 fw-bold">Thông tin Block</h4>
+            <a asp-action="Index" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Blockchain Logs
+            </a>
+        </div>
+
+        <div class="card-body">
+
+            <div class="info-item">
+                <span>🔢 Số Block:</span>
+                <strong>#@Model.BlockNumber</strong>
+            </div>
+
+            <div class="info-item">
+                <span>📌 Kiểu dữ liệu:</span>
+                <strong>@Model.RecordType</strong>
+            </div>
+
+            <div class="info-item">
+                <span>⚙️ Hành động:</span>
+                <strong>@Model.Operation</strong>
+            </div>
+
+            <div class="info-item">
+                <span>⏱️ Thời gian ghi:</span>
+                <strong>@vnTime.ToString("dd/MM/yyyy HH:mm:ss")</strong>
+            </div>
+
+            <div class="info-item">
+                <span>🔐 Hash hiện tại:</span>
+                <code class="block-text">@Model.Hash</code>
+            </div>
+
+            <div class="info-item">
+                <span>↩️ Hash trước:</span>
+                <code class="block-text">@Model.PreviousHash</code>
+            </div>
+
+            <h5 class="mt-4 fw-bold">📄 Nội dung JSON</h5>
+            <pre class="json-box" id="json-box"></pre>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        let jsonText = `@Html.Raw(Model.DataJson)`;
+        try {
+            let obj = JSON.parse(jsonText);
+            document.getElementById("json-box").textContent =
+                JSON.stringify(obj, null, 4);
+        } catch (e) {
+            // Nếu JSON lỗi → hiển thị thô không format
+            document.getElementById("json-box").textContent = jsonText;
+        }
+    });
+</script>
+
+<style>
+    .bc-wrapper {
+        max-width: 900px;
+        margin: auto;
+    }
+
+    .section-title {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #FF6185;
+        margin-bottom: 25px;
+    }
+
+    .bc-card {
+        border-radius: 18px;
+        border: 2px solid #FFB6C1;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 6px 20px rgba(255, 182, 193, 0.4);
+    }
+
+    .card-header {
+        background: #FFF0F5;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #FFB6C1;
+    }
+
+    .btn-back {
+        background-color: #FF6185;
+        color: #fff;
+        border-radius: 30px;
+        padding: 6px 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: 0.25s;
+    }
+
+        .btn-back:hover {
+            filter: brightness(1.15);
+            color: #222;
+        }
+
+    .info-item {
+        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+
+        .info-item span {
+            font-weight: 600;
+            color: #444;
+            margin-right: 5px;
+        }
+
+    .block-text {
+        font-size: 12px;
+        background: #fafafa;
+        padding: 5px 10px;
+        border-radius: 6px;
+        display: inline-block;
+        word-break: break-all;
+        border: 1px solid #eee;
+    }
+
+    .json-box {
+        background: #1a1a1a;
+        color: #00e676;
+        padding: 15px;
+        border-radius: 10px;
+        font-family: Consolas, monospace;
+        white-space: pre-wrap;
+        border: 1px solid #333;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+</style>

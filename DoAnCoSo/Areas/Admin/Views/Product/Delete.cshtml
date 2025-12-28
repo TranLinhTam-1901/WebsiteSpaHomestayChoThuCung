@@ -1,0 +1,54 @@
+﻿@model DoAnCoSo.Models.Product
+
+@{
+    ViewData["Title"] = "🗑️ Xóa sản phẩm";
+}
+
+<link rel="stylesheet" href="~/css/booking.css" />
+
+<div class="container my-5">
+    <div class="booking-card mx-auto text-center" style="max-width: 650px;">
+        <h2 class="booking-title mb-4">@ViewData["Title"]</h2>
+
+        <!-- Ảnh sản phẩm -->
+        <div class="text-center mb-4">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="Ảnh sản phẩm"
+                     class="rounded-3 shadow-sm"
+                     style="width:200px;height:200px;object-fit:cover;border:6px solid #FFB6C1;" />
+            }
+            else
+            {
+                <div class="rounded-3 d-inline-flex align-items-center justify-content-center shadow-sm"
+                     style="width:200px;height:200px;background-color:#FFF0F5;border:6px solid #FFB6C1;">
+                    <i class="fas fa-box fa-5x" style="color:#FF6185;"></i>
+                </div>
+            }
+        </div>
+
+        <p class="fw-bold" style="color:#444;">
+            Bạn có chắc muốn xóa sản phẩm <span style="color:#FF6185;">@Model.Name</span> không?<br />
+            Hành động này không thể hoàn tác.
+        </p>
+
+        <form asp-action="DeleteConfirmed" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <button type="submit" class="btn btn-danger px-4 py-2 rounded-pill shadow-sm">🗑️ Xóa</button>
+                <a asp-action="Index" class="btn btn-secondary px-4 py-2 rounded-pill shadow-sm">← Quay lại</a>
+            </div>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <p class="mt-4 text-muted"><strong>Mô tả:</strong> @Model.Description</p>
+        }
+
+        <p class="mt-1 text-muted">
+            <strong>Giá:</strong> @(Model.PriceReduced.HasValue && Model.PriceReduced.Value < Model.Price
+                        ? $"{Model.Price:N0} đ → {Model.PriceReduced:N0} đ"
+                        : $"{Model.Price:N0} đ")
+        </p>
+    </div>
+</div>
