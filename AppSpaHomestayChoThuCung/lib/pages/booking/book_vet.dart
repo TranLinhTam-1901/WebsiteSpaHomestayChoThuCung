@@ -1,312 +1,324 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-
-const kPrimaryPink = Color(0xFFFF6185);
-const kLightPink = Color(0xFFFFB6C1);
-const kBackgroundPink = Color(0xFFFFF0F5);
-
-/// =====================
-/// MODEL
-/// =====================
-class Pet {
-  final String name;
-  final String type;
-  final String breed;
-  final int age;
-  final double weight;
-
-  Pet(this.name, this.type, this.breed, this.age, this.weight);
-}
-
-class VetService {
-  final String name;
-  final int price;
-
-  VetService(this.name, this.price);
-}
+import 'package:intl/intl.dart';
+import '../../../services/api_service.dart';
+import '../../../model/service/service.dart';
 
 class VetBookingPage extends StatefulWidget {
-  const VetBookingPage({super.key});
+  final Map<String, dynamic>? appointment;
+
+  const VetBookingPage({super.key, this.appointment});
 
   @override
   State<VetBookingPage> createState() => _VetBookingPageState();
 }
 
 class _VetBookingPageState extends State<VetBookingPage> {
-  final phoneCtrl = TextEditingController();
-  final noteCtrl = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = true;
 
-  DateTime? selectedDate;
-  TimeOfDay? selectedTime;
+  // Dữ liệu từ API
+  List<dynamic> _userPets = [];
+  List<ServiceModel> _vetServices = [];
 
-  /// ===== DATA CỨNG =====
-  final pets = [
-    Pet("Milu", "Chó", "Poodle", 3, 5.2),
-    Pet("Mimi", "Mèo", "Anh lông ngắn", 2, 3.8),
-  ];
+  // Controllers
+  late TextEditingController _phoneController;
+  late TextEditingController _petNameController;
+  late TextEditingController _petTypeController;
+  late TextEditingController _petBreedController;
+  late TextEditingController _petAgeController;
+  late TextEditingController _petWeightController;
+  late TextEditingController _noteController;
 
-  final services = [
-    VetService("Khám tổng quát", 150000),
-    VetService("Tiêm phòng", 200000),
-    VetService("Xét nghiệm máu", 350000),
-  ];
-
-  late Pet selectedPet;
-  late VetService selectedService;
+  // Trạng thái chọn
+  int? _selectedPetId;
+  ServiceModel? _selectedService;
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = const TimeOfDay(hour: 8, minute: 0);
 
   @override
   void initState() {
     super.initState();
-    selectedPet = pets.first;
-    selectedService = services.first;
+    _initControllers();
+    _loadData();
   }
+
+  void _initControllers() {
+    _phoneController = TextEditingController(text: widget.appointment?['ownerPhoneNumber'] ?? "");
+    _petNameController = TextEditingController();
+    _petTypeController = TextEditingController();
+    _petBreedController = TextEditingController();
+    _petAgeController = TextEditingController();
+    _petWeightController = TextEditingController();
+    _noteController = TextEditingController(text: widget.appointment?['note'] ?? "");
+
+    if (widget.appointment != null) {
+      try {
+        String dateStr = widget.appointment!['appointmentDate'] ?? "";
+        _selectedDate = dateStr.contains('/')
+            ? DateFormat('dd/MM/yyyy').parse(dateStr)
+            : DateTime.parse(dateStr);
+
+        String timeStr = widget.appointment!['appointmentTime'] ?? "08:00";
+        final parts = timeStr.split(':');
+        _selectedTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      } catch (e) {
+        debugPrint("Lỗi parse thời gian: $e");
+      }
+    }
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      // 1. Lấy Profile để lấy SĐT và UserId (Sửa lỗi 400)
+      final profile = await ApiService.getUserProfile();
+      if (profile != null && widget.appointment == null) {
+        _phoneController.text = profile['phoneNumber']?.toString() ?? "";
+      }
+
+      // 2. Lấy danh sách thú cưng và dịch vụ
+      final results = await Future.wait([
+        ApiService.getPets(),
+        ApiService.getVetBookingData(),
+      ]);
+
+      setState(() {
+        // --- SẮP XẾP THÚ CƯNG THEO TÊN (A-Z) ---
+        _userPets = List.from(results[0] as Iterable);
+        _userPets.sort((a, b) => (a['name'] ?? "").toString().toLowerCase().compareTo((b['name'] ?? "").toString().toLowerCase()));
+
+        final rawData = results[1] as Map<String, dynamic>;
+        _vetServices = (rawData['services'] as List)
+            .map((s) => ServiceModel.fromJson(s))
+            .toList();
+
+        // 3. Khởi tạo Pet và Dịch vụ mặc định
+        if (_userPets.isNotEmpty) {
+          _selectedPetId = widget.appointment?['petId'] ?? _userPets.first['petId'];
+          _updatePetFields(_selectedPetId);
+        }
+
+        if (_vetServices.isNotEmpty) {
+          int? targetId = widget.appointment?['serviceId'];
+          _selectedService = _vetServices.firstWhere(
+                (s) => s.serviceId == targetId,
+            orElse: () => _vetServices.first,
+          );
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Lỗi loadData: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _updatePetFields(int? petId) {
+    if (petId == null || _userPets.isEmpty) return;
+    final pet = _userPets.firstWhere((p) => p['petId'] == petId, orElse: () => null);
+
+    if (pet != null) {
+      setState(() {
+        _petNameController.text = (pet['name'] ?? "").toString();
+        _petTypeController.text = (pet['type'] ?? "").toString();
+        _petBreedController.text = (pet['breed'] ?? "").toString();
+
+        // Đảm bảo lấy đúng key từ JSON (Thường là 'age' hoặc 'petAge')
+        var ageValue = pet['age'] ?? pet['petAge'];
+        _petAgeController.text = (ageValue != null) ? ageValue.toString() : "0";
+
+        var weightValue = pet['weight'] ?? pet['petWeight'];
+        _petWeightController.text = (weightValue != null) ? weightValue.toString() : "0";
+      });
+    }
+  }
+
+  void _handleBooking() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedPetId == null || _selectedService == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng chọn thú cưng và dịch vụ")));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final profile = await ApiService.getUserProfile();
+      final String formattedTime = "${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}";
+
+      Map<String, dynamic> bookingData = {
+        "UserId": profile?['id'], // QUAN TRỌNG: Thêm UserId để sửa lỗi 400
+        "OwnerPhoneNumber": _phoneController.text,
+        "ExistingPetId": _selectedPetId,
+        "PetName": _petNameController.text,
+        "PetType": _petTypeController.text,
+        "PetBreed": _petBreedController.text,
+        "PetAge": int.tryParse(_petAgeController.text) ?? 0,
+        "PetWeight": double.tryParse(_petWeightController.text) ?? 0,
+        "ServiceId": _selectedService!.serviceId,
+        "Note": _noteController.text,
+        "AppointmentDate": DateFormat('yyyy-MM-dd').format(_selectedDate),
+        "AppointmentTime": formattedTime,
+      };
+
+      bool isUpdate = widget.appointment != null;
+      int? appId = widget.appointment?['appointmentId'];
+
+      bool success = await ApiService.saveVetBooking(bookingData, isUpdate, id: appId);
+
+      if (success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Thao tác thành công! 🎉")));
+          Navigator.pop(context, true);
+        }
+      } else {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Lỗi: Server từ chối dữ liệu (400/500)")));
+      }
+    } catch (e) {
+      debugPrint("Lỗi Local: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // --- UI Components ---
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.pinkAccent)));
+
     return Scaffold(
-      backgroundColor: kBackgroundPink,
       appBar: AppBar(
-        backgroundColor: kLightPink,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text(
-          "🩺 Đặt lịch Thú y",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text(widget.appointment == null ? "🩺 Đặt lịch thú y" : "✏️ Cập nhật thú y"),
+        backgroundColor: Colors.pinkAccent,
+        foregroundColor: Colors.white,
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        children: [
-          /// 👤 Chủ nuôi
-          _pinkCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _section("👤 Thông tin chủ nuôi"),
-                TextField(
-                  controller: phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: "Số điện thoại",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          /// 🐾 Thú cưng
-          _pinkCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _section("🐾 Chọn thú cưng"),
-                DropdownButtonFormField<Pet>(
-                  value: selectedPet,
-                  decoration: const InputDecoration(
-                    labelText: "Thú cưng",
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    border: OutlineInputBorder(),
-                  ),
-                  items: pets
-                      .map(
-                        (p) => DropdownMenuItem(
-                      value: p,
-                      child: Text(p.name),
-                    ),
-                  )
-                      .toList(),
-                  onChanged: (val) => setState(() => selectedPet = val!),
-                ),
-
-                const SizedBox(height: 12),
-                _readonly("Loại", selectedPet.type),
-                _readonly("Giống", selectedPet.breed),
-                _readonly("Tuổi", "${selectedPet.age}"),
-                _readonly("Cân nặng", "${selectedPet.weight} kg"),
-              ],
-            ),
-          ),
-
-          /// 💉 Dịch vụ
-          _pinkCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _section("💉 Dịch vụ thú y"),
-                DropdownButtonFormField<VetService>(
-                  value: selectedService,
-                  items: services
-                      .map(
-                        (s) => DropdownMenuItem(
-                      value: s,
-                      child: Text(s.name),
-                    ),
-                  )
-                      .toList(),
-                  onChanged: (val) =>
-                      setState(() => selectedService = val!),
-                  decoration:
-                  const InputDecoration(border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 12),
-                _readonly(
-                  "Giá dịch vụ",
-                  "${selectedService.price.toStringAsFixed(0)} VNĐ",
-                  isPrice: true,
-                ),
-              ],
-            ),
-          ),
-
-          /// 📝 Ghi chú
-          _pinkCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _section("📝 Ghi chú"),
-                TextField(
-                  controller: noteCtrl,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: "Nhập triệu chứng hoặc yêu cầu...",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          /// 📅 Thời gian
-          _pinkCard(
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _section("📅 Thời gian"),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.date_range),
-                        label: Text(
-                          selectedDate == null
-                              ? "Chọn ngày"
-                              : "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
-                        ),
-                        onPressed: _pickDate,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.access_time),
-                        label: Text(
-                          selectedTime == null
-                              ? "Chọn giờ"
-                              : selectedTime!.format(context),
-                        ),
-                        onPressed: _pickTime,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          /// 📅 Submit
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kLightPink,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle("👤", "Thông tin chủ nuôi"),
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: "Số điện thoại", border: OutlineInputBorder()),
               ),
-            ),
-            onPressed: _submit,
-            icon: const Icon(Icons.event_available),
-            label: const Text(
-              "Đặt lịch ngay",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+              const SizedBox(height: 20),
+
+              _buildSectionTitle("🐾", "Chọn thú cưng"),
+              DropdownButtonFormField<int>(
+                value: _selectedPetId,
+                isExpanded: true,
+                items: _userPets.map((p) => DropdownMenuItem<int>(
+                    value: p['petId'], child: Text(p['name'] ?? "Không tên"))).toList(),
+                onChanged: (val) {
+                  setState(() => _selectedPetId = val);
+                  _updatePetFields(val);
+                },
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 15),
+
+              Row(
+                children: [
+                  Expanded(child: _buildReadonlyField("Tên thú cưng", _petNameController)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildReadonlyField("Loại", _petTypeController)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _buildReadonlyField("Giống", _petBreedController),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _buildReadonlyField("Tuổi", _petAgeController)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildReadonlyField("Cân nặng (kg)", _petWeightController)),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+              _buildSectionTitle("💉", "Chọn dịch vụ thú y"),
+              DropdownButtonFormField<int>(
+                value: _selectedService?.serviceId,
+                isExpanded: true,
+                items: _vetServices.map((s) => DropdownMenuItem<int>(
+                    value: s.serviceId, child: Text(s.name))).toList(),
+                onChanged: (val) => setState(() => _selectedService = _vetServices.firstWhere((s) => s.serviceId == val)),
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 10),
+              _buildPriceDisplay(),
+
+              const SizedBox(height: 20),
+              _buildSectionTitle("📝", "Ghi chú"),
+              TextFormField(controller: _noteController, maxLines: 2, decoration: const InputDecoration(hintText: "Nhập triệu chứng...", border: OutlineInputBorder())),
+
+              const SizedBox(height: 20),
+              _buildSectionTitle("📅", "Thời gian hẹn"),
+              _buildDateTimePicker(),
+
+              const SizedBox(height: 35),
+              ElevatedButton.icon(
+                onPressed: _handleBooking,
+                icon: const Icon(Icons.check_circle_outline),
+                label: Text(widget.appointment == null ? "XÁC NHẬN ĐẶT LỊCH" : "LƯU THAY ĐỔI"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pinkAccent,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 55),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
           ),
-
-        ],
-      ),
-    );
-  }
-
-  /// ================= HELPERS =================
-  Widget _section(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: kPrimaryPink,
         ),
       ),
     );
   }
 
-  Widget _pinkCard(Widget child) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: child,
-      ),
+  Widget _buildPriceDisplay() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade100)),
+      child: Text("${NumberFormat("#,###").format(_selectedService?.price ?? 0)} VNĐ",
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red)),
     );
   }
 
-  Widget _readonly(String label, String value, {bool isPrice = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: TextFormField(
-        initialValue: value,
-        readOnly: true,
-        style: TextStyle(
-          color: isPrice ? Colors.red : Colors.black,
-          fontWeight: isPrice ? FontWeight.bold : FontWeight.normal,
-        ),
-        decoration: InputDecoration(
-          labelText: label, // ⭐ CHỮ NHỎ PHÍA TRÊN
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-          border: const OutlineInputBorder(),
-        ),
-      ),
+  Widget _buildDateTimePicker() {
+    return Row(
+      children: [
+        Expanded(child: InkWell(onTap: _pickDate, child: InputDecorator(decoration: const InputDecoration(labelText: "Ngày hẹn", border: OutlineInputBorder()),
+            child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate))))),
+        const SizedBox(width: 10),
+        Expanded(child: InkWell(onTap: _pickTime, child: InputDecorator(decoration: const InputDecoration(labelText: "Giờ hẹn", border: OutlineInputBorder()),
+            child: Text(_selectedTime.format(context))))),
+      ],
     );
   }
+
+  Widget _buildSectionTitle(String icon, String title) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Text("$icon $title", style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+  );
+
+  Widget _buildReadonlyField(String label, TextEditingController controller) => TextFormField(
+    controller: controller, readOnly: true,
+    decoration: InputDecoration(labelText: label, filled: true, fillColor: Colors.grey.shade100, border: const OutlineInputBorder()),
+  );
 
   Future<void> _pickDate() async {
-    final date = await showDatePicker(
-      context: context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-      initialDate: DateTime.now(),
-    );
-    if (date != null) setState(() => selectedDate = date);
+    final DateTime? picked = await showDatePicker(context: context, initialDate: _selectedDate, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 30)));
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 
   Future<void> _pickTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (time != null) setState(() => selectedTime = time);
-  }
-
-  void _submit() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Đặt lịch thú y thành công (demo)")),
-    );
+    final TimeOfDay? picked = await showTimePicker(context: context, initialTime: _selectedTime);
+    if (picked != null) setState(() => _selectedTime = picked);
   }
 }

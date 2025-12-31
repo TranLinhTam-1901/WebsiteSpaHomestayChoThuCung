@@ -5,7 +5,7 @@ import '../Api/auth_service.dart';
 
 class ProductApi {
   final Dio _dio = Dio(
-    BaseOptions(baseUrl: 'https://localhost:7051'),
+    BaseOptions(baseUrl:'https://localhost:7051'),
   );
 
 
@@ -42,4 +42,21 @@ class ProductApi {
     return ProductDetailModel.fromJson(res.data);
   }
 
+  Future<List<ProductModel>> getProductsByCategory(int categoryId) async {
+    final res = await _dio.get(
+      '/api/products',
+      queryParameters: {
+        'categoryId': categoryId,
+      },
+      options: Options(
+        headers: {'Accept': 'application/json'},
+      ),
+    );
+
+    return (res.data as List)
+        .map((e) => ProductModel.fromJson(e))
+        .toList();
+  }
 }
+
+

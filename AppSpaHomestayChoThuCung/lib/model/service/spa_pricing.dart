@@ -15,6 +15,17 @@ class SpaPricingModel {
     this.priceOver25kg,
   });
 
+  Map<String, dynamic> toJson() {
+    return {
+      'spaPricingId': spaPricingId,
+      'serviceId': serviceId,
+      'priceUnder5kg': priceUnder5kg,
+      'price5To12kg': price5To12kg,
+      'price12To25kg': price12To25kg,
+      'priceOver25kg': priceOver25kg,
+    };
+  }
+
   factory SpaPricingModel.fromJson(Map<String, dynamic> json) {
     return SpaPricingModel(
       spaPricingId: json['spaPricingId'],

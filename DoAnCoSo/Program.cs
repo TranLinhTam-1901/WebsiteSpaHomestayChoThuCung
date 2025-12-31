@@ -127,6 +127,9 @@ builder.Services.AddScoped<BlockchainService>();
 
 builder.Services.AddSingleton<GeminiVisionService>();
 
+builder.Services.AddScoped<IProductApiService, ProductApiService>();
+
+
 var app = builder.Build();
 
 var supportedCultures = new[] { new CultureInfo("vi-VN"), new CultureInfo("en-US") };
@@ -161,9 +164,13 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
 app.UseRouting();
+
 app.UseCors("AllowFlutter");
+// đặt useStaticFiles tại đây để có thể load ảnh 
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();

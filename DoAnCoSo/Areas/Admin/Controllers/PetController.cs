@@ -177,7 +177,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers
                     existingPet.Gender,
                     existingPet.Age,
                     existingPet.Weight,
-                    OwnerName = existingPet.User?.FullName ?? "Unknown",
+                    OwnerName = (await _userManager.FindByIdAsync(pet.UserId))?.FullName ?? "Unknown",
                     existingPet.ImageUrl
                 };
 
@@ -211,92 +211,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             return View(pet);
         }
-
-        //[HttpPost, ActionName("DeleteConfirmed")]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> DeleteConfirmed(int PetId)
-        //{
-        //    var currentUser = await _userManager.GetUserAsync(User);
-        //    var performedBy = currentUser?.FullName ?? "Hệ thống";
-        //    var userId = _userManager.GetUserId(User);
-        //    bool isAdmin = User.IsInRole("Admin");
-
-        //    var pet = await _context.Pets.Include(p => p.User).FirstOrDefaultAsync(p => p.PetId == PetId);
-        //    if (pet == null) return RedirectToAction(nameof(Index));
-
-        //    try
-        //    {
-        //        var deletedPet = new DeletedPets
-        //        {
-        //            OriginalPetId = pet.PetId,
-        //            Name = pet.Name,
-        //            Type = pet.Type,
-        //            Breed = pet.Breed,
-        //            Gender = pet.Gender,
-        //            Age = pet.Age,
-        //            Weight = pet.Weight,
-        //            UserId = pet.UserId,
-        //            ImageUrl = pet.ImageUrl,
-        //            DeletedAt = DateTime.Now,
-        //            DeletedBy = performedBy
-        //        };
-
-        //        _context.DeletedPets.Add(deletedPet);
-        //        await _context.SaveChangesAsync(); // cần save để có Id
-
-        //        // 2. Cập nhật Appointment liên quan
-        //        var appointments = await _context.Appointments
-        //            .Where(a => a.PetId == PetId)
-        //            .ToListAsync();
-
-        //        foreach (var a in appointments)
-        //        {
-        //            a.DeletedPetId = deletedPet.Id; // gán DeletedPetId
-        //            a.Status = AppointmentStatus.Deleted; // đánh dấu đã xóa
-        //        }
-        //        await _context.SaveChangesAsync(); // lưu Appointment trước khi xóa Pet
-
-        //        _context.DeletedPets.Add(deletedPet);
-        //        await _context.SaveChangesAsync();
-
-        //        _context.Pets.Remove(pet);
-        //        await _context.SaveChangesAsync();
-
-        //        // 5. Ghi log blockchain
-        //        try
-        //        {
-        //            var deletedPetRecord = new
-        //            {
-        //                deletedPet.OriginalPetId,
-        //                deletedPet.Name,
-        //                deletedPet.Type,
-        //                deletedPet.Breed,
-        //                deletedPet.Gender,
-        //                deletedPet.Age,
-        //                deletedPet.Weight,
-        //                deletedPet.UserId,
-        //                deletedPet.ImageUrl,
-        //                deletedPet.DeletedAt,
-        //                deletedPet.DeletedBy
-        //            };
-
-        //            var operation = isAdmin ? "ADMIN_DELETE" : "DELETE";
-        //            await _blockchainService.AddPetBlockAsync(deletedPetRecord, operation, performedBy);
-        //        }
-        //        catch (Exception bcEx)
-        //        {
-        //            Console.WriteLine("Blockchain log lỗi (bỏ qua): " + bcEx.Message);
-        //        }
-
-        //        TempData["SuccessMessage"] = "🗑️ Hồ sơ thú cưng đã được đánh dấu xóa!";
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        TempData["ErrorMessage"] = "⚠️ Không thể xóa hồ sơ: " + ex.Message;
-        //    }
-
-        //    return RedirectToAction(nameof(Index));
-        //}
 
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
@@ -412,7 +326,5 @@ namespace DoAnCoSo.Areas.Admin.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
-
     }
 }

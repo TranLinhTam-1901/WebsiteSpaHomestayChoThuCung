@@ -14,10 +14,17 @@ namespace DoAnCoSo.Services
             _context = context;
         }
 
-        public async Task<List<ProductListDto>> GetProductsAsync()
+        public async Task<List<ProductListDto>> GetProductsAsync(int? categoryId)
         {
-            return await _context.Products
-                .Where(p => p.IsActive && !p.IsDeleted)
+            var query = _context.Products
+                .Where(p => p.IsActive && !p.IsDeleted);
+
+            if (categoryId.HasValue && categoryId.Value > 0)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            return await query
                 .Select(p => new ProductListDto
                 {
                     Id = p.Id,
@@ -32,6 +39,7 @@ namespace DoAnCoSo.Services
                 })
                 .ToListAsync();
         }
+
 
         public async Task<ProductDetailDto?> GetProductDetailAsync(int id)
         {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'book_homestay_page.dart';
-import 'book_spa_page.dart';
-import 'book_vet_page.dart';
+import 'book_homestay.dart';
+import 'book_spa.dart';
+import 'book_vet.dart';
 
 const kPrimaryPink = Color(0xFFFF6185);
 const kLightPink = Color(0xFFFFB6C1);

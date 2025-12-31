@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../model/appointment/appointment.dart';
 import '../../../services/api_service.dart';
 import 'booking_detail.dart';
+import '../../booking/book_spa.dart';
+import '../../booking/book_homestay.dart';
+import '../../booking/book_vet.dart';
 
 const kPrimaryPink = Color(0xFFFF6185);
 const kLightPink = Color(0xFFFFB6C1);
@@ -197,19 +200,95 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                       _outlineButton(
                         label: "Sửa",
                         color: Colors.green,
-                        onTap: () {},
+                        onTap: () async {
+                          // 1. Khai báo targetPage có thể null hoặc gán mặc định để tránh lỗi compile
+                          Widget? targetPage;
+
+                          // 2. Lấy category trực tiếp từ thuộc tính phẳng của Model Appointment
+                          String category = a.serviceCategory ?? "";
+
+                          if (category == "Spa") {
+                            targetPage = SpaBookingPage(appointment: a.toJson());
+                          } else if (category == "Vet") {
+                            targetPage = VetBookingPage(appointment: a.toJson());
+                          } else if (category == "Homestay" || a.isHomestay) {
+                            // Ưu tiên check category chuỗi, nếu null thì check qua logic date (isHomestay)
+                            targetPage = HomestayBookingPage(appointment: a.toJson());
+                          }
+
+                          // 3. Chỉ chuyển trang nếu tìm thấy trang đích phù hợp
+                          if (targetPage != null) {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => targetPage!),
+                            );
+
+                            if (result == true) {
+                              setState(() {
+                                appointmentsFuture = ApiService.getBookingHistory();
+                              });
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Không xác định được loại dịch vụ để chỉnh sửa"))
+                            );
+                          }
+                        },
                       ),
+
                     if (canEditOrCancel)
                       _outlineButton(
                         label: "Hủy",
                         color: Colors.red,
                         onTap: () async {
                           if (a.appointmentId == null) return;
-                          await ApiService.cancelAppointment(a.appointmentId!);
-                          setState(() {
-                            appointmentsFuture =
-                                ApiService.getBookingHistory();
-                          });
+
+                          // Sử dụng thuộc tính canCancel có sẵn trong Model 176 dòng của bạn để chặn sớm
+                          if (!a.canCancel) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Không thể hủy lịch sát giờ quy định!"))
+                            );
+                            return;
+                          }
+
+                          bool confirm = await showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text("Xác nhận hủy"),
+                              content: const Text("Bạn có chắc chắn muốn hủy lịch hẹn này không?"),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text("Không")
+                                ),
+                                TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text("Có, hủy ngay", style: TextStyle(color: Colors.red))
+                                ),
+                              ],
+                            ),
+                          ) ?? false;
+
+                          if (confirm) {
+                            // Gọi API Service
+                            bool success = await ApiService.cancelAppointment(a.appointmentId!);
+                            if (success) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Đã hủy lịch hẹn thành công! 🎉"))
+                                );
+                                setState(() {
+                                  appointmentsFuture = ApiService.getBookingHistory();
+                                });
+                              }
+                            } else {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Lỗi: Server từ chối yêu cầu hủy. ❌"))
+                                );
+                              }
+                            }
+                          }
                         },
                       ),
                   ],

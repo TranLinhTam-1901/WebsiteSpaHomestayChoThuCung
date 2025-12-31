@@ -6,6 +6,7 @@ class PetDetail {
   final String? breed;
   final String? gender;
   final String? age;
+  final String? dateOfBirth;
   final double? weight;
   final double? height;
   final String? color;
@@ -17,6 +18,8 @@ class PetDetail {
   final String? dietPreferences;
   final String? healthNotes;
   final bool? isDeleted;
+  final String? imageUrl;
+  final String? userId;
   final List<PetServiceRecord>? serviceRecords;
 
   PetDetail({
@@ -25,19 +28,47 @@ class PetDetail {
     this.breed,
     this.gender,
     this.age,
+    this.dateOfBirth,
     this.weight,
     this.height,
     this.color,
     this.vaccinationRecords,
     this.aiAnalysisResult,
-    this.distinguishingMarks, // Sửa dấu ; thành dấu ,
-    this.medicalHistory,      // Sửa dấu ; thành dấu ,
-    this.allergies,           // Sửa dấu ; thành dấu ,
-    this.dietPreferences,      // Sửa dấu ; thành dấu ,
-    this.healthNotes,         // Sửa dấu ; thành dấu ,
+    this.distinguishingMarks,
+    this.medicalHistory,
+    this.allergies,
+    this.dietPreferences,
+    this.healthNotes,
     this.isDeleted,
+    this.imageUrl,
+    this.userId,
     this.serviceRecords,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'petId': 0, // Sẽ được ghi đè ở trang Detail
+      'name': name ?? "",
+      'type': type ?? "",
+      'breed': breed ?? "",
+      'gender': gender ?? "Male",
+      'age': age ?? "0",
+      'dateOfBirth': dateOfBirth,
+      'weight': weight ?? 0.0,
+      'height': height ?? 0.0,
+      'color': color ?? "",
+      'imageUrl': imageUrl ?? "",
+      // Đồng bộ tên trường để PetUpdatePage đọc đúng dữ liệu cũ
+      'vaccinationRecords': vaccinationRecords ?? "",
+      'medicalHistory': medicalHistory ?? "",
+      'distinguishingMarks': distinguishingMarks ?? "",
+      'aiAnalysisResult': aiAnalysisResult ?? "",
+      'allergies': allergies ?? "",
+      'dietPreferences': dietPreferences ?? "",
+      'healthNotes': healthNotes ?? "",
+      'userId': userId ?? "",
+    };
+  }
 
   factory PetDetail.fromJson(Map<String, dynamic> json) {
     return PetDetail(
@@ -46,6 +77,8 @@ class PetDetail {
       breed: json['breed']?.toString(),
       gender: json['gender']?.toString(),
       age: json['age']?.toString(),
+      // Lấy đúng trường dateOfBirth từ JSON
+      dateOfBirth: json['dateOfBirth']?.toString(),
 
       // Xử lý số thực an toàn
       weight: json['weight'] != null ? double.tryParse(json['weight'].toString()) : null,
@@ -64,6 +97,9 @@ class PetDetail {
 
       // Logic xác định thú cưng đã xóa
       isDeleted: json['isDeleted'] ?? (json['deletedPet'] != null),
+
+      imageUrl: json['imageUrl']?.toString(),
+      userId: json['userId']?.toString(),
 
       // Parse danh sách lịch sử dịch vụ
       serviceRecords: (json['serviceRecords'] ?? json['service_Records']) != null

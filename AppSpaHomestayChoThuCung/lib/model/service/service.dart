@@ -30,25 +30,37 @@ class ServiceModel {
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
     return ServiceModel(
-      serviceId: json['serviceId'],
-      name: json['name'],
-      description: json['description'],
-      price: (json['price'] ?? 0).toDouble(),
-      salePrice: json['salePrice']?.toDouble(),
-      image: json['image'],
-      // Map string từ API về Enum
-      category: ServiceCategory.values.firstWhere(
-            (e) => e.toString().split('.').last == json['category'],
-        orElse: () => ServiceCategory.Spa,
-      ),
-      spaPricing: json['spaPricing'] != null
-          ? SpaPricingModel.fromJson(json['spaPricing'])
-          : null,
-      serviceDetails: json['serviceDetails'] != null
-          ? (json['serviceDetails'] as List)
-          .map((i) => ServiceDetailModel.fromJson(i))
-          .toList()
+      // 1. Map đúng theo Postman (ưu tiên chữ thường)
+      serviceId: json['serviceId'] ?? json['ServiceId'] ?? 0,
+      name: json['name'] ?? json['Name'] ?? 'Không tên',
+      description: json['description'] ?? json['Description'] ?? '',
+
+      // 2. Ép kiểu double an toàn cho giá tiền
+      price: (json['price'] ?? json['Price'] ?? 0).toDouble(),
+
+      // 3. Các trường có thể null
+      salePrice: (json['salePrice'] ?? json['SalePrice'])?.toDouble(),
+      image: json['image'] ?? json['Image'],
+
+      // 4. Xử lý Category:
+      // Vì API này chỉ trả về phòng Homestay, ta mặc định là Homestay
+      // nếu API không trả về trường category.
+      category: _parseCategory(json['category'] ?? json['Category']),
+
+      spaPricing: (json['spaPricing'] ?? json['SpaPricing']) != null
+          ? SpaPricingModel.fromJson(json['spaPricing'] ?? json['SpaPricing'])
           : null,
     );
+  }
+
+// Hàm phụ để parse category không bị lỗi crash app
+  static ServiceCategory _parseCategory(dynamic val) {
+    if (val == null) return ServiceCategory.Homestay; // Mặc định cho trang này
+    if (val is int) {
+      if (val >= 0 && val < ServiceCategory.values.length) {
+        return ServiceCategory.values[val];
+      }
+    }
+    return ServiceCategory.Homestay;
   }
 }
