@@ -79,13 +79,12 @@ class CheckoutController extends GetxController {
       }
 
       Get.snackbar("Thành công", data["message"] ?? "Đặt hàng thành công");
+
       if (Get.isRegistered<CartController>()) {
         await Get.find<CartController>().loadCart(); // load lại từ server (server đã xóa cart)
       }
 
       Get.offAll(() => HomePage(model: HomeViewModel.demo()));
-
-
     } catch (e) {
       Get.snackbar("Lỗi", e.toString());
     } finally {
