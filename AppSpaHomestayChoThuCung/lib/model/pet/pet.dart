@@ -1,11 +1,12 @@
 import 'pet_service_record.dart';
 
 class PetDetail {
+  final int? id; // Map với petId trong C#
   final String? name;
   final String? type;
   final String? breed;
   final String? gender;
-  final String? age;
+  final int? age; // Chuyển về int cho đồng bộ với C#
   final String? dateOfBirth;
   final double? weight;
   final double? height;
@@ -21,8 +22,12 @@ class PetDetail {
   final String? imageUrl;
   final String? userId;
   final List<PetServiceRecord>? serviceRecords;
+  final String? ownerName;
+  final String? ownerPhone;
+  final String? ownerAddress;
 
   PetDetail({
+    this.id,
     this.name,
     this.type,
     this.breed,
@@ -43,22 +48,24 @@ class PetDetail {
     this.imageUrl,
     this.userId,
     this.serviceRecords,
+    this.ownerName,
+    this.ownerPhone,
+    this.ownerAddress,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'petId': 0, // Sẽ được ghi đè ở trang Detail
+      'petId': id, // Lấy đúng ID của đối tượng
       'name': name ?? "",
       'type': type ?? "",
       'breed': breed ?? "",
       'gender': gender ?? "Male",
-      'age': age ?? "0",
+      'age': age ?? 0,
       'dateOfBirth': dateOfBirth,
       'weight': weight ?? 0.0,
       'height': height ?? 0.0,
       'color': color ?? "",
       'imageUrl': imageUrl ?? "",
-      // Đồng bộ tên trường để PetUpdatePage đọc đúng dữ liệu cũ
       'vaccinationRecords': vaccinationRecords ?? "",
       'medicalHistory': medicalHistory ?? "",
       'distinguishingMarks': distinguishingMarks ?? "",
@@ -67,45 +74,54 @@ class PetDetail {
       'dietPreferences': dietPreferences ?? "",
       'healthNotes': healthNotes ?? "",
       'userId': userId ?? "",
+      'ownerName': ownerName,
+      'ownerPhone': ownerPhone,
+      'ownerAddress': ownerAddress,
     };
   }
 
   factory PetDetail.fromJson(Map<String, dynamic> json) {
     return PetDetail(
+      // 1. Map ID
+      id: json['petId'] ?? json['PetId'],
+
       name: json['name']?.toString(),
       type: json['type']?.toString(),
       breed: json['breed']?.toString(),
       gender: json['gender']?.toString(),
-      age: json['age']?.toString(),
-      // Lấy đúng trường dateOfBirth từ JSON
-      dateOfBirth: json['dateOfBirth']?.toString(),
 
-      // Xử lý số thực an toàn
+      // 2. Logic lấy tên chủ linh hoạt
+      // - json['ownerName']: Lấy từ API GetAll (trường phẳng)
+      // - json['owner']['fullName']: Lấy từ API Details (object lồng)
+      ownerName: json['ownerName'] ??
+          (json['owner'] != null ? json['owner']['fullName'] : null) ??
+          "Chưa có chủ",
+      ownerPhone: json['owner'] != null ? json['owner']['phoneNumber']?.toString() : null,
+      ownerAddress: json['owner'] != null ? json['owner']['address']?.toString() : null,
+
+      // 3. Ép kiểu số an toàn
+      age: json['age'] is int ? json['age'] : int.tryParse(json['age']?.toString() ?? ""),
       weight: json['weight'] != null ? double.tryParse(json['weight'].toString()) : null,
       height: json['height'] != null ? double.tryParse(json['height'].toString()) : null,
 
+      dateOfBirth: json['dateOfBirth']?.toString(),
       color: json['color']?.toString(),
-      vaccinationRecords: json['vaccinationRecords']?.toString(),
-
-      // Map các trường đặc biệt từ C# (đề phòng API trả về PascalCase hoặc Snake_case)
-      aiAnalysisResult: (json['ai_AnalysisResult'] ?? json['AI_AnalysisResult'] ?? json['aiAnalysisResult'])?.toString(),
-      distinguishingMarks: (json['distinguishingMarks'] ?? json['distinguishing_Marks'])?.toString(),
-      medicalHistory: (json['medicalHistory'] ?? json['medical_History'])?.toString(),
-      allergies: json['allergies']?.toString(),
-      dietPreferences: (json['dietPreferences'] ?? json['diet_Preferences'])?.toString(),
-      healthNotes: (json['healthNotes'] ?? json['health_Notes'])?.toString(),
-
-      // Logic xác định thú cưng đã xóa
-      isDeleted: json['isDeleted'] ?? (json['deletedPet'] != null),
-
       imageUrl: json['imageUrl']?.toString(),
-      userId: json['userId']?.toString(),
 
-      // Parse danh sách lịch sử dịch vụ
-      serviceRecords: (json['serviceRecords'] ?? json['service_Records']) != null
-          ? ( (json['serviceRecords'] ?? json['service_Records']) as List)
-          .map((i) => PetServiceRecord.fromJson(i))
-          .toList()
+      // 4. Map các trường thông tin chi tiết (Dùng cho trang Detail)
+      vaccinationRecords: json['vaccinationRecords'] ?? json['VaccinationRecords'],
+      medicalHistory: json['medicalHistory'] ?? json['MedicalHistory'],
+      distinguishingMarks: json['distinguishingMarks'] ?? json['DistinguishingMarks'],
+      aiAnalysisResult: json['aiAnalysisResult'] ?? json['AiAnalysisResult'] ?? json['aI_AnalysisResult'],
+      allergies: json['allergies'] ?? json['Allergies'],
+      dietPreferences: json['dietPreferences'] ?? json['DietPreferences'],
+      healthNotes: json['healthNotes'] ?? json['HealthNotes'],
+
+      userId: json['userId']?.toString(),
+      isDeleted: json['isDeleted'] ?? false,
+
+      serviceRecords: json['serviceRecords'] != null
+          ? (json['serviceRecords'] as List).map((i) => PetServiceRecord.fromJson(i)).toList()
           : null,
     );
   }

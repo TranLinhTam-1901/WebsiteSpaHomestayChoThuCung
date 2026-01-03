@@ -1,4 +1,4 @@
-import 'package:baitap1/widgets/write_review_page.dart';
+import 'package:baitap1/pages/review/write_review_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Controller/review_controller.dart';

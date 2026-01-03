@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../model/category_model.dart';
+import '../model/category/category_model.dart';
 
 class CategoryService {
   static const String baseUrl = 'https://localhost:7051';

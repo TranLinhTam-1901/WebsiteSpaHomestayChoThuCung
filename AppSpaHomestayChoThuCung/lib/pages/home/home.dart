@@ -10,12 +10,11 @@ import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:intl/intl.dart';
-import '../Api/auth_service.dart';
-import '../Controller/category_controller.dart';
-import '../Controller/product_controller.dart';
-import '../Controller/user_controller.dart';
-import '../auth_gate.dart';
-import '../pages/login.dart';
+import '../../Api/auth_service.dart';
+import '../../Controller/category_controller.dart';
+import '../../Controller/product_controller.dart';
+import '../../Controller/user_controller.dart';
+import '../../auth_gate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const kPrimaryPink = Color(0xFFFFB6C1);
@@ -281,7 +280,6 @@ class _HomePageState extends State<HomePage> {
           }),
         ),
 
-
         const SizedBox(height: 12),
 
         // 🏷 TITLE
@@ -471,8 +469,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
   /// TAB PROMOTION
   Widget _promotionTab() {
     return ListView.builder(
@@ -582,9 +578,4 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-
-
-
-
 }

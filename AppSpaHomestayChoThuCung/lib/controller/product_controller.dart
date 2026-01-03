@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../Api/product_api.dart';
-import '../model/product_model.dart';
+import '../model/product/product_model.dart';
 
 class ProductController extends GetxController {
   final _api = ProductApi();

@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../Api/auth_service.dart';
-import '../Controller/user_controller.dart';
-import '../auth/google_auth_service.dart';
-import '../auth_gate.dart';
+import '../../Api/auth_service.dart';
+import '../../Controller/user_controller.dart';
+import '../../auth/google_auth_service.dart';
+import '../../auth_gate.dart';
 import 'Register.dart';
-import 'product/admin_add_product.dart';
+import '../../admin/home/admin_home.dart'; // Chú ý đường dẫn phải đúng với nơi bạn đặt file
 import 'package:get/get.dart';
-import '../model/user/user_profile.dart'; // Để dùng class UserProfile (thay đổi đường dẫn cho đúng với project của bạn)
+import '../../model/user/user_profile.dart'; // Để dùng class UserProfile (thay đổi đường dẫn cho đúng với project của bạn)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -35,14 +35,13 @@ class _LoginPageState extends State<LoginPage> {
     final result = await AuthService.login(email, password);
 
     if (result != null) {
-      // ⭐ THAY THẾ TỪ ĐÂY:
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true); // Lưu trạng thái đăng nhập
+      await prefs.setBool('isLoggedIn', true);
       await prefs.setString('jwt_token', result.token);
-      // Điều hướng dứt khoát về AuthGate để nó dẫn vào HomePage
+
       if (result.role == 'Admin') {
-        // Nếu là Admin thì tùy bạn điều hướng, nhưng vẫn nên lưu isLoggedIn
-        Get.offAll(() => const AdminAddProductPage());
+        // Đảm bảo không có chữ const ở trước AdminHomeScreen() nếu file kia chưa ổn định
+        Get.offAll(() => const AdminHomeScreen());
       } else {
         Get.offAll(() => const AuthGate());
       }
@@ -160,7 +159,6 @@ class _LoginPageState extends State<LoginPage> {
                           style: TextStyle(fontSize: 16, color: Colors.black54),
                         ),
                       ),
-
 
                       ElevatedButton.icon(
 

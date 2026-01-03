@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'promotion/my_promotions_page.dart';
-import 'pet/pet_profile.dart';
+import '../promotion/my_promotions_page.dart';
+import '../pet/pet_profile.dart';
 
 const kPrimaryPink = Color(0xFFFFB6C1);
 const kBackgroundPink = Color(0xFFFFF0F5);

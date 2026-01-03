@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../Api/auth_service.dart';
-import '../Api/review_api.dart';
-import '../Controller/review_controller.dart';
+import '../../Api/auth_service.dart';
+import '../../Api/review_api.dart';
+import '../../Controller/review_controller.dart';
 import 'package:image_picker/image_picker.dart';
 
 class WriteReviewPage extends StatefulWidget {

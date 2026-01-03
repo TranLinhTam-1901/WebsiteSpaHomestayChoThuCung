@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart'; // Để dùng kIsWeb
 import 'dart:io'; // Để sửa lỗi Undefined class 'File'
 import 'package:http_parser/http_parser.dart'; // Để sửa lỗi 'MediaType'
 import '../model/service/service.dart';
+import '../model/Blockchain/blockchain_record.dart';
 
 class ApiService {
   static const String baseUrl = kIsWeb
@@ -524,6 +525,32 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Hủy đơn thất bại: ${response.statusCode}');
+    }
+  }
+
+  /// BLOCKCHAIN ///
+
+  static Future<List<BlockchainRecord>> getBlockchainLogs() async {
+    try {
+      print("Đang gọi API: $baseUrl/admin/Blockchain");
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/Blockchain'),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final dynamic decodedData = jsonDecode(response.body);
+        List<dynamic> list = (decodedData is List) ? decodedData : (decodedData['records'] ?? []);
+        return list.map((item) => BlockchainRecord.fromJson(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Lỗi ApiService: $e");
+      return [];
     }
   }
 }
