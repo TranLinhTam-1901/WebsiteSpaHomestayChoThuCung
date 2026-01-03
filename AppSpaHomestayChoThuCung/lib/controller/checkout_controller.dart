@@ -1,4 +1,6 @@
+import 'package:baitap1/pages/home/home.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_navigation/src/snackbar/snackbar.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
@@ -13,6 +15,7 @@ import 'package:http/http.dart' as http;
 
 import '../model/Cart/cart_item_model.dart';
 import '../pages/history/order/order_history.dart';
+import 'cart_controller.dart';
 
 class CheckoutController extends GetxController {
   final Rxn<PromotionModel> selectedPromotion = Rxn<PromotionModel>();
@@ -76,7 +79,13 @@ class CheckoutController extends GetxController {
       }
 
       Get.snackbar("Thành công", data["message"] ?? "Đặt hàng thành công");
-      Get.offAll(() => const OrderHistoryPage());
+      if (Get.isRegistered<CartController>()) {
+        await Get.find<CartController>().loadCart(); // load lại từ server (server đã xóa cart)
+      }
+
+      Get.offAll(() => HomePage(model: HomeViewModel.demo()));
+
+
     } catch (e) {
       Get.snackbar("Lỗi", e.toString());
     } finally {

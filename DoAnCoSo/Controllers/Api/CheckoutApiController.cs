@@ -247,6 +247,12 @@ namespace DoAnCoSo.Controllers.Api
             // =========================
             // 6️⃣ SAVE + GIỮ HÀNG
             // =========================
+
+            if (!dto.IsBuyNowCheckout)
+            {
+                _context.CartItems.RemoveRange(itemsForOrder);
+            }
+
             await _context.SaveChangesAsync();
             //await _inventory.ReserveForOrderAsync(order.Id, userId);
 
