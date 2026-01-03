@@ -68,7 +68,8 @@ class BookingSelectPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const SpaBookingPage(isUpdate: false),
+                    // Không truyền isUpdate: false nữa vì logic đã được gộp vào check widget.appointment == null
+                    builder: (_) => const SpaBookingPage(),
                   ),
                 );
               },

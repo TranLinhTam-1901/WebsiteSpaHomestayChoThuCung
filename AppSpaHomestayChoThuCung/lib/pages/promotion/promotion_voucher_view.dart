@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Controller/promotion_controller.dart';
 import '../../utils/price_utils.dart';
-import '../home_page.dart';
+import '../home/home.dart';
 
 class PromotionVoucherView extends StatelessWidget {
   const PromotionVoucherView({super.key});

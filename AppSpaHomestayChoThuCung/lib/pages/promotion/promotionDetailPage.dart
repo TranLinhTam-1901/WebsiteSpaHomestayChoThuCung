@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../model/promotion_model.dart';
 import '../../utils/price_utils.dart';
-import '../home_page.dart';
+import '../home/home.dart';
 
 class PromotionDetailPage extends StatelessWidget {
   final PromotionModel promotion;

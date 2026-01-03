@@ -1,4 +1,5 @@
 import 'package:baitap1/widgets/write_review_page.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Controller/review_controller.dart';
@@ -27,6 +28,7 @@ class _ProductReviewSectionState extends State<ProductReviewSection> {
         final reviews = rc.reviews;
         final visibleReviews =
         showAll ? reviews : reviews.take(3).toList();
+
 
         if (rc.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -131,6 +133,7 @@ class _ProductReviewSectionState extends State<ProductReviewSection> {
                           },
 
 
+
                           icon: const Icon(Icons.edit, color: Colors.pink),
                           label: const Text(
                             "Viết đánh giá",
@@ -162,9 +165,9 @@ class _ProductReviewSectionState extends State<ProductReviewSection> {
                 "Chưa có đánh giá nào",
                 style: TextStyle(color: Colors.grey),
               ),
-
             ...visibleReviews.map((r) => Padding(
             padding: const EdgeInsets.only(bottom: 24),
+
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -297,9 +300,6 @@ class _ProductReviewSectionState extends State<ProductReviewSection> {
                   ),
                 ),
               ),
-
-
-
           ],
         );
       },

@@ -1,243 +1,243 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import '../../Controller/pet_controller.dart';
-
-const kDarkPink = Color(0xFFFF6185);
-const kPrimaryPink = Color(0xFFFFB6C1);
-const kBackgroundPink = Color(0xFFFFF0F5);
+import '../../services/api_service.dart';
+import '../../model/pet/pet.dart'; // Đảm bảo đúng path model của bạn
+import 'package:intl/intl.dart'; // Dòng quan trọng để dùng DateFormat
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'pet_update.dart';
 
 class PetDetailPage extends StatelessWidget {
-  final Pet  pet; // dùng pet hiện tại của bạn (Pet hoặc Map)
+  final int petId;
 
-  const PetDetailPage({Key? key, required this.pet}) : super(key: key);
+  const PetDetailPage({Key? key, required this.petId}) : super(key: key);
 
-  String _text(String? value) =>
-      (value == null || value.trim().isEmpty) ? "Chưa có" : value;
+  // 1. Thêm hàm hiển thị ảnh xử lý logic URL
+  Widget _buildPetImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return const Icon(Icons.pets, size: 70, color: Color(0xFFFF6185));
+    }
 
-  String _number(dynamic value, String unit) =>
-      value != null ? "$value $unit" : "Chưa có";
+    String cleanPath = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+
+    // Nếu chạy trên Web dùng localhost, nếu chạy Android dùng 10.0.2.2
+    String domain = kIsWeb ? "localhost" : "10.0.2.2";
+
+    // Lưu ý: Port 7051 thường là HTTPS, nếu chạy Web bạn nên thử HTTP (ví dụ 5051)
+    // để tránh lỗi Certificate.
+    String fullUrl = "https://$domain:7051/$cleanPath";
+
+    debugPrint("Đang tải ảnh trên ${kIsWeb ? 'Web' : 'Mobile'}: $fullUrl");
+
+    return Image.network(
+      fullUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return const Icon(Icons.pets, size: 70, color: Color(0xFFFFB6C1));
+      },
+    );
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return "Chưa có";
+    try {
+      DateTime dt = DateTime.parse(dateStr);
+      return DateFormat('dd/MM/yyyy').format(dt);
+    } catch (e) {
+      return "Chưa có";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundPink,
+      backgroundColor: const Color(0xFFFFF7F9),
       appBar: AppBar(
-        backgroundColor: kPrimaryPink,
+        title: const Text("📋 Chi tiết thú cưng",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: const Color(0xFFFF6185),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text(
-          "📋 Chi tiết thú cưng",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.black),
-            onPressed: () {
-              // TODO: sang trang sửa thú cưng
-            },
-          )
-        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: kPrimaryPink.withOpacity(0.35),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              /// 🐾 ẢNH THÚ CƯNG
-              Center(
-                child: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
-                    ? CircleAvatar(
-                  radius: 75,
-                  backgroundImage: NetworkImage(pet.imageUrl!), // thêm !
-                )
-                    : const CircleAvatar(
-                  radius: 75,
-                  backgroundColor: kBackgroundPink,
-                  child: Icon(Icons.pets, size: 48, color: kDarkPink),
-                ),
-              ),
+      body: FutureBuilder<PetDetail?>(
+        future: ApiService.getPetDetails(petId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFFFF6185)));
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text("Không tìm thấy thông tin thú cưng"));
+          }
 
-              const SizedBox(height: 24),
+          final pet = snapshot.data!;
 
-              /// 📋 THÔNG TIN CƠ BẢN
-              _sectionTitle("📋 Thông tin cơ bản"),
-              _infoRow("Tên thú cưng", _text(pet.name)),
-              _infoRow("Loại", _text(pet.type)),
-              _infoRow("Giống", _text(pet.breed)),
-              _infoRow(
-                "Giới tính",
-                pet.gender == "Male"
-                    ? "Đực"
-                    : pet.gender == "Female"
-                    ? "Cái"
-                    : "Chưa có",
-              ),
-              _infoRow(
-                "Tuổi",
-                pet.age != null
-                    ? (pet.age == 0 ? "< 1 tuổi" : "${pet.age} tuổi")
-                    : "Chưa có",
-              ),
-              _infoRow(
-                "Ngày sinh",
-                pet.dateOfBirth != null
-                    ? "${pet.dateOfBirth!.day}/${pet.dateOfBirth!.month}/${pet.dateOfBirth!.year}"
-                    : "Chưa có",
-              ),
-              _infoRow("Màu sắc", _text(pet.color)),
-              _infoRow("Dấu hiệu nhận dạng", _text(pet.distinguishingMarks)),
-
-              const SizedBox(height: 20),
-
-              /// ⚖️ THÔNG TIN THỂ CHẤT
-              _sectionTitle("⚖️ Thông tin thể chất"),
-              _infoRow("Cân nặng", _number(pet.weight, "kg")),
-              _infoRow("Chiều cao", _number(pet.height, "cm")),
-
-              const SizedBox(height: 20),
-
-              /// 🩺 SỨC KHỎE
-              _sectionTitle("🩺 Thông tin sức khỏe"),
-              _paragraph("Hồ sơ tiêm phòng", _text(pet.vaccinationRecords)),
-              _paragraph("Tiền sử bệnh", _text(pet.medicalHistory)),
-              _paragraph("Dị ứng", _text(pet.allergies)),
-              _paragraph("Chế độ ăn", _text(pet.dietPreferences)),
-              _paragraph("Ghi chú sức khỏe", _text(pet.healthNotes)),
-
-              const SizedBox(height: 20),
-
-              /// 🤖 AI
-              _sectionTitle("🤖 Kết quả phân tích AI"),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                    pet.aiAnalysisResult != null && pet.aiAnalysisResult!.isNotEmpty
-                        ? pet.aiAnalysisResult!
-                        : "Chưa được phân tích",
-
-                    style: const TextStyle(color: Colors.black87),
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              /// 🔘 NÚT
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Get.back(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      side: const BorderSide(color: Colors.black54),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Padding(
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      child: Text("← Quay lại"),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: sang trang sửa
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Padding(
-                      padding:
-                      EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      child: Text("🛠️ Sửa"),
-                    ),
-                  ),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(color: Colors.pink.withOpacity(0.1), blurRadius: 10, spreadRadius: 2)
                 ],
-              )
-            ],
-          ),
-        ),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 30),
+                  // --- PHẦN ẢNH ĐÃ SỬA ---
+                  Center(
+                    child: Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFFFB6C1), width: 4),
+                        color: const Color(0xFFFFF0F5),
+                      ),
+                      child: ClipOval(
+                        child: _buildPetImage(pet.imageUrl), // Truyền imageUrl từ API vào
+                      ),
+                    ),
+                  ),
+                  // -----------------------
+                  const SizedBox(height: 20),
+                  Text(pet.name ?? "Chưa có tên",
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFF6185))),
+                  const Divider(indent: 40, endIndent: 40),
+
+                  _buildSectionHeader("📋", "Thông tin cơ bản"),
+                  _buildInfoRow(context, "Tên:", pet.name, "Loại:", pet.type),
+                  _buildInfoRow(context, "Giống:", pet.breed, "Giới tính:", pet.gender == "Male" ? "Đực" : "Cái"),
+
+                  _buildInfoRow(
+                      context,
+                      "Tuổi:",
+                      pet.age != null ? "${pet.age} tuổi" : "Chưa có",
+                      "Ngày sinh:",
+                      _formatDate(pet.dateOfBirth)
+                  ),
+                  _buildInfoRow(context, "Màu sắc:", pet.color, "Dấu hiệu:", pet.distinguishingMarks),
+
+                  _buildSectionHeader("⚖️", "Thông tin thể chất"),
+                  _buildInfoRow(context, "Cân nặng:", "${pet.weight ?? 0} kg", "Chiều cao:", "${pet.height ?? 0} cm"),
+
+                  _buildSectionHeader("🩺", "Thông tin sức khỏe"),
+                  _buildFullWidthInfo("Hồ sơ tiêm phòng:", pet.vaccinationRecords),
+                  _buildFullWidthInfo("Tiền sử bệnh:", pet.medicalHistory),
+                  _buildFullWidthInfo("Dị ứng:", pet.allergies ?? "Không có"),
+                  _buildFullWidthInfo("Chế độ ăn:", pet.dietPreferences ?? "Không có"),
+                  _buildFullWidthInfo("Ghi chú sức khỏe:", pet.healthNotes),
+
+                  _buildSectionHeader("🤖", "Kết quả phân tích AI"),
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.blue.shade100),
+                    ),
+                    child: Text(pet.aiAnalysisResult ?? "Chưa được phân tích",
+                        style: TextStyle(color: Colors.blue.shade900)),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey.shade500,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
+                          ),
+                          child: const Text("← Quay lại", style: TextStyle(color: Colors.white)),
+                        ),
+                        // Nút Sửa: Ở đây bạn nên dùng Navigator.push sang trang PetUpdatePage
+                        ElevatedButton(
+                          onPressed: () async {
+                            final pet = snapshot.data!;
+
+                            // Chuyển Model thành Map và gán thêm petId
+                            final petMap = pet.toMap();
+                            petMap['petId'] = petId;
+
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => PetUpdatePage(pet: petMap)),
+                            );
+
+                            if (result == true) {
+                              // Load lại trang chi tiết
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => PetDetailPage(petId: petId)),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          ),
+                          child: const Text("🛠️ Sửa", style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  /// ================= HELPERS =================
+  // --- WIDGET HELPERS (Giữ nguyên hoặc cập nhật như dưới) ---
 
-  Widget _sectionTitle(String title) {
+  Widget _buildSectionHeader(String icon, String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: kDarkPink,
-        ),
-      ),
-    );
-  }
-
-  Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.only(left: 15, top: 20, bottom: 10),
       child: Row(
         children: [
-          Expanded(
-            flex: 3,
-            child: Text(
-              "$label:",
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Expanded(
-            flex: 5,
-            child: Text(
-              value,
-              style: const TextStyle(color: Colors.black54),
-            ),
-          ),
+          Text(icon, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
         ],
       ),
     );
   }
 
-  Widget _paragraph(String title, String value) {
+  Widget _buildInfoRow(BuildContext context, String label1, String? val1, String label2, String? val2) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: RichText(
-        text: TextSpan(
-          style: const TextStyle(color: Colors.black87),
-          children: [
-            TextSpan(
-              text: "$title: ",
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            TextSpan(text: value),
-          ],
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      child: Row(
+        children: [
+          Expanded(child: _richTextItem(label1, val1)),
+          Expanded(child: _richTextItem(label2, val2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFullWidthInfo(String label, String? val) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: _richTextItem(label, val),
+      ),
+    );
+  }
+
+  Widget _richTextItem(String label, String? val) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(color: Colors.black87, fontSize: 14),
+        children: [
+          TextSpan(text: "$label ", style: const TextStyle(fontWeight: FontWeight.bold)),
+          TextSpan(text: (val == null || val.isEmpty) ? "Chưa có" : val),
+        ],
       ),
     );
   }

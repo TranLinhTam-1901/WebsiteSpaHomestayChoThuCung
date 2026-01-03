@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+
 import '../../Controller/cart_controller.dart';
 import '../../Controller/review_controller.dart';
 
@@ -11,15 +12,18 @@ import '../shopping_cart/shopping_cart_page.dart';
 import '../utils/price_utils.dart';
 
 
+
 class ProductDetailPage extends StatelessWidget {
   final int productId;
+
   final productController = Get.put(ProductDetailController());
   final cartController = Get.put(CartController());
 
   ProductDetailPage({super.key, required this.productId}) {
-    // final Controller = Get.put(ProductDetailController());
+    // final controller = Get.put(ProductDetailController());
     productController.fetchDetail(productId);
     Get.put(ReviewController()).load(productId);
+
   }
 
 
@@ -114,6 +118,7 @@ class ProductDetailPage extends StatelessWidget {
                       );
                     }),
                   ],
+
                 ),
               ),
             ),
@@ -239,6 +244,7 @@ class ProductDetailPage extends StatelessWidget {
                       return const SizedBox.shrink();
                     }),
 
+
                   ],
                 ),
               ),
@@ -285,6 +291,7 @@ class ProductDetailPage extends StatelessWidget {
                           });
                         }).toList(),
                       ),
+
 
                     ],
                   ],
@@ -337,6 +344,7 @@ class ProductDetailPage extends StatelessWidget {
 
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -480,6 +488,7 @@ class ProductDetailPage extends StatelessWidget {
         }),
 
       ),
+
 
     );
   }
