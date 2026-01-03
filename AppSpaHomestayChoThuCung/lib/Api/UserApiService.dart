@@ -33,4 +33,36 @@
         "getMyProfile failed: ${response.statusCode} - ${response.body}",
       );
     }
+
+    static Future<UserProfile> updateMyProfile({
+      required String token,
+      required String fullName,
+      required String phone,
+      required String address,
+    }) async {
+      final uri = Uri.parse("$baseUrl/api/users/me");
+
+      final response = await http.put(
+        uri,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "fullName": fullName,
+          "phone": phone,
+          "address": address,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return UserProfile.fromJson(data);
+      }
+
+      throw Exception(
+        "updateMyProfile failed: ${response.statusCode} - ${response.body}",
+      );
+    }
+
   }

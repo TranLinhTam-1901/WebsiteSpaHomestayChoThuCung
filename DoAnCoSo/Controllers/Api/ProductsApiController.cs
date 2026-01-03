@@ -16,12 +16,14 @@ namespace DoAnCoSo.Controllers.Api
             _productService = productService;
         }
 
+
         [HttpGet]
-        public async Task<IActionResult> GetProducts()
+        public async Task<IActionResult> GetProducts(int? categoryId)
         {
-            var products = await _productService.GetProductsAsync();
+            var products = await _productService.GetProductsAsync (categoryId);
             return Ok(products);
         }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProductDetail(int id)

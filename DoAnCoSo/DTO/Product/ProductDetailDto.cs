@@ -17,5 +17,7 @@
         public List<string> Images { get; set; } = new();
 
         public List<ProductOptionGroupDto> OptionGroups { get; set; } = new();
+        public List<ProductVariantDto> Variants { get; set; } = new();
+
     }
 }

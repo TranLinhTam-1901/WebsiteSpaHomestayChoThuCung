@@ -1,7 +1,8 @@
   import 'package:flutter/material.dart';
   import '../../../model/order/order_model.dart';
   import '../../../services/api_service.dart';
-  import 'order_detail.dart';
+  import '../../../utils/price_utils.dart';
+import 'order_detail.dart';
 
   const kPrimaryPink = Color(0xFFFF6185);
   const kLightPink = Color(0xFFFFB6C1);
@@ -100,13 +101,13 @@
                   const SizedBox(height: 8),
                   if (o.discount > 0) ...[
                     Text(
-                      "💰 ${(o.totalPrice + o.discount).toStringAsFixed(0)} đ",
+                      "💰 ${formatPrice(o.totalPrice + o.discount)}",
                       style: const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey),
                     ),
-                    Text("💖 ${o.totalPrice.toStringAsFixed(0)} đ", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                    Text("🎟 Mã ${o.promoCode} (-${o.discount.toStringAsFixed(0)} đ)", style: const TextStyle(color: Colors.green)),
+                    Text("💖 ${formatPrice(o.totalPrice)}", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    Text("🎟 Mã ${o.promoCode} (-${formatPrice(o.discount)})", style: const TextStyle(color: Colors.green)),
                   ] else
-                    Text("💰 ${o.totalPrice.toStringAsFixed(0)} đ", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    Text("💰 ${formatPrice(o.totalPrice)}", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   const Text("🛒 Sản phẩm:", style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -120,8 +121,8 @@
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             if (it.discountedPrice < it.price)
-                              Text("${it.price} đ", style: const TextStyle(decoration: TextDecoration.lineThrough, fontSize: 12, color: Colors.grey)),
-                            Text("${it.discountedPrice} đ", style: const TextStyle(fontWeight: FontWeight.bold)),
+                              Text(formatPrice(it.price), style: const TextStyle(decoration: TextDecoration.lineThrough, fontSize: 12, color: Colors.grey)),
+                            Text(formatPrice(it.discountedPrice), style: const TextStyle(fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ],

@@ -14,10 +14,17 @@ namespace DoAnCoSo.Services
             _context = context;
         }
 
-        public async Task<List<ProductListDto>> GetProductsAsync()
+        public async Task<List<ProductListDto>> GetProductsAsync(int? categoryId)
         {
-            return await _context.Products
-                .Where(p => p.IsActive && !p.IsDeleted)
+            var query = _context.Products
+                .Where(p => p.IsActive && !p.IsDeleted);
+
+            if (categoryId.HasValue && categoryId.Value > 0)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            return await query
                 .Select(p => new ProductListDto
                 {
                     Id = p.Id,
@@ -33,17 +40,25 @@ namespace DoAnCoSo.Services
                 .ToListAsync();
         }
 
+
         public async Task<ProductDetailDto?> GetProductDetailAsync(int id)
         {
-            var product = await _context.Products
-                .Include(p => p.Images)
-                .Include(p => p.Category)
-                
-                .FirstOrDefaultAsync(p =>
-                    p.Id == id &&
-                    p.IsActive &&
-                    !p.IsDeleted
-                );
+                        var product = await _context.Products
+                 .Include(p => p.Images)
+                 .Include(p => p.Category)
+                 .Include(p => p.Variants)
+                     .ThenInclude(v => v.OptionValues)
+                         .ThenInclude(ov => ov.OptionValue)
+                             .ThenInclude(ovv => ovv.Group)
+                 .FirstOrDefaultAsync(p =>
+                     p.Id == id &&
+                     p.IsActive &&
+                     !p.IsDeleted
+                 );
+
+
+
+
 
             if (product == null) return null;
 
@@ -74,9 +89,23 @@ namespace DoAnCoSo.Services
                 DiscountPercentage = product.DiscountPercentage,
                 Trademark = product.Trademark,
                 StockQuantity = product.StockQuantity,
-                CategoryName = product.Category!.Name!,
+                CategoryName = product.Category!.Name!,               
                 Images = product.Images.Select(i => i.Url).ToList(),
-                OptionGroups = optionGroups
+                OptionGroups = optionGroups,
+
+                // 🔥 PHẦN QUAN TRỌNG NHẤT
+                Variants = product.Variants
+                .Where(v => v.IsActive)
+                .Select(v => new ProductVariantDto
+                {
+                    Id = v.Id,
+                    StockQuantity = v.StockQuantity,
+                    Options = v.OptionValues.ToDictionary(
+                        ov => ov.OptionValue.Group.Name,
+                        ov => ov.OptionValue.Value
+                    )
+                })
+                .ToList()
             };
 
             return dto;

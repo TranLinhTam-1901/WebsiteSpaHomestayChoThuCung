@@ -1,3 +1,5 @@
+import 'package:baitap1/pages/product/product_detail_page.dart';
+import 'package:baitap1/pages/promotion/promotion_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -7,11 +9,19 @@ import 'package:baitap1/widgets/chat_floating.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:intl/intl.dart';
 import '../Api/auth_service.dart';
+import '../Api/promotion_api.dart';
+import '../Controller/category_controller.dart';
+import '../Controller/product_controller.dart';
+import '../Controller/promotion_controller.dart';
 import '../Controller/user_controller.dart';
 import '../auth_gate.dart';
 import '../pages/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../utils/price_utils.dart';
 
 const kPrimaryPink = Color(0xFFFFB6C1);
 const kBackgroundPink = Color(0xFFFFF0F5);
@@ -117,10 +127,15 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   String? avatarInitial;
   late final UserController userController;
+  bool _handledHomeArgs = false;
+
 
   @override
   void initState() {
     super.initState();
+    Get.put(ProductController());
+    Get.put(CategoryController());
+    Get.put(PromotionController());
 
     userController = Get.find<UserController>();
     userController.loadProfile();
@@ -131,6 +146,33 @@ class _HomePageState extends State<HomePage> {
     } else {
       avatarInitial = user?.email?[0].toUpperCase();  // Nếu không có displayName, lấy từ email
     }
+
+    // ✅ NHẬN ARGUMENTS TỪ PROMOTION DETAIL → CHUYỂN TAB PRODUCT + GỌI API LỌC
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_handledHomeArgs) return;
+      _handledHomeArgs = true;
+
+      final args = Get.arguments;
+
+      if (args is Map) {
+        final goToTab = args['goToTab'];
+        final promotionId = args['promotionId'];
+
+        if (goToTab == 'product' || promotionId != null) {
+          setState(() {
+            _currentIndex = 1; // ✅ TAB "SẢN PHẨM" của bạn là index 1
+            _drawerScreen = null;
+          });
+
+          if (promotionId != null) {
+            await Get.find<ProductController>()
+                .fetchByPromotion(promotionId as int,
+                promoCode: args['promoCode']?.toString(),);
+          }
+        }
+      }
+    });
+
   }
 
   /// Drawer selected screen
@@ -227,68 +269,287 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  /// TAB PRODUCT
+  /// TAP PRODUCT
   Widget _productTab() {
-    final list = widget.model.catProducts + widget.model.dogProducts;
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: list.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemBuilder: (_, i) {
-        final p = list[i];
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: Image.network(p.imageUrl, fit: BoxFit.cover),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  p.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+    final productController = Get.find<ProductController>();
+    final categoryController = Get.find<CategoryController>();
+
+
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 🔘 CATEGORY FILTER (scroll ngang)
+        SizedBox(
+          height: 46,
+          child: Obx(() {
+            if (categoryController.isLoading.value) {
+              return const SizedBox(); // hoặc shimmer/loading nhỏ
+            }
+
+            final cats = categoryController.categories;
+
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: cats.length,
+              itemBuilder: (_, i) {
+                final c = cats[i];
+                final selected =
+                    c.id == categoryController.selectedCategoryId.value;
+
+                return _chip(
+                  c.name,
+                  selected: selected,
+                  onTap: () {
+                    categoryController.selectCategory(c.id);
+
+                    productController.loadProducts(
+                      categoryId: c.id == 0 ? null : c.id,
+                    );
+                  },
+                );
+              },
+            );
+          }),
+        ),
+
+
+        const SizedBox(height: 12),
+
+        // 🏷 TITLE
+        Obx(() {
+          final isPromo = productController.isPromotionMode.value;
+          final code = productController.activePromotionCode.value;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isPromo
+                      ? "Sản phẩm áp dụng mã ${code ?? ''}".trim()
+                      : "Sản phẩm nổi bật",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+
+                if (isPromo) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.pink.withOpacity(0.25)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.filter_alt, color: Colors.pink, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "Đang lọc theo điều kiện khuyến mãi",
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => productController.exitPromotionMode(),
+                          child: const Text("Thoát lọc"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }),
+
+
+        const SizedBox(height: 12),
+
+        // 📦 GRID PRODUCTS
+        Expanded(
+          child:Obx(() {
+            if (productController.isLoading.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final list = productController.products;
+
+            if (list.isEmpty) {
+              return const Center(child: Text("Chưa có sản phẩm"));
+            }
+
+            return GridView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: list.length,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 260, // mỗi card max ~260px
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+
               ),
-            ],
-          ),
-        );
-      },
+
+              itemBuilder: (_, i) {
+                final p = list[i];
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    Get.to(() => ProductDetailPage(productId: p.id));
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // 🖼 IMAGE + BADGE
+                        Expanded(
+                          child:Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+
+
+                                 child: Container(
+                                  color: Colors.white,
+                                  padding: const EdgeInsets.all(12),
+                                  alignment: Alignment.center,
+                                  child: Image.network(
+                                    'https://localhost:7051${p.imageUrl}',
+                                    fit: BoxFit.cover, // ✅ không méo
+                                    errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.image_not_supported),
+                                  ),
+                                ),
+
+                            ),
+
+                            if (p.discountPercentage != null && p.discountPercentage! > 0)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    "-${p.discountPercentage}%",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                          ],
+                        ),
+                        ),
+                        // 📄 INFO
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(16),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min, // 🔥 QUAN TRỌNG
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                p.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                p.trademark,
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                              const SizedBox(height: 6),
+
+                              if (p.priceReduced != null && p.priceReduced! < p.price)
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      formatPrice(p.priceReduced!),
+                                      style: const TextStyle(
+                                        color: Colors.pink,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      formatPrice(p.price),
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
+                                Text(
+                                  formatPrice(p.price),
+                                  style: const TextStyle(
+                                    color: Colors.pink,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+
+
+
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
+    )
+      ],
     );
   }
 
+
+
   /// TAB PROMOTION
   Widget _promotionTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: widget.model.discountedProducts.length,
-      itemBuilder: (_, i) {
-        final p = widget.model.discountedProducts[i];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: Image.network(p.imageUrl, width: 60),
-            title: Text(
-              p.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(
-              "Giảm ${p.discountPercentage}% • ${p.priceReduced}đ",
-              style: const TextStyle(color: kPrimaryPink),
-            ),
-          ),
-        );
-      },
-    );
+    return const PromotionPage();
   }
 
   /// UI COMPONENTS
@@ -354,4 +615,30 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  Widget _chip(
+      String text, {
+        bool selected = false,
+        VoidCallback? onTap,
+      }) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(text),
+        selected: selected,
+        onSelected: (_) => onTap?.call(),
+        selectedColor: Colors.pink,
+        backgroundColor: Colors.white,
+        labelStyle: TextStyle(
+          color: selected ? Colors.white : Colors.grey[700],
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+
+
+
+
 }

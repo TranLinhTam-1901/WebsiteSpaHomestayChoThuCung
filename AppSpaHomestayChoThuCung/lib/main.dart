@@ -53,5 +53,6 @@ void main() async {
   Get.put(SettingsController());
   Get.put(UserController());
 
+
   runApp(const MyApp());
 }
