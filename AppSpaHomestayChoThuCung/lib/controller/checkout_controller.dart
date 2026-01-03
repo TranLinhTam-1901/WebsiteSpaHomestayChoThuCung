@@ -76,7 +76,7 @@ class CheckoutController extends GetxController {
       }
 
       Get.snackbar("Thành công", data["message"] ?? "Đặt hàng thành công");
-      Get.offAll(() => const OrderHistoryPage());
+       Get.to(() => OrderHistoryPage());
     } catch (e) {
       Get.snackbar("Lỗi", e.toString());
     } finally {
