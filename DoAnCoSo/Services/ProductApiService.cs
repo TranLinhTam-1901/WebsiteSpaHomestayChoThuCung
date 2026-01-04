@@ -43,15 +43,22 @@ namespace DoAnCoSo.Services
 
         public async Task<ProductDetailDto?> GetProductDetailAsync(int id)
         {
-            var product = await _context.Products
-                .Include(p => p.Images)
-                .Include(p => p.Category)
-                
-                .FirstOrDefaultAsync(p =>
-                    p.Id == id &&
-                    p.IsActive &&
-                    !p.IsDeleted
-                );
+                        var product = await _context.Products
+                 .Include(p => p.Images)
+                 .Include(p => p.Category)
+                 .Include(p => p.Variants)
+                     .ThenInclude(v => v.OptionValues)
+                         .ThenInclude(ov => ov.OptionValue)
+                             .ThenInclude(ovv => ovv.Group)
+                 .FirstOrDefaultAsync(p =>
+                     p.Id == id &&
+                     p.IsActive &&
+                     !p.IsDeleted
+                 );
+
+
+
+
 
             if (product == null) return null;
 
@@ -82,9 +89,23 @@ namespace DoAnCoSo.Services
                 DiscountPercentage = product.DiscountPercentage,
                 Trademark = product.Trademark,
                 StockQuantity = product.StockQuantity,
-                CategoryName = product.Category!.Name!,
+                CategoryName = product.Category!.Name!,               
                 Images = product.Images.Select(i => i.Url).ToList(),
-                OptionGroups = optionGroups
+                OptionGroups = optionGroups,
+
+                // 🔥 PHẦN QUAN TRỌNG NHẤT
+                Variants = product.Variants
+                .Where(v => v.IsActive)
+                .Select(v => new ProductVariantDto
+                {
+                    Id = v.Id,
+                    StockQuantity = v.StockQuantity,
+                    Options = v.OptionValues.ToDictionary(
+                        ov => ov.OptionValue.Group.Name,
+                        ov => ov.OptionValue.Value
+                    )
+                })
+                .ToList()
             };
 
             return dto;

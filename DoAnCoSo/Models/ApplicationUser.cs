@@ -19,5 +19,14 @@ namespace DoAnCoSo.Models
         // **Cảnh báo**: private key lưu ở DB = server có thể giải mã.
         public string? PrivateKey { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+
+        // phân biệt kiểu đăng nhập
+        public string LoginProvider { get; set; } = "Local";
+        // lưu firebaseUid
+        public string? ExternalProviderId { get; set; }
+        // phân biệt có dùng password hay không 
+        public bool IsExternalLogin { get; set; } = false;
+
     }
 }

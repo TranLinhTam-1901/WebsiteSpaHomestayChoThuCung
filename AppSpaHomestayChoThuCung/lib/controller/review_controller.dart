@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../Api/review_api.dart';
-import '../model/product/review_model.dart';
+import '../model/review_model.dart';
 
 class ReviewController extends GetxController {
   var isLoading = false.obs;

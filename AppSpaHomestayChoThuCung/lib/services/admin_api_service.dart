@@ -218,7 +218,7 @@ class AdminApiService {
         return null;
       }
 
-      // Đảm bảo URL khớp với Route [HttpGet("{id}")] của Admin Controller
+      // Đảm bảo URL khớp với Route [HttpGet("{id}")] của Admin controller
       final url = Uri.parse('$baseUrl/admin/Pet/$id');
 
       debugPrint("🚀 Admin đang lấy chi tiết Pet ID: $id");

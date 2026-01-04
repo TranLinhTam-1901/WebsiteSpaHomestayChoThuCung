@@ -1,16 +1,35 @@
-import 'package:baitap1/pages/review/write_review_page.dart';
+import 'package:baitap1/widgets/write_review_page.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../Controller/review_controller.dart';
 import '../Controller/product_detail_controller.dart';
+import 'package:intl/intl.dart';
 
-class ProductReviewSection extends StatelessWidget {
+class ProductReviewSection extends StatefulWidget {
   const ProductReviewSection({super.key});
 
   @override
+  State<ProductReviewSection> createState() => _ProductReviewSectionState();
+}
+
+class _ProductReviewSectionState extends State<ProductReviewSection> {
+  bool showAll = false;
+
+  String formatDateTime(DateTime time) {
+    return DateFormat('dd/MM/yyyy HH:mm').format(time);
+  }
+
+  @override
   Widget build(BuildContext context) {
+
     return GetX<ReviewController>(
       builder: (rc) {
+        final reviews = rc.reviews;
+        final visibleReviews =
+        showAll ? reviews : reviews.take(3).toList();
+
+
         if (rc.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -26,16 +45,6 @@ class ProductReviewSection extends StatelessWidget {
                 const Text(
                   "Đánh giá & Nhận xét",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Xem tất cả",
-                    style: TextStyle(
-                      color: Colors.pink,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -111,11 +120,19 @@ class ProductReviewSection extends StatelessWidget {
                         height: 44,
                         child: OutlinedButton.icon(
                           onPressed: () {
-                            final productId =
-                                Get.find<ProductDetailController>().product.value!.id;
+                            final p = Get.find<ProductDetailController>().product.value!;
 
-                            Get.to(() => WriteReviewPage(productId: productId));
+                            Get.to(() => WriteReviewPage(
+                              productId: p.id,
+                              productName: p.name,
+                              productImage: p.images.isNotEmpty ? p.images.first : null,
+                              optionText: p.optionGroups.isNotEmpty
+                                  ? p.optionGroups.first.name
+                                  : null,
+                            ));
                           },
+
+
 
                           icon: const Icon(Icons.edit, color: Colors.pink),
                           label: const Text(
@@ -148,9 +165,9 @@ class ProductReviewSection extends StatelessWidget {
                 "Chưa có đánh giá nào",
                 style: TextStyle(color: Colors.grey),
               ),
+            ...visibleReviews.map((r) => Padding(
+            padding: const EdgeInsets.only(bottom: 24),
 
-            ...rc.reviews.map((r) => Padding(
-              padding: const EdgeInsets.only(bottom: 24),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -182,11 +199,30 @@ class ProductReviewSection extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          r.userName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            /// 👤 USER NAME (TRÁI)
+                            Expanded(
+                              child: Text(
+                                r.userName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+
+                            /// 🕒 TIME (PHẢI)
+                            Text(
+                              formatDateTime(r.createdDate),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -234,6 +270,36 @@ class ProductReviewSection extends StatelessWidget {
                 ],
               ),
             )),
+            /// ===== XEM TẤT CẢ / THU GỌN =====
+            if (reviews.length > 3)
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    setState(() {
+                      showAll = !showAll;
+                    });
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        showAll ? "Thu gọn" : "Xem tất cả đánh giá",
+                        style: const TextStyle(
+                          color: Colors.pink,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        showAll
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: Colors.pink,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         );
       },
