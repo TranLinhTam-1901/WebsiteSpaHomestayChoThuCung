@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../Api/promotion_api.dart';
-import '../model/promotion_model.dart';
+import '../model/promotion/promotion_model.dart';
 
 class PromotionController extends GetxController {
   var promotions = <PromotionModel>[].obs;

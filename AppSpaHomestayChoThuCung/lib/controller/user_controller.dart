@@ -4,6 +4,7 @@ import '../Api/UserApiService.dart';
 import '../Api/auth_service.dart';
 import '../model/user/user_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // ⭐ Nhớ thêm import này
+
 class UserController extends GetxController {
   var isLoading = false.obs;
   final Rxn<UserProfile> profile = Rxn<UserProfile>();
@@ -47,18 +48,24 @@ class UserController extends GetxController {
       // Firebase sẽ mất một chút thời gian để khôi phục session sau khi F5
       final firebaseUser = FirebaseAuth.instance.currentUser;
 
+// Trong file UserController.dart, hàm loadProfile()
+
       if (firebaseUser != null) {
         print("ℹ️ Đang khôi phục dữ liệu từ Firebase cho: ${firebaseUser.email}");
+
         profile.value = UserProfile(
           id: firebaseUser.uid,
+          // Cung cấp userName (bắt buộc).
+          // Thường lấy từ email (bỏ phần @) hoặc displayName
+          userName: firebaseUser.email?.split('@')[0] ?? "google_user",
+
           fullName: firebaseUser.displayName ?? "Người dùng Google",
-          userName: firebaseUser.email ?? "", // 👈 THÊM DÒNG NÀY (Lấy email làm userName tạm thời)
           email: firebaseUser.email ?? "",
           phone: "",
           address: "",
           avatarUrl: firebaseUser.photoURL ?? "",
           role: 'User',
-          isLocked: false, // Thêm các giá trị mặc định nếu cần
+          isLocked: false, // Thêm các giá trị mặc định cho Model mới
         );
         return;
       }

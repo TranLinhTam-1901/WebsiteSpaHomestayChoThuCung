@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../model/promotion_model.dart';
+import '../../model/promotion/promotion_model.dart';
 import '../../utils/price_utils.dart';
 import '../home/home.dart';
 

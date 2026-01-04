@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
-import '../../Controller/checkout_controller.dart';
+import '../../controller/checkout_controller.dart';
 import '../../model/Cart/cart_item_model.dart';
 import '../../utils/price_utils.dart';
 import 'package:get/get.dart';
-import '../../Controller/checkout_controller.dart';
 
 class BottomCheckoutBar extends StatelessWidget {
   final List<CartItem> items;

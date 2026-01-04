@@ -10,23 +10,14 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:intl/intl.dart';
 import '../../Api/auth_service.dart';
-import '../../Controller/category_controller.dart';
-import '../../Controller/product_controller.dart';
-import '../../Controller/promotion_controller.dart';
-import '../../Controller/user_controller.dart';
 import '../../auth_gate.dart';
 import '../../utils/price_utils.dart';
-import 'package:baitap1/Api/auth_service.dart';
-import 'package:baitap1/Api/promotion_api.dart';
-import 'package:baitap1/controller/category_controller.dart' hide CategoryController;
-import 'package:baitap1/controller/promotion_controller.dart' hide PromotionController;
-import 'package:baitap1/controller/user_controller.dart' hide UserController;
-import 'package:baitap1/auth_gate.dart';
+import 'package:baitap1/controller/category_controller.dart';
+import 'package:baitap1/controller/promotion_controller.dart';
+import 'package:baitap1/controller/product_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../utils/price_utils.dart';
+import 'package:baitap1/controller/user_controller.dart';
 
 const kPrimaryPink = Color(0xFFFFB6C1);
 const kBackgroundPink = Color(0xFFFFF0F5);

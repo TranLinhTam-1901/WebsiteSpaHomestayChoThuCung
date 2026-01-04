@@ -2,8 +2,8 @@ import 'dart:io'; // 🔥 BẮT BUỘC để dùng HttpOverrides
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'Controller/settings_controller.dart';
-import 'Controller/user_controller.dart';
+import 'controller/settings_controller.dart';
+import 'controller/user_controller.dart';
 import 'auth_gate.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';

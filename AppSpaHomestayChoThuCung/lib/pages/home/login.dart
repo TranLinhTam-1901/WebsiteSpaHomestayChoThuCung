@@ -1,9 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Api/auth_service.dart';
 import '../../admin/home/admin_home.dart';
-import '../../admin/product/admin_add_product.dart';
 import '../../auth/google_auth_service.dart';
 import '../../auth_gate.dart';
 import 'Register.dart';
@@ -66,168 +64,149 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
 
-      body: Stack(
-        children: [
+        body: Stack(
+          children: [
           // Background gradient
           Container(
-            height: size.height,
-            width: size.width,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFCE4EC), Color(0xFFF8BBD0)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+          height: size.height,
+          width: size.width,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFFCE4EC), Color(0xFFF8BBD0)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
+        ),
 
-          Center(
+        Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Card(
-                elevation: 15,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                shadowColor: Colors.black45,
-                child: Padding(
-                  padding: const EdgeInsets.all(25),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Đăng nhập",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Tài khoản
-                      TextField(
-                        controller: userController,
-                        decoration: const InputDecoration(
-                          labelText: "Tài khoản",
-                          prefixIcon: Icon(Icons.person),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-
-                      // Mật khẩu
-                      TextField(
-                        controller: passController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: "Mật khẩu",
-                          prefixIcon: Icon(Icons.lock),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 25),
-
-                      // Nút đăng nhập
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.pinkAccent,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15)),
-                            elevation: 5,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Card(
+                    elevation: 15,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    shadowColor: Colors.black45,
+                    child: Padding(
+                        padding: const EdgeInsets.all(25),
+                        child: Column(mainAxisSize: MainAxisSize.min,
+                          children: [
+                          const Text(
+                          "Đăng nhập",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
                           ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Tài khoản
+                        TextField(
+                          controller: userController,
+                          decoration: const InputDecoration(
+                            labelText: "Tài khoản",
+                            prefixIcon: Icon(Icons.person),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Mật khẩu
+                        TextField(
+                          controller: passController,
+                          obscureText: true,
+                          decoration: const InputDecoration(
+                            labelText: "Mật khẩu",
+                            prefixIcon: Icon(Icons.lock),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+
+                        // Nút đăng nhập
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.pinkAccent,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15)),
+                              elevation: 5,
+                            ),
+                            child: const Text(
+                              "Đăng nhập",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Nút đăng ký
+                        TextButton(
+                          onPressed: _goRegister,
                           child: const Text(
-                            "Đăng nhập",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                            "Chưa có tài khoản? Đăng ký",
+                            style: TextStyle(fontSize: 16, color: Colors.black54),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 15),
 
-                      // Nút đăng ký
-                      TextButton(
-                        onPressed: _goRegister,
-                        child: const Text(
-                          "Chưa có tài khoản? Đăng ký",
-                          style: TextStyle(fontSize: 16, color: Colors.black54),
+
+                        ElevatedButton.icon(
+
+                            icon: const Icon(Icons.login),
+                            label: const Text("Đăng nhập bằng Google"),
+                            onPressed: _isGoogleLoading
+                                ? null: () async {
+                              setState(() => _isGoogleLoading = true);
+                              try
+                              {
+                                final userCredential =
+                                await GoogleAuthService.signInWithGoogle();
+
+                                final user = userCredential.user;
+
+                                if (user != null) {
+                                  await AuthService.googleLogin(
+                                    email: user.email!,
+                                    fullName: user.displayName ?? "",
+                                    firebaseUid: user.uid,
+                                    avatarUrl: user.photoURL,
+                                  );
+                                  print("✅ Google login Firebase + Backend login SQL");
+                                  print("Email: ${user.email}");
+
+
+                                  // 2. Lưu trạng thái vào bộ nhớ máy để không bị văng khi F5
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await prefs.setBool('isLoggedIn', true);
+
+                                  // 4. Chuyển trang về AuthGate
+                                  Get.offAll(() => const AuthGate());
+                                }
+                              } catch (e) {
+                                print("❌ Google login lỗi: $e");
+                              }
+                              finally {
+                                setState(() => _isGoogleLoading = false);
+                              }
+                            },
                         ),
-                      ),
 
-
-                      ElevatedButton.icon(
-
-                        icon: const Icon(Icons.login),
-                        label: const Text("Đăng nhập bằng Google"),
-                        onPressed: _isGoogleLoading
-                            ? null
-                            : () async {
-                          setState(() => _isGoogleLoading = true);
-                          try
-                          {
-                            final userCredential =
-                            await GoogleAuthService.signInWithGoogle();
-
-                            final user = userCredential.user;
-
-                            if (user != null) {
-                              await AuthService.googleLogin(
-                                email: user.email!,
-                                fullName: user.displayName ?? "",
-                                firebaseUid: user.uid,
-                                avatarUrl: user.photoURL,
-                              );
-                              print("✅ Google login Firebase + Backend login SQL");
-                              print("Email: ${user.email}");
-
-
-                              // 2. Lưu trạng thái vào bộ nhớ máy để không bị văng khi F5
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setBool('isLoggedIn', true);
-                              await prefs.setString('login_type', 'google'); // Để App biết đây là khách Google
-
-                              // 3. ĐÂY LÀ PHẦN QUAN TRỌNG: Gán dữ liệu vào UserController
-                              // để App Bar và Drawer có dữ liệu hiển thị ngay lập tức
-                              final userController = Get.find<UserController>();
-
-                              userController.profile.value = UserProfile(
-                                id: user.uid,
-                                fullName: user.displayName ?? "Người dùng Google",
-                                userName: user.email ?? "google_user", // 👈 BẮT BUỘC PHẢI CÓ DÒNG NÀY
-                                email: user.email ?? "",
-                                phone: "",
-                                address: "",
-                                avatarUrl: user.photoURL ?? "",
-                                role: 'User',
-                                isLocked: false, // 👈 Đảm bảo thêm cả các trường required mới nếu có
-                              );
-
-                              // 4. Chuyển trang về AuthGate
-                              Get.offAll(() => const AuthGate());
-                            }
-                          } catch (e) {
-                            print("❌ Google login lỗi: $e");
-                          }
-                          finally {
-                            setState(() => _isGoogleLoading = false);
-                          }
-                        },
-                      ),
-
-                    ],
-                  ),
+                          ],
+                        ),
+                    ),
                 ),
-              ),
             ),
-          ),
-        ],
-      ),
+        ),
+          ],
+        ),
     );
   }
 }

@@ -8,13 +8,12 @@ import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 
 import '../Api/UserApiService.dart';
 import '../Api/auth_service.dart';
-import '../model/promotion_model.dart';
+import '../model/promotion/promotion_model.dart';
 import '../model/user/user_profile.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../model/Cart/cart_item_model.dart';
-import '../pages/history/order/order_history.dart';
 import 'cart_controller.dart';
 
 class CheckoutController extends GetxController {

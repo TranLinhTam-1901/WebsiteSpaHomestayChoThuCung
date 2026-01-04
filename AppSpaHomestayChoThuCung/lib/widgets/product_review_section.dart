@@ -1,9 +1,8 @@
 import 'package:baitap1/widgets/write_review_page.dart';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../Controller/review_controller.dart';
-import '../Controller/product_detail_controller.dart';
+import '../../controller/review_controller.dart';
+import '../controller/product_detail_controller.dart';
 import 'package:intl/intl.dart';
 
 class ProductReviewSection extends StatefulWidget {

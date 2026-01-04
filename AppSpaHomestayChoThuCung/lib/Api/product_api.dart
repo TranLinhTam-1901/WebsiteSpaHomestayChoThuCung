@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import '../model/product/product_detail_model.dart';
 import '../Api/auth_service.dart';
-import '../model/product_model.dart';
+import '../model/product/product_model.dart';
 
 class ProductApi {
   final Dio _dio = Dio(

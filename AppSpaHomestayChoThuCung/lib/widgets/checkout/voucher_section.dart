@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../Controller/checkout_controller.dart';
-import '../../Controller/promotion_controller.dart';
-import '../../model/promotion_model.dart';
+import '../../controller/checkout_controller.dart';
+import '../../controller/promotion_controller.dart';
+import '../../model/promotion/promotion_model.dart';
 import '../../utils/price_utils.dart';
 
 class VoucherSection extends StatelessWidget {

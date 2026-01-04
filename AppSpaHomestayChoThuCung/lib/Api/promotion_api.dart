@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../model/promotion_model.dart';
+import '../model/promotion/promotion_model.dart';
 import 'auth_service.dart';
 
 class PromotionApi {

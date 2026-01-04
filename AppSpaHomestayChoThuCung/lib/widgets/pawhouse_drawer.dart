@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:baitap1/pages/home/setting.dart';
 import 'package:get/get.dart';
-import '../Controller/user_controller.dart';
+import '../controller/user_controller.dart';
+import '../pages/home/setting.dart';
 import '../pages/service/homestay_page.dart';
 import '../pages/service/spa_page.dart';
 import '../pages/service/vet_page.dart';
@@ -169,14 +169,14 @@ class PawHouseDrawer extends StatelessWidget {
 
           const Divider(),
 
-          // // Drawer – Cài đặt
-          // _item("Cài đặt", Icons.settings, () {
-          //   Navigator.pop(context); // Đóng drawer
-          //   Navigator.push(
-          //     context,
-          //     MaterialPageRoute(builder: (_) => SettingsPage()),
-          //   );
-          // }),
+          // Drawer – Cài đặt
+          _item("Cài đặt", Icons.settings, () {
+            Navigator.pop(context); // Đóng drawer
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => SettingsPage()),
+            );
+          }),
 
           const Divider(),
 

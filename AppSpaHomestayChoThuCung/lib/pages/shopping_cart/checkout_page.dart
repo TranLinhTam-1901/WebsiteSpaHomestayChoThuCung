@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../Controller/checkout_controller.dart';
+import '../../controller/checkout_controller.dart';
 import '../../model/Cart/cart_item_model.dart';
 
 import '../../widgets/checkout/address_section.dart';

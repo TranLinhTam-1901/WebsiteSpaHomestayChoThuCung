@@ -6,7 +6,7 @@ import '../Api/product_api.dart';
 
 import '../model/product/product_detail_model.dart';
 
-import '../model/product_variant.dart';
+import '../model/product/product_variant.dart';
 
 
 class ProductDetailController extends GetxController {

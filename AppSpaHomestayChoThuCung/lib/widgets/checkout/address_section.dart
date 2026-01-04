@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../Controller/checkout_controller.dart';
+import '../../controller/checkout_controller.dart';
 
 class AddressSection extends StatelessWidget {
   AddressSection({super.key});

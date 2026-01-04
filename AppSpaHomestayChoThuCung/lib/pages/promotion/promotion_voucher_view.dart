@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../Controller/promotion_controller.dart';
+import 'package:baitap1/controller/promotion_controller.dart';
 import '../../utils/price_utils.dart';
 import '../home/home.dart';
 

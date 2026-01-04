@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../Controller/user_controller.dart';
-import '../Controller/cart_controller.dart';
+import '../controller/user_controller.dart';
+import '../controller/cart_controller.dart';
 import '../pages/shopping_cart/shopping_cart_page.dart';
 
 final CartController cartController =

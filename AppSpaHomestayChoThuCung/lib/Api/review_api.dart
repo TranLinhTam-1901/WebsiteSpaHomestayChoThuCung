@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
-import '../model/review_model.dart';
+import '../model/review/review_model.dart';
 import 'auth_service.dart';
 
 class ReviewApi {

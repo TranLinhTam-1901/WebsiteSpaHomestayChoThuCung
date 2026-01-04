@@ -1,7 +1,7 @@
 import 'package:baitap1/pages/promotion/promotionDetailPage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../Controller/promotion_controller.dart';
+import 'package:baitap1/controller/promotion_controller.dart';
 
 class PromotionBannerView extends StatelessWidget {
   const PromotionBannerView({super.key});

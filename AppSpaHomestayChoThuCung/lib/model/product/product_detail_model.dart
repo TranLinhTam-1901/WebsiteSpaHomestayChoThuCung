@@ -1,4 +1,4 @@
-import 'package:baitap1/model/product_variant.dart';
+import 'package:baitap1/model/product/product_variant.dart';
 
 class ProductDetailModel {
   final int id;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../Controller/user_controller.dart';
+import '../../controller/user_controller.dart';
 import '../../Api/auth_service.dart';
 import '../../auth_gate.dart';
 import 'admin_sidebar.dart';

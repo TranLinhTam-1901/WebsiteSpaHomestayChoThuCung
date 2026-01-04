@@ -1,9 +1,9 @@
-import 'package:baitap1/Controller/product_detail_controller.dart';
+import 'package:baitap1/controller/product_detail_controller.dart';
 import 'package:get/get.dart';
 import '../Api/product_api.dart';
 import '../model/Cart/cart_item_model.dart';
 import '../model/Cart/cart_response_model.dart';
-import '../model/product_variant.dart';
+import '../model/product/product_variant.dart';
 import '../pages/shopping_cart/checkout_page.dart';
 import '../services/cart_api_service.dart';
 import 'checkout_controller.dart';

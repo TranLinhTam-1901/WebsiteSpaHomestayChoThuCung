@@ -1,4 +1,3 @@
-import '../../Controller/cart_controller.dart';
 import 'cart_item_model.dart';
 
 class CartResponse {
