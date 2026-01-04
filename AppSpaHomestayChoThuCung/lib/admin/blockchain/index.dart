@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../model/Blockchain/blockchain_record.dart';
 import '../../services/admin_api_service.dart';
 import 'detail.dart';
+import '../../model/blockchain/blockchain_record.dart';
 
 class BlockchainLogPage extends StatefulWidget {
   const BlockchainLogPage({super.key});
@@ -113,10 +113,13 @@ class _BlockchainLogPageState extends State<BlockchainLogPage> {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => BlockchainDetailPage(record: block)),
-          );
+          // Chờ cho frame hiện tại vẽ xong rồi mới push trang mới
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BlockchainDetailPage(record: block)),
+            );
+          });
         },
         borderRadius: BorderRadius.circular(15),
         child: Padding(

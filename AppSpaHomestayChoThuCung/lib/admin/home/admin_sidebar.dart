@@ -30,7 +30,11 @@ class AdminSidebar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
                   _buildMenuItem(context, "Blockchain", Icons.auto_awesome_mosaic_rounded),
+                  _buildMenuItem(context, "Quản lý tài khoản", Icons.manage_accounts_rounded),
                   _buildMenuItem(context, "Hồ sơ thú cưng", Icons.pets_rounded),
+                  _buildMenuItem(context, "Xác nhận lịch", Icons.pending_actions_rounded),
+                  _buildMenuItem(context, "Lịch sử đặt lịch", Icons.history_rounded),
+                  _buildMenuItem(context, "Quản lý đơn hàng", Icons.shopping_bag_rounded),
                   _buildMenuItem(context, "CSKH", Icons.support_agent_rounded),
 
                   const Divider(color: Color(0xFFEEEEEE), height: 30),

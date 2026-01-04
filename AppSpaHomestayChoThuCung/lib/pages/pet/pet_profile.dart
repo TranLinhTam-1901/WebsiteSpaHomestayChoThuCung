@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../services/api_service.dart'; // Import service đã tách
+import '../../services/api_service.dart';
 import 'pet_detail.dart';
 import 'pet_add.dart';
 import 'pet_update.dart';
 
+// Hằng số màu sắc đồng bộ
+const kLightPink = Color(0xFFFFB6C1);
+const kPrimaryPink = Color(0xFFFF6185);
+const kBackgroundLight = Color(0xFFF9F9F9);
+
 class PetProfilePage extends StatefulWidget {
+  const PetProfilePage({super.key});
+
   @override
   _PetProfilePageState createState() => _PetProfilePageState();
 }
@@ -20,12 +28,11 @@ class _PetProfilePageState extends State<PetProfilePage> {
   }
 
   void _loadPets() {
-    // Không cần setState ở đây nếu bạn chỉ muốn khởi tạo lại Future
-    _petFuture = ApiService.getPets();
-    setState(() {}); // Chỉ để báo Flutter vẽ lại giao diện với Future mới
+    setState(() {
+      _petFuture = ApiService.getPets();
+    });
   }
 
-  // Hàm xử lý giới tính giống logic C# của bạn
   String _getGenderText(String? gender) {
     if (gender == null) return "Không rõ";
     switch (gender.toLowerCase()) {
@@ -37,178 +44,213 @@ class _PetProfilePageState extends State<PetProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Chỉnh status bar đồng bộ
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF7F9), // Tương ứng màu nền nhẹ trong CSS
+      backgroundColor: kBackgroundLight,
       appBar: AppBar(
-        title: const Text("🐶 Hồ sơ thú cưng của tôi",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFFFF6185), // Màu hồng chủ đạo
+        title: const Text(
+          "Hồ sơ thú cưng",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black),
+        ),
+        centerTitle: true,
+        backgroundColor: kLightPink,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle, color: Colors.white, size: 28),
-            tooltip: "Thêm thú cưng mới",
+            icon: const Icon(Icons.add, color: Colors.black, size: 26),
             onPressed: () async {
-              // Đợi kết quả trả về từ trang AddPetPage
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AddPetPage()),
               );
-
-              // Nếu result là true (do ta đã pop(true)), thì mới load lại danh sách
-              if (result == true) {
-                _loadPets();
-              }
+              if (result == true) _loadPets();
             },
           ),
-          const SizedBox(width: 10), // Khoảng cách nhỏ ở góc phải
+          const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              "🐾 Danh sách thú cưng",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFFF6185),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(width: 80, height: 4, color: const Color(0xFFFFB6C1)),
-            const SizedBox(height: 20),
+      body: RefreshIndicator(
+        onRefresh: () async => _loadPets(),
+        color: kPrimaryPink,
+        child: FutureBuilder<List<dynamic>>(
+          future: _petFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator(color: kLightPink));
+            } else if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
+              return _buildEmptyState();
+            }
 
-            // Card bọc lấy bảng dữ liệu
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFFB6C1), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFFB6C1).withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  )
-                ],
-              ),
-              child: FutureBuilder<List<dynamic>>(
-                future: _petFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Padding(
-                      padding: EdgeInsets.all(50.0),
-                      child: Center(child: CircularProgressIndicator(color: Color(0xFFFF6185))),
-                    );
-                  } else if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(40.0),
-                      child: Center(child: Text("Chưa có thú cưng nào được thêm 🐶🐱")),
-                    );
-                  }
-
-                  final pets = snapshot.data!;
-
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      headingRowColor: MaterialStateProperty.all(const Color(0xFFFFE4E9)),
-                      columnSpacing: 20,
-                      columns: const [
-                        DataColumn(label: Text('Tên', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Loại', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Giống', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Cân nặng', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Giới tính', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Hành động', style: TextStyle(fontWeight: FontWeight.bold))),
-                      ],
-                      rows: pets.map((pet) {
-                        return DataRow(cells: [
-                          DataCell(Text(pet['name'] ?? "")),
-                          DataCell(Text(pet['type'] ?? "")),
-                          DataCell(Text(pet['breed'] ?? "")),
-                          DataCell(Text("${pet['weight']} kg")),
-                          DataCell(Text(_getGenderText(pet['gender']))),
-                          DataCell(Row(
-                            children: [
-                              // Nút Chi tiết (Màu hồng nhạt)
-                              _buildActionButton(
-                                icon: FontAwesomeIcons.infoCircle,
-                                color: const Color(0xFFFFB6C1),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => PetDetailPage(petId: pet['petId']),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(width: 5),
-                              // Nút Sửa (Màu xanh)
-                              _buildActionButton(
-                                icon: FontAwesomeIcons.edit,
-                                color: Colors.green,
-                                isOutline: true,
-                                onTap: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => PetUpdatePage(pet: pet)),
-                                  );
-
-                                  // Khi quay lại từ trang Update với giá trị true
-                                  if (result == true) {
-                                    _loadPets();
-                                  }
-                                },
-                              ),
-                              const SizedBox(width: 5),
-                              // Nút Xóa (Màu đỏ)
-                              _buildActionButton(
-                                icon: FontAwesomeIcons.trashAlt,
-                                color: Colors.red,
-                                isOutline: true,
-                                onTap: () => _confirmDelete(pet['petId']),
-                              ),
-                            ],
-                          )),
-                        ]);
-                      }).toList(),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+            final pets = snapshot.data!;
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: pets.length,
+              itemBuilder: (context, index) => _buildPetCard(pets[index]),
+            );
+          },
         ),
       ),
     );
   }
 
-  // Widget helper tạo nút bấm giống CSS của bạn
-  Widget _buildActionButton({required IconData icon, required Color color, bool isOutline = false, required VoidCallback onTap}) {
-    return GestureDetector(
+  // --- GIAO DIỆN THẺ THÚ CƯNG ---
+  Widget _buildPetCard(dynamic pet) {
+    String gender = _getGenderText(pet['gender']);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Avatar giả định hoặc Icon loại thú cưng
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: kLightPink.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    pet['type'].toString().toLowerCase().contains('mèo')
+                        ? FontAwesomeIcons.cat
+                        : FontAwesomeIcons.dog,
+                    color: Colors.pinkAccent,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Thông tin chính
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pet['name'] ?? "Không tên",
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${pet['type']} • ${pet['breed']}",
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                // Badge giới tính
+                _buildGenderBadge(gender),
+              ],
+            ),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          // Thông số phụ (Cân nặng)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(FontAwesomeIcons.weightScale, size: 14, color: Colors.grey.shade400),
+                const SizedBox(width: 6),
+                Text("${pet['weight']} kg", style: const TextStyle(fontSize: 13, color: Colors.black87)),
+                const Spacer(),
+                // Nhóm nút bấm
+                _buildSmallActionBtn(
+                    icon: Icons.visibility_outlined,
+                    color: Colors.blueGrey,
+                    onTap: () async {
+                      // Thêm await ở đây để đợi kết quả từ trang Detail trả về
+                      final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PetDetailPage(petId: pet['petId']))
+                      );
+
+                      // Nếu xóa thành công ở trang Detail, nó sẽ trả về true
+                      if (result == true) {
+                        _loadPets(); // Gọi hàm tải lại danh sách
+                      }
+                    }
+                ),
+                const SizedBox(width: 12),
+                _buildSmallActionBtn(
+                    icon: Icons.edit_outlined,
+                    color: Colors.green,
+                    onTap: () async {
+                      final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => PetUpdatePage(pet: pet)));
+                      if (result == true) _loadPets();
+                    }
+                ),
+                const SizedBox(width: 12),
+                _buildSmallActionBtn(
+                    icon: Icons.delete_outline,
+                    color: Colors.redAccent,
+                    onTap: () => _confirmDelete(pet['petId'])
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderBadge(String gender) {
+    Color color = gender == 'Cái' ? Colors.pinkAccent : Colors.blueAccent;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        gender,
+        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildSmallActionBtn({required IconData icon, required Color color, required VoidCallback onTap}) {
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: isOutline ? Colors.transparent : color,
-          border: isOutline ? Border.all(color: color, width: 2) : null,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Icon(icon, size: 14, color: isOutline ? color : Colors.black),
+      child: Icon(icon, color: color, size: 22),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(FontAwesomeIcons.paw, size: 60, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          const Text("Chưa có thú cưng nào", style: TextStyle(color: Colors.grey)),
+        ],
       ),
     );
   }
 
-  // Hàm xác nhận xóa
   void _confirmDelete(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         title: const Text("Xác nhận xóa?"),
-        content: const Text("Bạn có chắc chắn muốn xóa thú cưng này không?"),
+        content: const Text("Hồ sơ thú cưng sẽ bị xóa vĩnh viễn và không thể hoàn tác."),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
           TextButton(

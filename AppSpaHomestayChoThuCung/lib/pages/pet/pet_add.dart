@@ -2,9 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import '../../services/api_service.dart'; // Đảm bảo đường dẫn đúng
-import 'dart:typed_data'; // Để dùng Uint8List
-import 'package:flutter/foundation.dart' show kIsWeb; // Để dùng kIsWeb
+import '../../services/api_service.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
+
+// Hằng số màu sắc đồng bộ
+const kLightPink = Color(0xFFFFB6C1);
+const kPrimaryPink = Color(0xFFFF6185);
+const kBackgroundLight = Color(0xFFF9F9F9);
 
 class AddPetPage extends StatefulWidget {
   const AddPetPage({super.key});
@@ -16,27 +22,27 @@ class AddPetPage extends StatefulWidget {
 class _AddPetPageState extends State<AddPetPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers cho các ô nhập liệu
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _breedController = TextEditingController();
-  final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _colorController = TextEditingController();
-  final TextEditingController _marksController = TextEditingController();
-  final TextEditingController _weightController = TextEditingController();
-  final TextEditingController _heightController = TextEditingController();
-  final TextEditingController _vaccineController = TextEditingController();
-  final TextEditingController _medicalController = TextEditingController();
-  final TextEditingController _allergyController = TextEditingController();
-  final TextEditingController _dietController = TextEditingController();
-  final TextEditingController _healthNoteController = TextEditingController();
-  final TextEditingController _aiResultController = TextEditingController();
+  // Controllers
+  final _nameController = TextEditingController();
+  final _breedController = TextEditingController();
+  final _dobController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _colorController = TextEditingController();
+  final _marksController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _vaccineController = TextEditingController();
+  final _medicalController = TextEditingController();
+  final _allergyController = TextEditingController();
+  final _dietController = TextEditingController();
+  final _healthNoteController = TextEditingController();
+  final _aiResultController = TextEditingController();
 
   String _selectedType = 'Chó';
   String _selectedGender = 'Male';
   File? _imageFile;
-  bool _isAnalyzing = false;
   Uint8List? _webImageBytes;
+  bool _isAnalyzing = false;
 
   // 1. Logic chọn ngày sinh và tính tuổi
   Future<void> _selectDate(BuildContext context) async {
@@ -113,105 +119,140 @@ class _AddPetPageState extends State<AddPetPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF7F9),
+      backgroundColor: kBackgroundLight,
       appBar: AppBar(
-        title: const Text("🐶 Thêm hồ sơ thú cưng", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFFFF6185),
+        title: const Text(
+          "Tạo hồ sơ thú cưng",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 19,
+            color: Colors.black, // Chuyển sang màu trắng để nổi bật trên nền hồng
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: kLightPink,
         elevation: 0,
+        // Thêm bo góc dưới để đồng bộ với trang Chi tiết/Lịch sử
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        // Đổi màu icon quay lại thành trắng
+        iconTheme: const IconThemeData(color: Colors.black),
+        // Đảm bảo status bar (pin, sóng) có màu trắng cho dễ nhìn
+        systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.pink.withOpacity(0.05), blurRadius: 10)],
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionTitle("📋", "Thông tin cơ bản"),
-                _buildTextField("Tên thú cưng", _nameController, isRequired: true),
-                const SizedBox(height: 15),
-                Row(
-                  children: [
-                    Expanded(child: _buildDropdown("Loại", ['Chó', 'Mèo'], _selectedType, (v) => setState(() => _selectedType = v!))),
-                    const SizedBox(width: 10),
-                    Expanded(child: _buildTextField("Giống", _breedController)),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => _selectDate(context),
-                        child: AbsorbPointer(
-                          child: _buildTextField("Ngày sinh", _dobController, icon: Icons.calendar_today),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // --- 1. CHỌN ẢNH (AVATAR STYLE) ---
+              _buildImageHeader(),
+              const SizedBox(height: 20),
+
+              // --- 2. THÔNG TIN CƠ BẢN ---
+              _buildFormSection(
+                title: "Thông tin cơ bản",
+                icon: Icons.pets,
+                children: [
+                  // 1. Tên thú cưng chiếm trọn 1 hàng
+                  _buildModernField("Tên thú cưng *", _nameController, isRequired: true),
+
+                  // 2. Hàng chứa LOẠI và GIỚI TÍNH
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // LOẠI (Bên trái)
+                      Expanded(
+                        child: _buildModernDropdown(
+                            "Loại",
+                            ['Chó', 'Mèo'],
+                            _selectedType,
+                                (v) => setState(() => _selectedType = v!)
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(child: _buildTextField("Tuổi", _ageController, readOnly: true)),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                _buildDropdown("Giới tính", ['Male', 'Female'], _selectedGender, (v) => setState(() => _selectedGender = v!)),
-                _buildTextField("Màu sắc", _colorController),
-                _buildTextField("Dấu hiệu nhận dạng", _marksController),
 
-                _buildSectionTitle("⚖️", "Thông tin thể chất"),
-                Row(
-                  children: [
-                    Expanded(child: _buildTextField("Cân nặng (kg)", _weightController, keyboardType: TextInputType.number)),
-                    const SizedBox(width: 10),
-                    Expanded(child: _buildTextField("Chiều cao (cm)", _heightController, keyboardType: TextInputType.number)),
-                  ],
-                ),
+                      const SizedBox(width: 12),
 
-                _buildSectionTitle("🩺", "Thông tin sức khỏe"),
-                _buildTextField("Hồ sơ tiêm phòng", _vaccineController, maxLines: 2),
-                _buildTextField("Tiền sử bệnh", _medicalController, maxLines: 2),
-                _buildTextField("Dị ứng", _allergyController, maxLines: 2),
-                _buildTextField("Chế độ ăn", _dietController, maxLines: 2),
-                _buildTextField("Ghi chú sức khỏe", _healthNoteController, maxLines: 2),
-
-                _buildSectionTitle("📸", "Hình ảnh"),
-                _buildImagePicker(),
-
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isAnalyzing ? null : _analyzeWithAI,
-                    icon: _isAnalyzing ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.psychology),
-                    label: const Text("🔍 Phân tích ảnh bằng AI"),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                  ),
-                ),
-                _buildTextField("Kết quả phân tích AI", _aiResultController, maxLines: 3, readOnly: true),
-
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text("← Quay lại", style: TextStyle(color: Colors.grey))),
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF6185),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      // GIỚI TÍNH (Bên phải)
+                      Expanded(
+                        child: _buildModernDropdown(
+                          "Giới tính",
+                          ['Đực', 'Cái'],
+                          _selectedGender == 'Male' ? 'Đực' : 'Cái',
+                              (v) {
+                            setState(() {
+                              _selectedGender = (v == 'Đực') ? 'Male' : 'Female';
+                            });
+                          },
+                        ),
                       ),
-                      child: const Text("💾 Lưu hồ sơ", style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
-                )
-              ],
-            ),
+                    ],
+                  ),
+
+                  // 3. Giống chiếm trọn 1 hàng (Hoặc bạn có thể gộp với Màu sắc nếu muốn)
+                  _buildModernField("Giống", _breedController),
+
+                  // 4. Hàng chứa NGÀY SINH và TUỔI
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context),
+                          child: AbsorbPointer(
+                            child: _buildModernField("Ngày sinh", _dobController, icon: Icons.calendar_today),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildModernField("Tuổi", _ageController, readOnly: true)),
+                    ],
+                  ),
+
+                  // 5. Màu sắc chiếm trọn 1 hàng
+                  _buildModernField("Màu sắc", _colorController),
+                ],
+              ),
+
+              // --- 3. THÔNG TIN THỂ CHẤT ---
+              _buildFormSection(
+                title: "Thể chất & Nhận dạng",
+                icon: Icons.monitor_weight_outlined,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: _buildModernField("Cân nặng (kg)", _weightController, keyboardType: TextInputType.number)),
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildModernField("Chiều cao (cm)", _heightController, keyboardType: TextInputType.number)),
+                    ],
+                  ),
+                  _buildModernField("Dấu hiệu nhận dạng", _marksController),
+                ],
+              ),
+
+              // --- 4. SỨC KHỎE & DINH DƯỠNG ---
+              _buildFormSection(
+                title: "Sức khỏe & Dinh dưỡng",
+                icon: Icons.health_and_safety_outlined,
+                children: [
+                  _buildModernField("Tiêm phòng", _vaccineController, maxLines: 2),
+                  _buildModernField("Tiền sử bệnh", _medicalController, maxLines: 2),
+                  _buildModernField("Dị ứng", _allergyController, maxLines: 2),
+                  _buildModernField("Chế độ ăn", _dietController, maxLines: 2),
+                  _buildModernField("Ghi chú sức khỏe", _healthNoteController, maxLines: 2),
+                ],
+              ),
+
+              // --- 5. TRÍ TUỆ NHÂN TẠO AI ---
+              _buildAISection(),
+
+              const SizedBox(height: 24),
+
+              // --- 6. NÚT LƯU ---
+              _buildSubmitButtons(),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
@@ -220,92 +261,180 @@ class _AddPetPageState extends State<AddPetPage> {
 
   // --- WIDGET COMPONENTS ---
 
-  Widget _buildSectionTitle(String icon, String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      child: Row(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 10),
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-        ],
+  // Widget tiêu đề nhóm thông tin
+  Widget _buildFormSection({required String title, required IconData icon, required List<Widget> children}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
       ),
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller, {bool isRequired = false, bool readOnly = false, IconData? icon, TextInputType? keyboardType, int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          const SizedBox(height: 5),
-          TextFormField(
-            controller: controller,
-            readOnly: readOnly,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              suffixIcon: icon != null ? Icon(icon, size: 20) : null,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-            ),
-            validator: (v) => isRequired && (v == null || v.isEmpty) ? "Không được để trống" : null,
+          Row(
+            children: [
+              Icon(icon, size: 20, color: kPrimaryPink),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            ],
           ),
+          const Divider(height: 24),
+          ...children,
         ],
       ),
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, String value, Function(String?) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  // Widget Input Field hiện đại
+  Widget _buildModernField(String label, TextEditingController controller, {bool isRequired = false, bool readOnly = false, IconData? icon, TextInputType? keyboardType, int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 14),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          prefixIcon: icon != null ? Icon(icon, size: 18, color: Colors.pinkAccent) : null,
+          filled: true,
+          fillColor: kBackgroundLight,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kLightPink, width: 1)),
+        ),
+        validator: (v) => isRequired && (v == null || v.isEmpty) ? "Vui lòng nhập $label" : null,
+      ),
+    );
+  }
+
+  // Logic Widgets giữ nguyên (Dropdown, SelectDate...)
+  Widget _buildModernDropdown(String label, List<String> items, String value, Function(String?) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(color: kBackgroundLight, borderRadius: BorderRadius.circular(12)),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: items.contains(value) ? value : items.first,
+            isExpanded: true,
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            onChanged: onChanged,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // AI Section
+  Widget _buildAISection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.blue, size: 20),
+              const SizedBox(width: 8),
+              const Text("Phân tích thông minh AI", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+              const Spacer(),
+              _isAnalyzing
+                  ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2))
+                  : TextButton(onPressed: _analyzeWithAI, child: const Text("Bắt đầu")),
+            ],
+          ),
+          _buildModernField("Kết quả phân tích", _aiResultController, readOnly: true, maxLines: 2),
+        ],
+      ),
+    );
+  }
+
+  // Nút Submit
+  Widget _buildSubmitButtons() {
+    return Row(
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        const SizedBox(height: 5),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(10)),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: items.contains(value) ? value : items.first,
-              isExpanded: true,
-              items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-              onChanged: onChanged,
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: BorderSide(color: Colors.red.shade300), // Viền xám nhạt
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              foregroundColor: Colors.red.shade700, // Màu chữ xám đậm hơn chút
             ),
+            child: const Text(
+              "Hủy bỏ",
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            onPressed: _submitForm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimaryPink,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("Lưu hồ sơ ngay", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildImagePicker() {
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        height: 150,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
-        ),
-        child: _imageFile != null || _webImageBytes != null
-            ? ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: kIsWeb
-              ? Image.memory(_webImageBytes!, fit: BoxFit.cover) // Cách hiển thị tốt nhất trên Web
-              : Image.file(_imageFile!, fit: BoxFit.cover),  // Dùng cho Mobile
-        )
-            : const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.cloud_upload, size: 40, color: Colors.grey),
-            Text("Nhấn để chọn ảnh"),
-          ],
-        ),
+  // Header chọn ảnh
+  Widget _buildImageHeader() {
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            width: 110,
+            height: 110,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: Colors.pinkAccent, width: 3),
+              boxShadow: [BoxShadow(color: kLightPink.withOpacity(0.2), blurRadius: 10)],
+            ),
+            child: ClipOval(
+              child: (_imageFile != null || _webImageBytes != null)
+                  ? (kIsWeb ? Image.memory(_webImageBytes!, fit: BoxFit.cover) : Image.file(_imageFile!, fit: BoxFit.cover))
+                  : const Icon(Icons.pets, size: 50, color: Colors.pinkAccent),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(color: kPrimaryPink, shape: BoxShape.circle),
+                child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

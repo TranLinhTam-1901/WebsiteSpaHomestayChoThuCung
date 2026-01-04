@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../model/order/order_model.dart';
+import '../model/order/order.dart';
 import '../model/appointment/appointment.dart';
 import '../model/appointment/appointment_detail.dart';
 import '../model/pet/pet.dart';
@@ -525,32 +525,6 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Hủy đơn thất bại: ${response.statusCode}');
-    }
-  }
-
-  /// BLOCKCHAIN ///
-
-  static Future<List<BlockchainRecord>> getBlockchainLogs() async {
-    try {
-      print("Đang gọi API: $baseUrl/admin/Blockchain");
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/admin/Blockchain'),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final dynamic decodedData = jsonDecode(response.body);
-        List<dynamic> list = (decodedData is List) ? decodedData : (decodedData['records'] ?? []);
-        return list.map((item) => BlockchainRecord.fromJson(item)).toList();
-      }
-      return [];
-    } catch (e) {
-      print("Lỗi ApiService: $e");
-      return [];
     }
   }
 }

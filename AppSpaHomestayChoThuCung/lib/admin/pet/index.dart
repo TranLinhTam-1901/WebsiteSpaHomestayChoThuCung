@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/admin_api_service.dart';
 import '../../model/pet/pet.dart';
 import 'detail.dart';
+import '../blockchain/detail_by_pet.dart';
 
 class PetManagementScreen extends StatefulWidget {
   const PetManagementScreen({super.key});
@@ -39,13 +40,13 @@ class _PetManagementScreenState extends State<PetManagementScreen> {
           future: _petFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: pinkPrimary));
+              return const Center(child: CircularProgressIndicator(color: Colors.pinkAccent));
             }
 
             final pets = snapshot.data ?? [];
             if (pets.isEmpty) {
               return Center(
-                child: Text("Trống", style: TextStyle(color: pinkPrimary.withOpacity(0.5))),
+                child: Text("Trống", style: TextStyle(color: Colors.pinkAccent.withOpacity(0.5))),
               );
             }
 
@@ -80,9 +81,10 @@ class _PetManagementScreenState extends State<PetManagementScreen> {
                             color: pinkPrimary.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Icon(FontAwesomeIcons.paw, color: pinkPrimary, size: 22),
+                          child: const Icon(FontAwesomeIcons.paw, color: Colors.pinkAccent, size: 22),
                         ),
                         const SizedBox(width: 15),
+
                         // Thông tin
                         Expanded(
                           child: Column(
@@ -98,12 +100,12 @@ class _PetManagementScreenState extends State<PetManagementScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                pet.type ?? "Thú cưng",
+                                "${pet.type} • ${pet.breed}",
                                 style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                               ),
-                              const SizedBox(height: 6), // Khoảng cách nhỏ
+                              const SizedBox(height: 6),
 
-                              // HIỂN THỊ TÊN CHỦ SỞ HỮU Ở ĐÂY
+                              // Hiển thị tên chủ sở hữu
                               Row(
                                 children: [
                                   const Icon(Icons.person, size: 14, color: Color(0xFFFF6185)),
@@ -121,24 +123,51 @@ class _PetManagementScreenState extends State<PetManagementScreen> {
                             ],
                           ),
                         ),
-                        // Nút Info & Xóa
+
+                        // NHÓM NÚT THAO TÁC
                         Row(
                           children: [
-                            _buildActionBtn(FontAwesomeIcons.circleInfo, Colors.blue.shade200, () {
-                              final petId = pet.id; // Bây giờ id đã được map từ json['petId']
-
-                              if (petId != null && petId != 0) {
-                                debugPrint("🚀 Đang mở ID: $petId");
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => PetDetailScreen(petId: petId)),
-                                );
-                              } else {
-                                debugPrint("❌ ID vẫn null. Kiểm tra lại Model hoặc API Danh sách");
-                              }
-                            }),
+                            // 1. NÚT BLOCKCHAIN (MỚI THÊM)
+                            _buildActionBtn(
+                                FontAwesomeIcons.link,
+                                Colors.orange.shade300,
+                                    () {
+                                  final petId = pet.id;
+                                  if (petId != null && petId != 0) {
+                                    // Điều hướng tới trang Blockchain (Bạn cần tạo trang này)
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PetBlockchainScreen(petId: petId, petName: pet.name ?? ""),
+                                      ),
+                                    );
+                                  }
+                                }
+                            ),
                             const SizedBox(width: 8),
-                            _buildActionBtn(FontAwesomeIcons.trashCan, pinkPrimary.withOpacity(0.7), () => _confirmDelete(pet.id ?? 0)),
+
+                            // 2. NÚT CHI TIẾT (INFO)
+                            _buildActionBtn(
+                                FontAwesomeIcons.circleInfo,
+                                Colors.blue.shade200,
+                                    () {
+                                  final petId = pet.id;
+                                  if (petId != null && petId != 0) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => PetDetailScreen(petId: petId)),
+                                    );
+                                  }
+                                }
+                            ),
+                            const SizedBox(width: 8),
+
+                            // 3. NÚT XÓA
+                            _buildActionBtn(
+                                FontAwesomeIcons.trashCan,
+                                Colors.pinkAccent.withOpacity(0.7),
+                                    () => _confirmDelete(pet.id ?? 0)
+                            ),
                           ],
                         )
                       ],

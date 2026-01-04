@@ -190,6 +190,23 @@ class _LoginPageState extends State<LoginPage> {
                               // 2. Lưu trạng thái vào bộ nhớ máy để không bị văng khi F5
                               final prefs = await SharedPreferences.getInstance();
                               await prefs.setBool('isLoggedIn', true);
+                              await prefs.setString('login_type', 'google'); // Để App biết đây là khách Google
+
+                              // 3. ĐÂY LÀ PHẦN QUAN TRỌNG: Gán dữ liệu vào UserController
+                              // để App Bar và Drawer có dữ liệu hiển thị ngay lập tức
+                              final userController = Get.find<UserController>();
+
+                              userController.profile.value = UserProfile(
+                                id: user.uid,
+                                fullName: user.displayName ?? "Người dùng Google",
+                                userName: user.email ?? "google_user", // 👈 BẮT BUỘC PHẢI CÓ DÒNG NÀY
+                                email: user.email ?? "",
+                                phone: "",
+                                address: "",
+                                avatarUrl: user.photoURL ?? "",
+                                role: 'User',
+                                isLocked: false, // 👈 Đảm bảo thêm cả các trường required mới nếu có
+                              );
 
                               // 4. Chuyển trang về AuthGate
                               Get.offAll(() => const AuthGate());

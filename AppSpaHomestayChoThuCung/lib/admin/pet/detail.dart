@@ -100,7 +100,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildStatCard("Tuổi", "${pet.age}", "Năm", FontAwesomeIcons.cakeCandles),
+                          _buildStatCard("Tuổi", "${pet.age}", "", FontAwesomeIcons.cakeCandles),
                           _buildStatCard("Cân nặng", "${pet.weight}", "Kg", FontAwesomeIcons.weightScale),
                           _buildStatCard("Giới tính", pet.gender == "Male" ? "Đực" : "Cái", "",
                               pet.gender == "Male" ? FontAwesomeIcons.mars : FontAwesomeIcons.venus),

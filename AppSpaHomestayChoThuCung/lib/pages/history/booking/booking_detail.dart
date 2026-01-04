@@ -1,89 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../services/api_service.dart';
 import '../../../model/appointment/appointment_detail.dart';
 
-// Đồng bộ hằng số màu sắc
-const kPrimaryPink = Color(0xFFFF6185);
 const kLightPink = Color(0xFFFFB6C1);
-const kBackgroundPink = Color(0xFFFFF0F5);
+const kBackgroundLight = Color(0xFFF9F9F9);
 
 class BookingDetailPage extends StatelessWidget {
   final int appointmentId;
 
   const BookingDetailPage({super.key, required this.appointmentId});
 
+  // Hàm helper để check dữ liệu trống
+  String _validate(String? value) {
+    if (value == null || value.trim().isEmpty || value == 'N/A') {
+      return "Không có";
+    }
+    return value;
+  }
+
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
     return Scaffold(
-      backgroundColor: kBackgroundPink, // Đổi màu nền trang
+      backgroundColor: kBackgroundLight,
       appBar: AppBar(
         title: const Text(
-          '📋 Chi tiết lịch đặt',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          'Chi tiết lịch đặt',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black),
         ),
-        backgroundColor: kLightPink, // Đổi màu AppBar giống History
-        elevation: 0,
         centerTitle: true,
+        backgroundColor: kLightPink,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: FutureBuilder<AppointmentDetail>(
         future: ApiService.getAppointmentDetail(appointmentId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: kPrimaryPink));
+            return const Center(child: CircularProgressIndicator(color: kLightPink));
           } else if (snapshot.hasError) {
-            return const Center(child: Text('❌ Lỗi tải dữ liệu', style: TextStyle(color: Colors.redAccent)));
+            return const Center(child: Text('Lỗi tải dữ liệu', style: TextStyle(color: Colors.grey)));
           } else if (!snapshot.hasData) {
             return const Center(child: Text('Không có dữ liệu'));
           }
 
           final detail = snapshot.data!;
+          final bool isPetDeleted = detail.pet?.isDeleted ?? false;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             child: Column(
               children: [
-                // 1. THÔNG TIN LỊCH ĐẶT
+                // 1. CARD THÔNG TIN LỊCH HẸN
                 _buildCardSection(
                   title: 'Thông tin lịch đặt',
-                  icon: Icons.event_available,
-                  content: _buildInfoTable([
-                    _tableRow('Mã lịch đặt', detail.appointmentId.toString()),
-                    _tableRow('Dịch vụ', detail.serviceName ?? 'N/A'),
-                    _tableRow('Loại dịch vụ', detail.serviceCategory ?? 'N/A'),
-                    _tableRow('Trạng thái', detail.statusDisplay, isStatus: true),
-                    if (detail.isHomestay) ...[
-                      _tableRow('Ngày nhận', detail.startDate ?? 'N/A'),
-                      _tableRow('Ngày trả', detail.endDate ?? 'N/A'),
-                    ] else ...[
-                      _tableRow('Thời gian hẹn',
-                          '${detail.appointmentDate ?? 'N/A'} ${detail.appointmentTime ?? ''}'),
+                  icon: Icons.event_note_outlined,
+                  content: Column(
+                    children: [
+                      _infoTile('Mã lịch', '#${detail.appointmentId}'),
+                      _infoTile('Dịch vụ', _validate(detail.serviceName)),
+                      _infoTile('Phân loại', _validate(detail.serviceCategory)),
+                      _infoTile('Trạng thái', _validate(detail.statusDisplay), isStatus: true),
+                      if (detail.isHomestay) ...[
+                        _infoTile('Ngày nhận', _validate(detail.startDate)),
+                        _infoTile('Ngày trả', _validate(detail.endDate)),
+                      ] else ...[
+                        _infoTile('Thời gian', '${_validate(detail.appointmentDate)} | ${_validate(detail.appointmentTime)}'),
+                      ],
+                      _infoTile('SĐT liên hệ', _validate(detail.ownerPhoneNumber)),
+                      _infoTile('Ghi chú', _validate(detail.note)),
                     ],
-                    _tableRow('Thời điểm đặt', detail.createdDate ?? 'N/A'),
-                    _tableRow('SĐT liên hệ', detail.ownerPhoneNumber ?? 'N/A'),
-                    _tableRow('Ghi chú', (detail.note == null || detail.note!.isEmpty) ? 'Không có' : detail.note!),
-                  ]),
+                  ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // 1. Cập nhật tiêu đề Card dựa trên trạng thái xóa
+                // 2. CARD THÔNG TIN THÚ CƯNG
                 _buildCardSection(
-                  title: (detail.pet?.isDeleted ?? false)
-                      ? 'Thông tin thú cưng (Đã xóa)'
-                      : 'Thông tin thú cưng',
-                  icon: Icons.pets,
+                  title: isPetDeleted ? 'Thú cưng (Đã xóa)' : 'Thông tin thú cưng',
+                  icon: Icons.pets_outlined,
                   content: _buildPetDetails(detail),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // 2. Logic ẩn/hiện Lịch sử dịch vụ giống như @if trong C#
-                if (!(detail.pet?.isDeleted ?? false))
+                // 3. CARD LỊCH SỬ DỊCH VỤ
+                if (!isPetDeleted)
                   _buildCardSection(
-                    title: 'Lịch sử dịch vụ của thú cưng',
-                    icon: Icons.history,
+                    title: 'Lịch sử dịch vụ thú cưng',
+                    icon: Icons.history_outlined,
                     content: _buildServiceHistory(detail),
                   )
                 else
@@ -91,10 +105,11 @@ class BookingDetailPage extends StatelessWidget {
                     title: 'Lịch sử dịch vụ',
                     icon: Icons.history_toggle_off,
                     content: const Padding(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(20),
                       child: Text(
                         'Thú cưng đã bị xóa nên lịch sử dịch vụ không còn hiển thị.',
-                        style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black54),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey, fontSize: 13),
                       ),
                     ),
                   ),
@@ -108,52 +123,108 @@ class BookingDetailPage extends StatelessWidget {
     );
   }
 
+  Widget _buildCardSection({required String title, required IconData icon, required Widget content}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.pinkAccent, size: 20),
+                const SizedBox(width: 8),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ],
+            ),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          content,
+        ],
+      ),
+    );
+  }
+
+  Widget _infoTile(String label, String value, {bool isStatus = false}) {
+    Color valColor = Colors.black87;
+    if (isStatus) {
+      final s = value.toLowerCase();
+      if (s.contains('chờ')) valColor = Colors.orange;
+      else if (s.contains('xác nhận')) valColor = Colors.green;
+      else if (s.contains('hủy')) valColor = Colors.red;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontWeight: isStatus ? FontWeight.bold : FontWeight.w500,
+                color: valColor,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPetDetails(AppointmentDetail detail) {
     final p = detail.pet;
-    if (p == null) return const Padding(padding: EdgeInsets.all(16), child: Text("Không có thông tin thú cưng"));
+    if (p == null) return const Padding(padding: EdgeInsets.all(16), child: Text("Không có dữ liệu"));
 
     final bool isDeleted = p.isDeleted ?? false;
 
-    // Việt hóa giới tính
-    String genderVietnamese = "N/A";
-    if (p.gender?.toLowerCase() == 'male') genderVietnamese = "Đực";
-    else if (p.gender?.toLowerCase() == 'female') genderVietnamese = "Cái";
+    // 1. Xử lý Giới tính
+    String gender = "Không có";
+    if (p.gender?.toLowerCase() == 'male') gender = "Đực";
+    else if (p.gender?.toLowerCase() == 'female') gender = "Cái";
 
-    // Các hàng thông tin cơ bản
-    List<TableRow> rows = [
-      _tableRow('Tên thú cưng', p.name ?? 'N/A'),
-      _tableRow('Loại', p.type ?? 'N/A'),
-      _tableRow('Giống', p.breed ?? 'N/A'),
-      _tableRow('Giới tính', genderVietnamese),
-      _tableRow('Tuổi', p.age?.toString() ?? 'N/A'),
-      _tableRow('Cân nặng', p.weight != null ? '${p.weight} kg' : 'N/A'),
-    ];
-
-    if (!isDeleted) {
-      // Nếu chưa xóa thì thêm các hàng chi tiết vào Table
-      rows.addAll([
-        _tableRow('Dấu hiệu nhận dạng', p.distinguishingMarks ?? 'N/A'),
-        _tableRow('Tiêm phòng', p.vaccinationRecords ?? 'N/A'),
-        _tableRow('Lịch sử bệnh', p.medicalHistory ?? 'N/A'),
-        _tableRow('Dị ứng', p.allergies ?? 'N/A'),
-        _tableRow('Chế độ ăn', p.dietPreferences ?? 'N/A'),
-        _tableRow('Ghi chú sức khỏe', p.healthNotes ?? 'N/A'),
-        _tableRow('Kết quả AI', p.aiAnalysisResult ?? 'N/A'),
-      ]);
-    } else {
-      // Nếu đã xóa thì thêm hàng Ghi chú vào Table
-      rows.add(_tableRow('Ghi chú', 'Đã bị xóa', isStatus: true));
-    }
+    // 2. Xử lý các trường số kèm đơn vị (Logic đồng bộ)
+    String ageDisplay = (p.age != null) ? "${p.age} tuổi" : "Không có";
+    String weightDisplay = (p.weight != null) ? "${p.weight} kg" : "Không có";
+    String heightDisplay = (p.height != null) ? "${p.height} cm" : "Không có";
 
     return Column(
       children: [
-        _buildInfoTable(rows), // Hiển thị bảng trước
-        if (isDeleted) // Nếu xóa thì hiện dòng thông báo full width ở dưới bảng
+        // --- NHÓM THÔNG TIN CƠ BẢN ---
+        _infoTile('Tên thú cưng', _validate(p.name)),
+        _infoTile('Loại/Giống', '${_validate(p.type)} | ${_validate(p.breed)}'),
+        _infoTile('Giới tính', gender),
+        _infoTile('Tuổi', ageDisplay),
+        _infoTile('Cân nặng', weightDisplay),
+
+        if (!isDeleted) ...[
+          // --- NHÓM THÔNG TIN CHI TIẾT (Hiển thị đầy đủ khi chưa xóa) ---
+          _infoTile('Chiều cao', heightDisplay),
+          _infoTile('Màu lông', _validate(p.color)), // Thêm Màu lông
+          _infoTile('Dấu hiệu nhận dạng', _validate(p.distinguishingMarks)),
+          _infoTile('Tiêm phòng', _validate(p.vaccinationRecords)),
+          _infoTile('Lịch sử bệnh', _validate(p.medicalHistory)),
+          _infoTile('Dị ứng', _validate(p.allergies)),
+          _infoTile('Chế độ ăn', _validate(p.dietPreferences)),
+          _infoTile('Ghi chú sức khỏe', _validate(p.healthNotes)),
+          _infoTile('Kết quả AI', _validate(p.aiAnalysisResult)),
+        ] else ...[
+          // Thông báo khi thú cưng đã bị xóa
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: kBackgroundPink, width: 1)),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
             ),
             child: const Text(
               "Các thông tin khác không còn hiển thị vì thú cưng đã bị xóa.",
@@ -165,6 +236,7 @@ class BookingDetailPage extends StatelessWidget {
               ),
             ),
           ),
+        ],
       ],
     );
   }
@@ -173,124 +245,36 @@ class BookingDetailPage extends StatelessWidget {
     final records = detail.pet?.serviceRecords ?? [];
     if (records.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('Chưa có lịch sử dịch vụ.', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black54)),
+        padding: EdgeInsets.all(20),
+        child: Text('Chưa có lịch sử dịch vụ.', style: TextStyle(color: Colors.grey, fontSize: 13)),
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        headingRowHeight: 40,
-        headingRowColor: MaterialStateProperty.all(kLightPink.withOpacity(0.5)),
-        columns: const [
-          DataColumn(label: Text('Dịch vụ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-          DataColumn(label: Text('Ngày dùng', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-          DataColumn(label: Text('Giá tiền', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
-        ],
-        rows: records.map((r) {
-          return DataRow(cells: [
-            DataCell(Text(r.serviceName ?? 'N/A', style: const TextStyle(fontSize: 12))),
-            DataCell(Text(r.dateUsed?.toString() ?? 'N/A', style: const TextStyle(fontSize: 12))),
-            DataCell(Text(
-              r.price != null
-                  ? NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(r.price)
-                  : 'Miễn phí',
-              style: const TextStyle(fontSize: 12),
-            )),
-          ]);
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildCardSection({required String title, required IconData icon, required Widget content}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: kLightPink, width: 2),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: kPrimaryPink.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: const BoxDecoration(
-              color: kBackgroundPink, // Header Card cùng màu nền App
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: kPrimaryPink, size: 20),
-                const SizedBox(width: 10),
-                Text(title, style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          content,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoTable(List<TableRow> rows) {
-    return Table(
-      columnWidths: const {0: FixedColumnWidth(130)},
-      children: rows,
-    );
-  }
-
-  TableRow _tableRow(String label, String value, {bool isStatus = false}) {
-    Color valueColor = Colors.black87;
-
-    if (isStatus) {
-      // Chuyển tất cả về chữ thường để so sánh chính xác nhất
-      final lowerValue = value.toLowerCase();
-
-      if (lowerValue.contains('chờ')) {
-        valueColor = Colors.orange;
-      } else if (lowerValue.contains('xác nhận')) {
-        // Lưu ý: 'đã xác nhận' chứa 'xác nhận'
-        valueColor = Colors.green;
-      } else if (lowerValue.contains('hủy')) {
-        valueColor = Colors.red;
-      } else if (lowerValue.contains('xóa')) {
-        valueColor = Colors.grey;
-      }
-    }
-
-    return TableRow(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: kBackgroundPink, width: 1)),
-          ),
-          child: Text(label,
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54, fontSize: 13)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columnSpacing: 25,
+          headingRowHeight: 40,
+          horizontalMargin: 16,
+          columns: const [
+            DataColumn(label: Text('Dịch vụ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Ngày dùng', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Giá tiền', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
+          ],
+          rows: records.map((r) {
+            return DataRow(cells: [
+              DataCell(Text(_validate(r.serviceName), style: const TextStyle(fontSize: 12))),
+              DataCell(Text(_validate(r.dateUsed?.toString()), style: const TextStyle(fontSize: 12))),
+              DataCell(Text(
+                r.price != null ? NumberFormat.currency(locale: 'vi_VN', symbol: 'đ').format(r.price) : 'Không có',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              )),
+            ]);
+          }).toList(),
         ),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: kBackgroundPink, width: 1)),
-          ),
-          child: Text(
-            value,
-            style: TextStyle(
-                fontWeight: isStatus ? FontWeight.bold : FontWeight.normal,
-                color: valueColor, // Bây giờ màu sẽ thay đổi chính xác
-                fontSize: 13
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
