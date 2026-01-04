@@ -1,16 +1,27 @@
-class CategoryModel {
+class Category {
   final int id;
   final String name;
+  bool isDeleted;
 
-  CategoryModel({
+  Category({
     required this.id,
     required this.name,
+    this.isDeleted = false,
   });
 
-  factory CategoryModel.fromJson(Map<String, dynamic> json) {
-    return CategoryModel(
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
       id: json['id'],
       name: json['name'],
+      isDeleted: json['isDeleted'] ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'isDeleted': isDeleted,
+    };
   }
 }

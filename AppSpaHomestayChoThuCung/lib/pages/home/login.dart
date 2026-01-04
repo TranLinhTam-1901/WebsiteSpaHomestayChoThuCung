@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Api/auth_service.dart';
 import '../../admin/home/admin_home.dart';
-import '../../admin/product/admin_add_product.dart';
 import '../../auth/google_auth_service.dart';
 import '../../auth_gate.dart';
 import 'Register.dart';

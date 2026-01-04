@@ -3,10 +3,9 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Api/auth_service.dart';
-import 'Controller/user_controller.dart';
 import 'pages/home/home.dart';
 import 'pages/home/login.dart';
-
+import 'package:baitap1/controller/user_controller.dart';
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 

@@ -32,6 +32,7 @@ class AdminSidebar extends StatelessWidget {
                   _buildMenuItem(context, "Blockchain", Icons.auto_awesome_mosaic_rounded),
                   _buildMenuItem(context, "Hồ sơ thú cưng", Icons.pets_rounded),
                   _buildMenuItem(context, "CSKH", Icons.support_agent_rounded),
+                  _buildMenuItem(context, "Danh Mục", Icons.category),
 
                   const Divider(color: Color(0xFFEEEEEE), height: 30),
 

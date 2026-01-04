@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../Controller/user_controller.dart';
+import 'package:baitap1/controller/user_controller.dart';
 import '../../Api/auth_service.dart';
 import '../../auth_gate.dart';
+import '../category/CategoryManagementScreen.dart';
 import 'admin_sidebar.dart';
 import '../blockchain/index.dart';
 import '../pet/index.dart';
@@ -233,6 +234,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget _buildMainBody() {
     switch (_selectedPage) {
       case "Blockchain": return const BlockchainLogPage();
+      case "Danh Mục":
+        return CategoryManagementScreen();
       case "Hồ sơ thú cưng": return const PetManagementScreen();
       default: return const Center(child: Text("Trang đang phát triển"));
     }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:baitap1/pages/home/setting.dart';
 import 'package:get/get.dart';
-import '../Controller/user_controller.dart';
+import 'package:baitap1/controller/user_controller.dart';
 import '../pages/service/homestay_page.dart';
 import '../pages/service/spa_page.dart';
 import '../pages/service/vet_page.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../Controller/product_controller.dart';
+import 'package:baitap1/controller/product_controller.dart';
 import '../../model/product_model.dart';
 import 'package:intl/intl.dart';
 
