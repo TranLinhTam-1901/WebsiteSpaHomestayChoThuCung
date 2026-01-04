@@ -212,18 +212,9 @@
                 <i class="bi bi-bag-check"></i> Sản phẩm
             </a>
 
-            <a class="nav-link @(IsActive("Chat", "Index"))" asp-area="Admin" asp-controller="Chat" asp-action="Index" title="CSKH">
-                <i class="bi bi-headset"></i> Chăm Sóc Khách Hàng
-            </a>
-
             <a class="nav-link @(IsActive("Promotion", "Index"))"
                asp-area="Admin" asp-controller="Promotion" asp-action="Index">
                 <i class="bi bi-gift"></i> Khuyến mãi
-            </a>
-
-            <a class="nav-link @(IsActive("Order", "Index"))"
-               asp-area="Admin" asp-controller="Order" asp-action="Index">
-                <i class="bi bi-receipt"></i> Đơn hàng
             </a>
 
             <a class="nav-link @(IsActive("Inventory", "Index"))"
@@ -231,30 +222,21 @@
                 <i class="bi bi-box-seam"></i> Kho hàng
             </a>
 
+            <a class="nav-link @(IsActive("Order", "Index"))"
+               asp-area="Admin" asp-controller="Order" asp-action="Index">
+                <i class="bi bi-receipt"></i> Đơn hàng
+            </a>
+
+            <a class="nav-link @(IsActive("User", "UserList"))"
+                               asp-area="Admin" asp-controller="User" asp-action="UserList">
+                <i class="bi bi-people"></i> Tài khoản
+            </a>
+
             <a class="nav-link @(IsActive("Pet", "Index"))"
                asp-area="Admin" asp-controller="Pet" asp-action="Index">
                 <i class="bi bi-clipboard-heart"></i> Hồ sơ thú cưng
             </a>
 
-            <a class="nav-link @(IsActive("Blockchain", "Index"))"
-               asp-area="Admin" asp-controller="Blockchain" asp-action="Index">
-                <i class="bi bi-link-45deg"></i> Blockchain
-            </a>
-
-            <a class="nav-link @(IsActive("User", "UserList"))"
-               asp-area="Admin" asp-controller="User" asp-action="UserList">
-                <i class="bi bi-people"></i> Tài khoản
-            </a>
-
-            <a class="nav-link @(IsActive("Service", "PendingAppointments"))"
-               asp-area="Admin" asp-controller="Service" asp-action="PendingAppointments">
-                <i class="bi bi-journal-check"></i> Xác nhận đặt lịch
-            </a>
-
-            <a class="nav-link @(IsActive("Service", "AppointmentHistory"))"
-               asp-area="Admin" asp-controller="Service" asp-action="AppointmentHistory">
-                <i class="bi bi-clock-history"></i> Lịch sử đặt lịch
-            </a>
             <!-- Mục "Đặt lịch" trong sidebar -->
             <a class="nav-link" href="javascript:void(0);" data-bs-toggle="collapse" data-bs-target="#bookingMenu" aria-expanded="false" aria-controls="bookingMenu">
                 <i class="bi bi-calendar-check"></i> Đặt lịch
@@ -271,10 +253,27 @@
                 </a>
             </div>
 
+            <a class="nav-link @(IsActive("Service", "PendingAppointments"))"
+               asp-area="Admin" asp-controller="Service" asp-action="PendingAppointments">
+                <i class="bi bi-journal-check"></i> Xác nhận đặt lịch
+            </a>
+
+            <a class="nav-link @(IsActive("Service", "AppointmentHistory"))"
+               asp-area="Admin" asp-controller="Service" asp-action="AppointmentHistory">
+                <i class="bi bi-clock-history"></i> Lịch sử đặt lịch
+            </a>
+
+            <a class="nav-link @(IsActive("Blockchain", "Index"))"
+               asp-area="Admin" asp-controller="Blockchain" asp-action="Index">
+                <i class="bi bi-link-45deg"></i> Blockchain
+            </a>
+
+            <a class="nav-link @(IsActive("Chat", "Index"))" asp-area="Admin" asp-controller="Chat" asp-action="Index" title="CSKH">
+                <i class="bi bi-headset"></i> Chăm Sóc Khách Hàng
+            </a>
 
         </nav>
     </div>
-
 
     <div class="right-panel">
 
@@ -322,7 +321,7 @@
 </html>
 <script>
 
-        // ------------------- SIGNALR FORCE LOGOUT -------------------
+    // ------------------- SIGNALR FORCE LOGOUT -------------------
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chathub")
         .build();
@@ -333,35 +332,6 @@
     });
 
     connection.start().catch(err => console.error("SignalR connection error:", err));
-       // ------------------- AJAX để thay đổi nội dung mà không reload trang -------------------
-   /* $(".nav-link").on("click", function(e) {
-        e.preventDefault();
-        var url = $(this).attr("href");
-
-        // Kiểm tra giá trị URL trước khi thực hiện AJAX (Debug)
-        console.log("URL: ", url);
-
-        // Lưu vị trí cuộn hiện tại của sidebar vào localStorage
-        var scrollPos = $(".sidebar").scrollTop();
-        localStorage.setItem('sidebarScrollPos', scrollPos);
-
-        // Thực hiện AJAX để thay đổi nội dung mà không reload trang
-        $.ajax({
-            url: url,
-            success: function(data) {
-                $(".main-content").html(data);  // Cập nhật phần nội dung chính
-                // Phục hồi lại vị trí cuộn của sidebar sau khi nội dung được thay đổi
-                var savedScrollPos = localStorage.getItem('sidebarScrollPos');
-                if (savedScrollPos) {
-                    $(".sidebar").scrollTop(savedScrollPos);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log("AJAX Error: " + status + " - " + error);
-                alert("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.");
-            }
-        });
-    });*/
 
     // ------------------- Quản lý Collapse bằng Bootstrap API -------------------
     document.addEventListener('DOMContentLoaded', function () {

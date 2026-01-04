@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:baitap1/pages/setting.dart';
+import 'package:baitap1/pages/home/setting.dart';
 import 'package:get/get.dart';
 import '../Controller/user_controller.dart';
 import '../pages/service/homestay_page.dart';
@@ -180,7 +180,6 @@ class PawHouseDrawer extends StatelessWidget {
 
           const Divider(),
 
-// ========= NÚT ĐĂNG XUẤT =========
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text(
@@ -189,7 +188,6 @@ class PawHouseDrawer extends StatelessWidget {
             ),
             onTap: onLogout,
           ),
-// =================================
 
         ],
       ),

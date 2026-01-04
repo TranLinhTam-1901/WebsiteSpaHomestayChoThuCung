@@ -17,9 +17,9 @@ namespace DoAnCoSo.Controllers.Api
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts()
+        public async Task<IActionResult> GetProducts(int? categoryId)
         {
-            var products = await _productService.GetProductsAsync();
+            var products = await _productService.GetProductsAsync(categoryId);
             return Ok(products);
         }
 

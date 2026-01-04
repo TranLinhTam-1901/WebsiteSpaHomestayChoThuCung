@@ -1,23 +1,28 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../model/order/order_model.dart';
 import '../model/appointment/appointment.dart';
 import '../model/appointment/appointment_detail.dart';
-import 'package:flutter/foundation.dart';
+import '../model/pet/pet.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart'; // Để dùng kIsWeb
+import 'dart:io'; // Để sửa lỗi Undefined class 'File'
+import 'package:http_parser/http_parser.dart'; // Để sửa lỗi 'MediaType'
+import '../model/service/service.dart';
+import '../model/Blockchain/blockchain_record.dart';
 
 class ApiService {
   static const String baseUrl = kIsWeb
       ? 'https://localhost:7051/api'
       : 'https://10.0.2.2:7051/api';
 
-  /// Lấy token
+  /// LOGIN ///
+
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');
   }
 
-  /// Login
   static Future<bool> login(String email, String password) async {
     final url = Uri.parse('$baseUrl/Auth/login');
 
@@ -38,10 +43,52 @@ class ApiService {
     }
   }
 
+  /// USER ///
+
+  static Future<Map<String, dynamic>?> getUserProfile() async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/Appointments/Profile');
+    try {
+      final response = await http.get(url, headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   static Future<List<dynamic>> getUserPets() async {
     final token = await getToken();
-    // THỬ KIỂM TRA LẠI CHỮ 'Pets' CÓ 's' HAY KHÔNG
-    final url = Uri.parse('$baseUrl/Pets/GetUserPets');
+    final url = Uri.parse('$baseUrl/Pets/MyPets'); // Giả định endpoint lấy pet của user
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// PET ///
+
+  static Future<List<dynamic>> getPets() async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/Pet'); // Khớp với [Route("api/Pet")]
 
     try {
       final response = await http.get(
@@ -51,103 +98,154 @@ class ApiService {
           'Content-Type': 'application/json',
         },
       );
-      // Nếu vẫn 404, hãy in URL ra console để copy dán vào trình duyệt kiểm tra
-      print("Đang gọi: ${url.toString()} - Status: ${response.statusCode}");
 
-      if (response.statusCode == 200) return jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
       return [];
-    } catch (e) { return []; }
+    } catch (e) {
+      print("Lỗi GetPets: $e");
+      return [];
+    }
   }
 
-// 1. Hàm lấy dữ liệu (Services & Pricings)
-  static Future<Map<String, dynamic>> getSpaBookingData() async {
-    final token = await getToken(); // Phải lấy token
-    final url = Uri.parse('$baseUrl/Appointments/SpaServices');
-
+  static Future<PetDetail?> getPetDetails(int id) async {
+    // Sửa từ _getToken() thành getToken() cho đồng bộ với các hàm khác
+    final token = await getToken();
     try {
       final response = await http.get(
-        url,
+        Uri.parse('$baseUrl/Pet/$id'), // Lưu ý: Thêm /Pet/ nếu baseUrl của bạn chỉ là .../api
         headers: {
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // THÊM DÒNG NÀY
         },
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        // Code map dữ liệu giữ nguyên như cũ...
-        return {"services": data, "pricings": data.map((e) => e['spaPricing']).toList()};
+        return PetDetail.fromJson(jsonDecode(response.body));
       }
-      return {"services": [], "pricings": []};
+      return null;
     } catch (e) {
-      return {"services": [], "pricings": []};
+      debugPrint("Lỗi GetPetDetails: $e");
+      return null;
     }
   }
 
-// 2. Hàm Lưu/Cập nhật (Phải gửi đúng cấu trúc request mà C# chờ)
-  static Future<bool> saveSpaBooking(Map<String, dynamic> bookingData, bool isUpdate, {int? id}) async {
+  static Future<bool> addPet(Map<String, String> petData, File? imageFile, {Uint8List? webImageBytes}) async {
     final token = await getToken();
-    final url = isUpdate
-        ? Uri.parse('$baseUrl/Appointments/UpdateSpa/$id')
-        : Uri.parse('$baseUrl/Appointments/BookSpa');
+    final url = Uri.parse('$baseUrl/Pet/Add');
 
     try {
-      final response = await (isUpdate ? http.put : http.post)(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // THÊM DÒNG NÀY
-        },
-        body: jsonEncode(bookingData),
-      );
+      var request = http.MultipartRequest('POST', url);
+      request.headers['Authorization'] = 'Bearer $token';
+      request.fields.addAll(petData);
 
-      print("Response từ Server: ${response.body}");
+      if (kIsWeb && webImageBytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'imageFile', webImageBytes, filename: 'pet_image.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      } else if (imageFile != null) {
+        request.files.add(await http.MultipartFile.fromPath('imageFile', imageFile.path));
+      }
+
+      var streamedResponse = await request.send();
+      // Chuyển stream phản hồi thành chuỗi text để đọc nội dung
+      final responseBody = await streamedResponse.stream.bytesToString();
+
+      print("DEBUG: Status Code = ${streamedResponse.statusCode}");
+
+      // TRƯỜNG HỢP 1: Thành công chuẩn (200-299)
+      if (streamedResponse.statusCode >= 200 && streamedResponse.statusCode < 300) {
+        return true;
+      }
+
+      // TRƯỜNG HỢP 2: Lỗi 500 nhưng thực tế đã lưu xong (dựa vào nội dung JSON bạn gửi)
+      if (streamedResponse.statusCode == 500 && responseBody.contains("Thêm thành công!")) {
+        print("CẢNH BÁO: Server bị lỗi vòng lặp JSON nhưng dữ liệu đã lưu xong.");
+        return true;
+      }
+
+      // TRƯỜNG HỢP 3: Lỗi thực sự
+      print("SERVER ERROR DETAILS: $responseBody");
+      return false;
+
+    } catch (e) {
+      print("Lỗi AddPet: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> updatePet(int id, Map<String, String> petData, File? imageFile, {Uint8List? webImageBytes}) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/Pet/Update/$id');
+
+    try {
+      var request = http.MultipartRequest('PUT', url);
+      request.headers['Authorization'] = 'Bearer $token';
+
+      // Thêm các trường dữ liệu
+      request.fields.addAll(petData);
+
+      // Xử lý file ảnh (Hỗ trợ cả Mobile và Web)
+      if (kIsWeb && webImageBytes != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'imageFile',
+          webImageBytes,
+          filename: 'update_pet.jpg',
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      } else if (imageFile != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'imageFile',
+          imageFile.path,
+          contentType: MediaType('image', 'jpeg'),
+        ));
+      }
+
+      // Gửi request
+      var streamedResponse = await request.send();
+      // Chuyển stream thành chuỗi để kiểm tra nội dung
+      final responseBody = await streamedResponse.stream.bytesToString();
+
+      print("DEBUG Update: Status Code = ${streamedResponse.statusCode}");
+
+      // TRƯỜNG HỢP 1: Thành công chuẩn (200 OK)
+      if (streamedResponse.statusCode >= 200 && streamedResponse.statusCode < 300) {
+        return true;
+      }
+
+      // TRƯỜNG HỢP 2: Phòng thủ lỗi vòng lặp JSON (500 nhưng nội dung báo thành công)
+      if (streamedResponse.statusCode == 500 && responseBody.contains("Cập nhật thành công!")) {
+        print("CẢNH BÁO: Server lỗi JSON nhưng đã cập nhật xong DB.");
+        return true;
+      }
+
+      print("LỖI UPDATE: $responseBody");
+      return false;
+    } catch (e) {
+      print("Exception UpdatePet: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> deletePet(int id) async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/Pet/Delete/$id');
+
+    try {
+      final response = await http.delete(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      );
       return response.statusCode == 200;
     } catch (e) {
       return false;
     }
   }
 
-  /// Lấy lịch sử đơn hàng
-  static Future<List<Order>> getOrderHistory() async {
-    final token = await getToken();
-    if (token == null) throw Exception("Chưa login");
+  /// APPOINTMENT ///
 
-    final url = Uri.parse('$baseUrl/OrderHistory');
-
-    final response = await http.get(
-      url,
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((e) => Order.fromJson(e as Map<String, dynamic>)).toList();
-    } else if (response.statusCode == 401) {
-      throw Exception("Unauthorized - token lỗi hoặc hết hạn");
-    } else {
-      throw Exception('Lỗi API: ${response.statusCode}');
-    }
-  }
-
-  /// Hủy đơn hàng
-  static Future<void> cancelOrder(int id) async {
-    final token = await getToken();
-    if (token == null) throw Exception("Chưa login");
-
-    final url = Uri.parse('$baseUrl/OrderHistory/cancel/$id');
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Hủy đơn thất bại: ${response.statusCode}');
-    }
-  }
-
-  /// Lấy danh sách lịch hẹn
   static Future<List<Appointment>> getBookingHistory() async {
     final token = await getToken();
     if (token == null) throw Exception("Chưa login");
@@ -170,7 +268,6 @@ class ApiService {
     }
   }
 
-  /// Lấy chi tiết lịch hẹn
   static Future<AppointmentDetail> getAppointmentDetail(int id) async {
     final token = await getToken();
     final url = Uri.parse('$baseUrl/Appointments/Details/$id'); // Sửa lại đường dẫn này
@@ -190,22 +287,270 @@ class ApiService {
     }
   }
 
-  /// Hủy lịch hẹn
-  static Future<void> cancelAppointment(int id) async {
+  static Future<bool> cancelAppointment(int id) async {
+    try {
+      final token = await getToken();
+      final response = await http.delete(
+        Uri.parse("$baseUrl/Appointments/Cancel/$id"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) return true;
+
+      // Nếu lỗi 400 (do quy định thời gian), Backend trả về thông báo
+      debugPrint("Lỗi hủy: ${response.body}");
+      return false;
+    } catch (e) {
+      debugPrint("Lỗi kết nối Cancel: $e");
+      return false;
+    }
+  }
+
+  /// SPA ///
+
+  static Future<Map<String, dynamic>> getSpaBookingData() async {
+    final token = await getToken();
+    final url = Uri.parse('$baseUrl/Appointments/SpaServices');
+
+    try {
+      final response = await http.get(url, headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        // Ép kiểu Json sang Model ngay tại đây để bên ngoài dễ dùng
+        List<ServiceModel> services = data.map((e) => ServiceModel.fromJson(e)).toList();
+        return {"services": services};
+      }
+    } catch (e) {
+      debugPrint("Lỗi API SpaServices: $e");
+    }
+    return {"services": <ServiceModel>[]};
+  }
+
+  static Future<bool> saveSpaBooking(Map<String, dynamic> bookingData, bool isUpdate, {dynamic id}) async {
+    final token = await getToken();
+    final url = isUpdate
+        ? Uri.parse('$baseUrl/Appointments/UpdateSpa/$id')
+        : Uri.parse('$baseUrl/Appointments/BookSpa');
+
+    try {
+      final response = await (isUpdate ? http.put : http.post)(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(bookingData),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return true;
+      } else {
+        // DÒNG QUAN TRỌNG: In lỗi để biết Backend đang thiếu gì
+        debugPrint("❌ LỖI SERVER (${response.statusCode}): ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("❌ LỖI KẾT NỐI: $e");
+      return false;
+    }
+  }
+
+  /// HOMESTAY ///
+
+  static Future<Map<String, dynamic>> getHomestayBookingData() async {
+    // Đảm bảo có chữ 's' sau chữ Appointment
+    final String url = "$baseUrl/Appointments/GetHomestayServices";
+
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      debugPrint("URL đang gọi: $url");
+      debugPrint("Status Code: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+        // Lấy danh sách từ key "services" (chữ thường theo Postman bạn gửi)
+        final List<dynamic> list = responseData['services'] ?? [];
+
+        List<ServiceModel> services = list.map((item) => ServiceModel.fromJson(item)).toList();
+
+        debugPrint("Số lượng dịch vụ đã load thành công: ${services.length}");
+        return {"services": services};
+      }
+    } catch (e) {
+      debugPrint("Lỗi kết nối API: $e");
+    }
+    return {"services": <ServiceModel>[]};
+  }
+
+  static Future<bool> saveHomestayBooking(Map<String, dynamic> data, bool isUpdate, {int? id}) async {
+    try {
+      final token = await getToken();
+
+      // 1. SỬA TẠI ĐÂY: Dùng Appointments (số nhiều) và bỏ chữ api thừa nếu baseUrl đã có
+      // Giả sử baseUrl = "https://10.0.2.2:7051/api"
+      final url = isUpdate
+          ? "$baseUrl/Appointments/UpdateHomestay/$id"
+          : "$baseUrl/Appointments/BookHomestay";
+
+      debugPrint("Đang gửi yêu cầu đến URL: $url");
+
+      final headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      };
+      final body = jsonEncode(data);
+
+      // 2. CHỌN PHƯƠNG THỨC: isUpdate dùng PUT, tạo mới dùng POST
+      final response = isUpdate
+          ? await http.put(Uri.parse(url), headers: headers, body: body)
+          : await http.post(Uri.parse(url), headers: headers, body: body);
+
+      debugPrint("Save Homestay Status: ${response.statusCode}");
+      debugPrint("Save Homestay Response: ${response.body}");
+
+      // Thông thường StatusCode thành công là 200 hoặc 201
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Lỗi kết nối saveHomestayBooking: $e");
+      return false;
+    }
+  }
+
+  /// VET ///
+
+  static Future<Map<String, dynamic>> getVetBookingData() async {
+    try {
+      final token = await getToken();
+      final response = await http.get(
+        Uri.parse("$baseUrl/Appointments/GetVetServices"), // Đảm bảo URL khớp với Backend
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return {"services": []};
+    } catch (e) {
+      debugPrint("Lỗi getVetBookingData: $e");
+      return {"services": []};
+    }
+  }
+
+  static Future<bool> saveVetBooking(Map<String, dynamic> data, bool isUpdate, {int? id}) async {
+    try {
+      final token = await getToken();
+
+      // 1. Sửa URL khớp với Backend (Appointments có s)
+      // Lưu ý: Nếu baseUrl của bạn chưa có "/api", hãy giữ nguyên "/api/Appointments/..."
+      final url = isUpdate
+          ? "$baseUrl/Appointments/UpdateVet/$id"
+          : "$baseUrl/Appointments/BookVet";
+
+      debugPrint("Gửi yêu cầu Vet đến: $url");
+
+      final headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      };
+      final body = jsonEncode(data);
+
+      // 2. Sửa: Update dùng PUT, Tạo mới dùng POST
+      final response = isUpdate
+          ? await http.put(Uri.parse(url), headers: headers, body: body)
+          : await http.post(Uri.parse(url), headers: headers, body: body);
+
+      debugPrint("Vet Response Status: ${response.statusCode}");
+      debugPrint("Vet Response Body: ${response.body}");
+
+      // Trả về true nếu thành công (200 OK hoặc 201 Created)
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Lỗi kết nối saveVetBooking: $e");
+      return false;
+    }
+  }
+
+  /// HISTORY ///
+
+  static Future<List<Order>> getOrderHistory() async {
     final token = await getToken();
     if (token == null) throw Exception("Chưa login");
 
-    final url = Uri.parse('$baseUrl/Appointments/cancel/$id');
+    final url = Uri.parse('$baseUrl/OrderHistory');
+
+    final response = await http.get(
+      url,
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => Order.fromJson(e as Map<String, dynamic>)).toList();
+    } else if (response.statusCode == 401) {
+      throw Exception("Unauthorized - token lỗi hoặc hết hạn");
+    } else {
+      throw Exception('Lỗi API: ${response.statusCode}');
+    }
+  }
+
+  static Future<void> cancelOrder(int id) async {
+    final token = await getToken();
+    if (token == null) throw Exception("Chưa login");
+
+    final url = Uri.parse('$baseUrl/OrderHistory/cancel/$id');
+
     final response = await http.post(
       url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Hủy thất bại: ${response.statusCode}');
+      throw Exception('Hủy đơn thất bại: ${response.statusCode}');
+    }
+  }
+
+  /// BLOCKCHAIN ///
+
+  static Future<List<BlockchainRecord>> getBlockchainLogs() async {
+    try {
+      print("Đang gọi API: $baseUrl/admin/Blockchain");
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/Blockchain'),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final dynamic decodedData = jsonDecode(response.body);
+        List<dynamic> list = (decodedData is List) ? decodedData : (decodedData['records'] ?? []);
+        return list.map((item) => BlockchainRecord.fromJson(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      print("Lỗi ApiService: $e");
+      return [];
     }
   }
 }

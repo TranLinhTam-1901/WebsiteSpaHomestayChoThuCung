@@ -37,7 +37,6 @@ class AuthService {
       return LoginResult.fromJson(data);
     }
 
-
     return null;
   }
 
@@ -60,6 +59,4 @@ class AuthService {
 
     return doc.data()?['role'] ?? 'User';
   }
-
-
 }
