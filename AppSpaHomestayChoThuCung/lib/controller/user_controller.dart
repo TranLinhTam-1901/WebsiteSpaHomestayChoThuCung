@@ -51,13 +51,14 @@ class UserController extends GetxController {
         print("ℹ️ Đang khôi phục dữ liệu từ Firebase cho: ${firebaseUser.email}");
         profile.value = UserProfile(
           id: firebaseUser.uid,
-          // userName: firebaseUser.displayName ?? "Người dùng Google",
           fullName: firebaseUser.displayName ?? "Người dùng Google",
+          userName: firebaseUser.email ?? "", // 👈 THÊM DÒNG NÀY (Lấy email làm userName tạm thời)
           email: firebaseUser.email ?? "",
           phone: "",
           address: "",
           avatarUrl: firebaseUser.photoURL ?? "",
           role: 'User',
+          isLocked: false, // Thêm các giá trị mặc định nếu cần
         );
         return;
       }

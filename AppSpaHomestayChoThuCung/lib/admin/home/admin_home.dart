@@ -8,6 +8,10 @@ import '../../auth_gate.dart';
 import 'admin_sidebar.dart';
 import '../blockchain/index.dart';
 import '../pet/index.dart';
+import '../user/index.dart';
+import '../history/appointment/index.dart';
+import '../history/appointment/pending.dart';
+import '../history/order/index.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -132,12 +136,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     bool isDesktop = screenWidth > 1100;
 
     return Scaffold(
-      // ✅ PHẢI CÓ DÒNG NÀY ĐỂ MỞ ĐƯỢC SIDEBAR
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFFDFDFD),
       drawer: isDesktop ? null : AdminSidebar(
@@ -157,13 +161,23 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               ),
             ),
           Expanded(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  _buildCustomTopBar(isDesktop),
-                  Expanded(child: _buildMainBody()),
-                ],
-              ),
+            child: Column(
+              children: [
+                // 1. Đưa TopBar lên trên cùng, bọc SafeArea chỉ cho phần TOP
+                // Điều này giúp TopBar không bị che bởi tai thỏ nhưng vẫn sát mép
+                Container(
+                  color: Colors.white,
+                  child: SafeArea(
+                    bottom: false, // Chỉ tránh tai thỏ phía trên
+                    child: _buildCustomTopBar(isDesktop),
+                  ),
+                ),
+
+                // 2. Nội dung chính bên dưới
+                Expanded(
+                  child: _buildMainBody(),
+                ),
+              ],
             ),
           ),
         ],
@@ -171,9 +185,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  // Trong AdminHomeScreen
   Widget _buildCustomTopBar(bool isDesktop) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      height: 60, // Cố định chiều cao để tất cả các trang đều có mốc như nhau
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey.shade200, width: 0.5)),
@@ -182,19 +198,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         children: [
           if (!isDesktop)
             IconButton(
-              // ✅ SỬ DỤNG KEY ĐỂ MỞ DRAWER (TRÁNH LỖI CONTEXT)
-              onPressed: () {
-                if (_scaffoldKey.currentState != null) {
-                  _scaffoldKey.currentState!.openDrawer();
-                }
-              },
+              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               icon: const Icon(Icons.menu_rounded, color: Color(0xFFFF6185)),
             ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              _selectedPage.toUpperCase(),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF2D2D2D)),
+              _selectedPage, // Bỏ toUpperCase cho đỡ thô giống History
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2D2D2D)),
             ),
           ),
           _buildTopUser(),
@@ -232,9 +243,31 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   Widget _buildMainBody() {
     switch (_selectedPage) {
-      case "Blockchain": return const BlockchainLogPage();
-      case "Hồ sơ thú cưng": return const PetManagementScreen();
-      default: return const Center(child: Text("Trang đang phát triển"));
+      case "Blockchain":
+        return const BlockchainLogPage();
+
+      case "Lịch sử đặt lịch":
+      // Trang hiển thị toàn bộ lịch sử (có phân trang/lọc)
+        return const AppointmentHistoryScreen();
+
+      case "Xác nhận lịch":
+      // Trang tập trung vào các đơn mới cần Admin duyệt
+        return const PendingAppointmentsScreen();
+
+      case "Quản lý tài khoản":
+        return const UserManagementPage();
+
+      case "Hồ sơ thú cưng":
+        return const PetManagementScreen();
+
+      case "Quản lý đơn hàng":
+        return const AdminOrderListScreen();
+
+      case "CSKH":
+        return const Center(child: Text("Trang Chăm sóc khách hàng"));
+
+      default:
+        return const Center(child: Text("Trang đang phát triển"));
     }
   }
 }

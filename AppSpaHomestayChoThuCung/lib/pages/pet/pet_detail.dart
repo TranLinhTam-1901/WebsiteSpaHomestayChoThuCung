@@ -1,38 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../services/api_service.dart';
-import '../../model/pet/pet.dart'; // Đảm bảo đúng path model của bạn
-import 'package:intl/intl.dart'; // Dòng quan trọng để dùng DateFormat
+import '../../model/pet/pet.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'pet_update.dart';
+
+// Hằng số màu sắc đồng bộ toàn app
+const kLightPink = Color(0xFFFFB6C1);
+const kPrimaryPink = Color(0xFFFF6185);
+const kBackgroundLight = Color(0xFFF9F9F9);
 
 class PetDetailPage extends StatelessWidget {
   final int petId;
 
-  const PetDetailPage({Key? key, required this.petId}) : super(key: key);
+  const PetDetailPage({super.key, required this.petId});
 
-  // 1. Thêm hàm hiển thị ảnh xử lý logic URL
+  // Hàm xử lý ảnh chuyên nghiệp hơn
   Widget _buildPetImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return const Icon(Icons.pets, size: 70, color: Color(0xFFFF6185));
+      return Container(
+        color: kLightPink.withOpacity(0.1),
+        child: const Icon(Icons.pets, size: 60, color: kPrimaryPink),
+      );
     }
-
     String cleanPath = imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
-
-    // Nếu chạy trên Web dùng localhost, nếu chạy Android dùng 10.0.2.2
     String domain = kIsWeb ? "localhost" : "10.0.2.2";
-
-    // Lưu ý: Port 7051 thường là HTTPS, nếu chạy Web bạn nên thử HTTP (ví dụ 5051)
-    // để tránh lỗi Certificate.
     String fullUrl = "https://$domain:7051/$cleanPath";
-
-    debugPrint("Đang tải ảnh trên ${kIsWeb ? 'Web' : 'Mobile'}: $fullUrl");
 
     return Image.network(
       fullUrl,
       fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return const Icon(Icons.pets, size: 70, color: Color(0xFFFFB6C1));
-      },
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: kLightPink.withOpacity(0.1),
+        child: const Icon(Icons.pets, size: 60, color: kPrimaryPink),
+      ),
     );
   }
 
@@ -48,144 +50,165 @@ class PetDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF7F9),
+      backgroundColor: kBackgroundLight,
       appBar: AppBar(
-        title: const Text("📋 Chi tiết thú cưng",
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: const Color(0xFFFF6185),
+        title: const Text("Hồ sơ chi tiết",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black)),
+        backgroundColor: kLightPink,
+        centerTitle: true,
         elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
       ),
       body: FutureBuilder<PetDetail?>(
         future: ApiService.getPetDetails(petId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFF6185)));
+            return const Center(child: CircularProgressIndicator(color: kLightPink));
           }
           if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text("Không tìm thấy thông tin thú cưng"));
+            return const Center(child: Text("Không tìm thấy thông tin"));
           }
 
           final pet = snapshot.data!;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(color: Colors.pink.withOpacity(0.1), blurRadius: 10, spreadRadius: 2)
-                ],
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 30),
-                  // --- PHẦN ẢNH ĐÃ SỬA ---
-                  Center(
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFFFB6C1), width: 4),
-                        color: const Color(0xFFFFF0F5),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              children: [
+                // 1. AVATAR & TÊN CHÍNH
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 130,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.pinkAccent, width: 5),
+                          boxShadow: [
+                            BoxShadow(color: kLightPink.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5))
+                          ],
+                        ),
+                        child: ClipOval(child: _buildPetImage(pet.imageUrl)),
                       ),
-                      child: ClipOval(
-                        child: _buildPetImage(pet.imageUrl), // Truyền imageUrl từ API vào
-                      ),
-                    ),
+                      const SizedBox(height: 12),
+                      Text(pet.name ?? "Chưa đặt tên",
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
+                      Text("${pet.type} • ${pet.breed}",
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                    ],
                   ),
-                  // -----------------------
-                  const SizedBox(height: 20),
-                  Text(pet.name ?? "Chưa có tên",
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFF6185))),
-                  const Divider(indent: 40, endIndent: 40),
+                ),
+                const SizedBox(height: 25),
 
-                  _buildSectionHeader("📋", "Thông tin cơ bản"),
-                  _buildInfoRow(context, "Tên:", pet.name, "Loại:", pet.type),
-                  _buildInfoRow(context, "Giống:", pet.breed, "Giới tính:", pet.gender == "Male" ? "Đực" : "Cái"),
-
-                  _buildInfoRow(
-                      context,
-                      "Tuổi:",
-                      pet.age != null ? "${pet.age} tuổi" : "Chưa có",
-                      "Ngày sinh:",
-                      _formatDate(pet.dateOfBirth)
+                // 2. CARD THÔNG TIN CƠ BẢN
+                _buildDetailCard(
+                  title: "Thông tin cơ bản",
+                  icon: Icons.badge_outlined,
+                  content: Column(
+                    children: [
+                      _infoRow("Giới tính", pet.gender == "Male" ? "Đực" : "Cái"),
+                      _infoRow("Tuổi", pet.age != null ? "${pet.age} tuổi" : "Chưa có"),
+                      _infoRow("Ngày sinh", _formatDate(pet.dateOfBirth)),
+                      _infoRow("Màu sắc", pet.color ?? "Chưa có"),
+                      _infoRow("Cân nặng", "${pet.weight ?? 0} kg"),
+                      _infoRow("Chiều cao", "${pet.height ?? 0} cm"),
+                    ],
                   ),
-                  _buildInfoRow(context, "Màu sắc:", pet.color, "Dấu hiệu:", pet.distinguishingMarks),
+                ),
 
-                  _buildSectionHeader("⚖️", "Thông tin thể chất"),
-                  _buildInfoRow(context, "Cân nặng:", "${pet.weight ?? 0} kg", "Chiều cao:", "${pet.height ?? 0} cm"),
+                // 3. CARD SỨC KHỎE
+                _buildDetailCard(
+                  title: "Tình trạng sức khỏe",
+                  icon: Icons.health_and_safety_outlined,
+                  content: Column(
+                    children: [
+                      _infoRow("Dấu hiệu", pet.distinguishingMarks ?? "Không có"),
+                      _infoRow("Tiêm phòng", pet.vaccinationRecords ?? "Chưa cập nhật"),
+                      _infoRow("Tiền sử bệnh", pet.medicalHistory ?? "Không có"),
+                      _infoRow("Dị ứng", pet.allergies ?? "Không có"),
+                      _infoRow("Chế độ ăn", pet.dietPreferences ?? "Không có"),
+                      _infoRow("Ghi chú sức khỏe", pet.healthNotes ?? "Không có"),
+                    ],
+                  ),
+                ),
 
-                  _buildSectionHeader("🩺", "Thông tin sức khỏe"),
-                  _buildFullWidthInfo("Hồ sơ tiêm phòng:", pet.vaccinationRecords),
-                  _buildFullWidthInfo("Tiền sử bệnh:", pet.medicalHistory),
-                  _buildFullWidthInfo("Dị ứng:", pet.allergies ?? "Không có"),
-                  _buildFullWidthInfo("Chế độ ăn:", pet.dietPreferences ?? "Không có"),
-                  _buildFullWidthInfo("Ghi chú sức khỏe:", pet.healthNotes),
-
-                  _buildSectionHeader("🤖", "Kết quả phân tích AI"),
-                  Container(
+                // 4. KẾT QUẢ AI (NỔI BẬT)
+                _buildDetailCard(
+                  title: "Phân tích AI",
+                  icon: Icons.auto_awesome_outlined,
+                  color: Colors.blue.shade50,
+                  content: Container(
                     width: double.infinity,
-                    margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                    padding: const EdgeInsets.all(15),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.blue.shade100),
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(pet.aiAnalysisResult ?? "Chưa được phân tích",
-                        style: TextStyle(color: Colors.blue.shade900)),
+                    child: Text(
+                      pet.aiAnalysisResult ?? "Dữ liệu đang được hệ thống phân tích...",
+                      style: TextStyle(color: Colors.blue.shade900, height: 1.5, fontSize: 13),
+                    ),
                   ),
+                ),
 
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade500,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
-                          ),
-                          child: const Text("← Quay lại", style: TextStyle(color: Colors.white)),
+                const SizedBox(height: 20),
+
+                // 5. NÚT THAO TÁC
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _confirmDelete(context, petId),
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: const Text("Xóa hồ sơ"),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        // Nút Sửa: Ở đây bạn nên dùng Navigator.push sang trang PetUpdatePage
-                        ElevatedButton(
-                          onPressed: () async {
-                            final pet = snapshot.data!;
-
-                            // Chuyển Model thành Map và gán thêm petId
-                            final petMap = pet.toMap();
-                            petMap['petId'] = petId;
-
-                            final result = await Navigator.push(
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final petDetail = snapshot.data!;
+                          final petMap = petDetail.toMap();
+                          petMap['petId'] = petId;
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => PetUpdatePage(pet: petMap)),
+                          );
+                          if (result == true) {
+                            Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => PetUpdatePage(pet: petMap)),
+                              MaterialPageRoute(builder: (context) => PetDetailPage(petId: petId)),
                             );
-
-                            if (result == true) {
-                              // Load lại trang chi tiết
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => PetDetailPage(petId: petId)),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          ),
-                          child: const Text("🛠️ Sửa", style: TextStyle(color: Colors.white)),
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryPink,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                      ],
+                        child: const Text("Chỉnh sửa", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
           );
         },
@@ -193,50 +216,98 @@ class PetDetailPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET HELPERS (Giữ nguyên hoặc cập nhật như dưới) ---
+  // Hàm xử lý xóa hồ sơ
+  void _confirmDelete(BuildContext context, int id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text("Xác nhận xóa?"),
+        content: const Text("Hồ sơ thú cưng sẽ bị xóa vĩnh viễn và không thể hoàn tác."),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Hủy")
+          ),
+          TextButton(
+              onPressed: () async {
+                Navigator.pop(context); // Đóng dialog xác nhận
 
-  Widget _buildSectionHeader(String icon, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 15, top: 20, bottom: 10),
-      child: Row(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 8),
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                // 1. Hiển thị loading nhẹ hoặc chặn người dùng bấm nhiều lần
+                bool success = await ApiService.deletePet(id);
+
+                if (success) {
+                  if (context.mounted) {
+                    // 2. Thông báo xóa thành công
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Đã xóa hồ sơ thú cưng")),
+                    );
+                    // 3. Quay lại trang danh sách và gửi kèm tín hiệu 'true'
+                    Navigator.pop(context, true);
+                  }
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Lỗi: Không thể xóa hồ sơ")),
+                    );
+                  }
+                }
+              },
+              child: const Text("Xóa ngay", style: TextStyle(color: Colors.red))
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label1, String? val1, String label2, String? val2) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-      child: Row(
+  // --- WIDGET CẤU TRÚC CARD ---
+  Widget _buildDetailCard({required String title, required IconData icon, required Widget content, Color? color}) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color ?? Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: _richTextItem(label1, val1)),
-          Expanded(child: _richTextItem(label2, val2)),
+          Row(
+            children: [
+              Icon(icon, size: 20, color: kPrimaryPink),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            ],
+          ),
+          const Divider(height: 24),
+          content,
         ],
       ),
     );
   }
 
-  Widget _buildFullWidthInfo(String label, String? val) {
+  // --- DÒNG THÔNG TIN GỌN GÀNG ---
+  Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: _richTextItem(label, val),
-      ),
-    );
-  }
-
-  Widget _richTextItem(String label, String? val) {
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(color: Colors.black87, fontSize: 14),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextSpan(text: "$label ", style: const TextStyle(fontWeight: FontWeight.bold)),
-          TextSpan(text: (val == null || val.isEmpty) ? "Chưa có" : val),
+          SizedBox(
+            width: 110,
+            child: Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(
+              (value.isEmpty || value == "null") ? "Chưa có" : value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87),
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );

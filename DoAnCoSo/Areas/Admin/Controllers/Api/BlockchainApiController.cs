@@ -2,11 +2,13 @@
 using DoAnCoSo.Models;
 using DoAnCoSo.Models.Blockchain;
 using DoAnCoSo.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DoAnCoSo.Areas.Admin.Controllers.Api
@@ -14,6 +16,7 @@ namespace DoAnCoSo.Areas.Admin.Controllers.Api
     [Area("Admin")]
     [Route("api/admin/Blockchain")] // Cấu hình đường dẫn API
     [ApiController] // Attribute bắt buộc cho Web API
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")] // Chỉ Admin mới vào được
     public class BlockchainApiController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -95,18 +98,6 @@ namespace DoAnCoSo.Areas.Admin.Controllers.Api
                 currentPetName = petName,
                 records = records
             });
-        }
-
-        // GET: api/admin/blockchain/details/5
-        [HttpGet("details/{id}")]
-        public async Task<IActionResult> GetDetails(int id)
-        {
-            var block = await _context.BlockchainRecords.FindAsync(id);
-
-            if (block == null)
-                return NotFound(new { message = "Block không tồn tại" });
-
-            return Ok(block);
         }
     }
 }

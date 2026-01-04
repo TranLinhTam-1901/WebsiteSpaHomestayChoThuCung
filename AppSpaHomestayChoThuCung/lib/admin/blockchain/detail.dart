@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../model/Blockchain/blockchain_record.dart';
+import '../../model/blockchain/blockchain_record.dart';
 
 class BlockchainDetailPage extends StatelessWidget {
   final BlockchainRecord record;
+  static const Color pinkLight = Color(0xFFFFB6C1);
 
   const BlockchainDetailPage({super.key, required this.record});
 
@@ -34,24 +34,20 @@ class BlockchainDetailPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFDFDFD),
+      appBar: AppBar(
+        title: const Text("Chi tiết Blockchain",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
+        centerTitle: true,
+        backgroundColor: pinkLight,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(20))),
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Thanh điều hướng (Bỏ AppBar truyền thống)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black87),
-                  ),
-                  const Text(
-                    "CHI TIẾT BLOCKCHAIN",
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                  ),
-                ],
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
 
             Expanded(

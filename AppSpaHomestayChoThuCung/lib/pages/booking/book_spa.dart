@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Thêm để chỉnh status bar
 import 'package:intl/intl.dart';
 import '../../../model/service/service.dart';
 import '../../../services/api_service.dart';
@@ -16,7 +17,9 @@ class _SpaBookingPageState extends State<SpaBookingPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
 
-  // --- 1. KHAI BÁO BIẾN THỜI GIAN (ĐÃ BỔ SUNG) ---
+  // Hằng số màu sắc đồng bộ
+  static const kLightPink = Color(0xFFFFB6C1);
+
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = const TimeOfDay(hour: 9, minute: 0);
 
@@ -37,16 +40,13 @@ class _SpaBookingPageState extends State<SpaBookingPage> {
   @override
   void initState() {
     super.initState();
-    // Khởi tạo giá trị mặc định ngay lập tức để tránh lỗi undefined trên Web
     _selectedDate = DateTime.now();
     _selectedTime = const TimeOfDay(hour: 9, minute: 0);
-
     _initControllers();
     _loadData();
   }
 
   void _initControllers() {
-    // CHỈ GIỮ LẠI ĐOẠN NÀY
     _phoneController = TextEditingController(text: widget.appointment?['ownerPhoneNumber'] ?? "");
     _petNameController = TextEditingController();
     _petTypeController = TextEditingController();
@@ -55,39 +55,14 @@ class _SpaBookingPageState extends State<SpaBookingPage> {
     _petWeightController = TextEditingController();
   }
 
-  // --- 2. HÀM CHỌN NGÀY/GIỜ ---
-  Future<void> _pickDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-    );
-    if (picked != null) setState(() => _selectedDate = picked);
-  }
-
-  Future<void> _pickTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null) setState(() => _selectedTime = picked);
-  }
-
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-
     try {
-      // 1. Lấy thông tin Profile trước và gán ngay
       final profile = await ApiService.getUserProfile();
-      debugPrint("DEBUG PROFILE: $profile");
-
       if (profile != null && widget.appointment == null) {
-        String phone = profile['phoneNumber']?.toString() ?? "";
-        _phoneController.text = phone;
+        _phoneController.text = profile['phoneNumber']?.toString() ?? "";
       }
 
-      // 2. Sau đó mới lấy các dữ liệu khác
       final results = await Future.wait([
         ApiService.getPets(),
         ApiService.getSpaBookingData(),
@@ -100,9 +75,6 @@ class _SpaBookingPageState extends State<SpaBookingPage> {
         final rawSpaData = results[1] as Map<String, dynamic>;
         _spaServices = List<ServiceModel>.from(rawSpaData['services']);
 
-        _isLoading = false;
-
-        // Khởi tạo mặc định
         if (_userPets.isNotEmpty) {
           _selectedPetId = widget.appointment?['petId'] ?? _userPets.first['petId'];
           _updatePetFields(_selectedPetId);
@@ -111,24 +83,23 @@ class _SpaBookingPageState extends State<SpaBookingPage> {
           _selectedService = _spaServices.first;
           _calculatePrice();
         }
+        _isLoading = false;
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      debugPrint("LỖI TỔNG HỢP: $e");
+      debugPrint("LỖI LOAD DATA: $e");
     }
   }
 
   void _updatePetFields(int? petId) {
     if (_userPets.isEmpty || petId == null) return;
-
     final pet = _userPets.firstWhere((p) => p['petId'] == petId, orElse: () => null);
-
     if (pet != null) {
       setState(() {
         _petNameController.text = pet['name'] ?? "";
         _petTypeController.text = pet['type'] ?? "";
-        _petBreedController.text = pet['breed'] ?? ""; // Thêm Giống
-        _petAgeController.text = pet['age']?.toString() ?? ""; // Thêm Tuổi
+        _petBreedController.text = pet['breed'] ?? "";
+        _petAgeController.text = pet['age']?.toString() ?? "";
         _petWeightController.text = pet['weight']?.toString() ?? "0";
         _calculatePrice();
       });
@@ -153,156 +124,114 @@ class _SpaBookingPageState extends State<SpaBookingPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.pinkAccent)));
-    }
+    // Chỉnh status bar đồng bộ
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ));
+
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator(color: kLightPink)));
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(widget.appointment == null ? "🧼 Đặt lịch Spa" : "✏️ Cập nhật lịch Spa"),
-        backgroundColor: Colors.pinkAccent,
+        title: Text(
+          widget.appointment == null ? "🧼 Đặt lịch Spa" : "✏️ Cập nhật Spa",
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19, color: Colors.black),
+        ),
+        centerTitle: true,
+        backgroundColor: kLightPink,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle("👤", "Thông tin chủ nuôi"),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: "Số điện thoại", border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 20),
-
-              // Thay thế đoạn hiển thị thú cưng cũ bằng đoạn này:
-              _buildSectionTitle("🐾", "Chọn thú cưng"),
-              const Text("Thú cưng có sẵn", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 5),
-              DropdownButtonFormField<int>(
-                value: _selectedPetId,
-                items: _userPets.map((pet) => DropdownMenuItem<int>(
-                  value: pet['petId'],
-                  child: Text(pet['name']),
-                )).toList(),
-                onChanged: (val) {
-                  setState(() => _selectedPetId = val);
-                  _updatePetFields(val);
-                },
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 15),
-
-              // Hàng 1: Tên thú cưng và Loại
-              Row(
-                children: [
-                  Expanded(child: _buildReadonlyField("Tên thú cưng", _petNameController)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildReadonlyField("Loại", _petTypeController)),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Hàng 2: Giống
-              _buildReadonlyField("Giống", _petBreedController),
-              const SizedBox(height: 10),
-
-              // Hàng 3: Tuổi và Cân nặng
-              Row(
-                children: [
-                  Expanded(child: _buildReadonlyField("Tuổi", _petAgeController)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _petWeightController,
-                      readOnly: true,
-                      decoration: InputDecoration(
-                          labelText: "Cân nặng",
-                          suffixText: "kg", // Thêm đơn vị kg như trong hình
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
-                          border: const OutlineInputBorder()
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              _buildSectionTitle("🧴", "Chọn dịch vụ Spa"),
-              DropdownButtonFormField<ServiceModel>(
-                value: _selectedService,
-                items: _spaServices.map((service) => DropdownMenuItem<ServiceModel>(
-                  value: service,
-                  child: Text(service.name),
-                )).toList(),
-                onChanged: (val) {
-                  setState(() => _selectedService = val);
-                  _calculatePrice();
-                },
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-              ),
-
-              const SizedBox(height: 20),
-              _buildSectionTitle("💰", "Giá dịch vụ"),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.shade100)
+              _buildCard(
+                title: "Thông tin chủ nuôi",
+                icon: Icons.person_outline,
+                child: TextFormField(
+                  controller: _phoneController,
+                  decoration: _inputDecoration("Số điện thoại liên hệ", Icons.phone_android),
                 ),
-                child: Text(_calculatedPrice, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
+              ),
+
+              _buildCard(
+                title: "Thú cưng của bạn",
+                icon: Icons.pets_outlined,
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<int>(
+                      value: _selectedPetId,
+                      isExpanded: true,
+                      items: _userPets.map((pet) => DropdownMenuItem<int>(
+                        value: pet['petId'],
+                        child: Text(pet['name']),
+                      )).toList(),
+                      onChanged: (val) {
+                        setState(() => _selectedPetId = val);
+                        _updatePetFields(val);
+                      },
+                      decoration: _inputDecoration("Chọn thú cưng", Icons.expand_more),
+                    ),
+                    const SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Expanded(child: _buildReadonlyField("Loại", _petTypeController)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildReadonlyField("Giống", _petBreedController)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: _buildReadonlyField("Tuổi", _petAgeController)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildReadonlyField("Cân nặng (kg)", _petWeightController)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              _buildCard(
+                title: "Dịch vụ Spa",
+                icon: Icons.bubble_chart_outlined,
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<ServiceModel>(
+                      value: _selectedService,
+                      isExpanded: true,
+                      items: _spaServices.map((service) => DropdownMenuItem<ServiceModel>(
+                        value: service,
+                        child: Text(service.name),
+                      )).toList(),
+                      onChanged: (val) {
+                        setState(() => _selectedService = val);
+                        _calculatePrice();
+                      },
+                      decoration: _inputDecoration("Gói dịch vụ", Icons.spa_outlined),
+                    ),
+                    const SizedBox(height: 15),
+                    _buildPriceDisplay(),
+                  ],
+                ),
+              ),
+
+              _buildCard(
+                title: "Thời gian hẹn",
+                icon: Icons.calendar_today_outlined,
+                child: _buildDateTimePicker(),
               ),
 
               const SizedBox(height: 20),
-              _buildSectionTitle("📅", "Thời gian hẹn"),
-              // --- 3. GIAO DIỆN CHỌN NGÀY GIỜ ---
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: _pickDate,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: "Ngày hẹn", border: OutlineInputBorder()),
-                        child: Text(DateFormat('dd/MM/yyyy').format(_selectedDate)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: InkWell(
-                      onTap: _pickTime,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(labelText: "Giờ hẹn", border: OutlineInputBorder()),
-                        child: Text(_selectedTime.format(context)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 40),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink.shade100, // Hồng nhạt chuẩn
-                  foregroundColor: Colors.pink.shade700, // Chữ hồng đậm cho dễ đọc
-                  minimumSize: const Size(double.infinity, 55),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      side: BorderSide(color: Colors.pink.shade200)
-                  ),
-                ),
-                onPressed: _handleBooking,
-                icon: const Icon(Icons.check_circle_outline),
-                label: Text(
-                  widget.appointment == null ? "XÁC NHẬN ĐẶT LỊCH" : "LƯU THAY ĐỔI",
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              )
+              _buildMainButton(),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -310,73 +239,170 @@ class _SpaBookingPageState extends State<SpaBookingPage> {
     );
   }
 
+  // --- HELPER WIDGETS (ĐỒNG BỘ VỚI VET) ---
+
+  Widget _buildCard({required String title, required IconData icon, required Widget child}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: Colors.pinkAccent),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87)),
+            ],
+          ),
+          const Divider(height: 20),
+          child,
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, IconData? icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: icon != null ? Icon(icon, size: 20, color: Colors.grey) : null,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kLightPink)),
+      filled: true,
+      fillColor: Colors.white,
+    );
+  }
+
+  Widget _buildReadonlyField(String label, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+      ),
+    );
+  }
+
+  Widget _buildPriceDisplay() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: kLightPink.withOpacity(0.15), borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text("Giá dịch vụ:", style: TextStyle(fontWeight: FontWeight.w500)),
+          Text(_calculatedPrice, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker() {
+    return Row(
+      children: [
+        Expanded(child: _timePickerBox(label: "Ngày", value: DateFormat('dd/MM/yyyy').format(_selectedDate), icon: Icons.calendar_month, onTap: _pickDate)),
+        const SizedBox(width: 12),
+        Expanded(child: _timePickerBox(label: "Giờ", value: _selectedTime.format(context), icon: Icons.access_time, onTap: _pickTime)),
+      ],
+    );
+  }
+
+  Widget _timePickerBox({required String label, required String value, required IconData icon, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(12)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Row(children: [Icon(icon, size: 16, color: Colors.pinkAccent), const SizedBox(width: 8), Text(value, style: const TextStyle(fontWeight: FontWeight.bold))]),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: kLightPink,
+        foregroundColor: Colors.black87,
+        minimumSize: const Size(double.infinity, 55),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      ),
+      onPressed: _handleBooking,
+      child: Text(
+        widget.appointment == null ? "XÁC NHẬN ĐẶT LỊCH" : "LƯU THAY ĐỔI",
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  // --- LOGIC PICKER ---
+  Future<void> _pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+      builder: (context, child) => Theme(data: ThemeData.light().copyWith(colorScheme: const ColorScheme.light(primary: Colors.pinkAccent)), child: child!),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  Future<void> _pickTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+      builder: (context, child) => Theme(data: ThemeData.light().copyWith(colorScheme: const ColorScheme.light(primary: kLightPink)), child: child!),
+    );
+    if (picked != null) setState(() => _selectedTime = picked);
+  }
+
   void _handleBooking() async {
     if (_selectedPetId == null || _selectedService == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Vui lòng chọn thú cưng và dịch vụ"))
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Vui lòng chọn thú cưng và dịch vụ")));
       return;
     }
-
     setState(() => _isLoading = true);
-
     try {
       final profile = await ApiService.getUserProfile();
-
       Map<String, dynamic> bookingData = {
         "UserId": profile?['id'],
         "OwnerPhoneNumber": _phoneController.text,
-
-        // ĐỔI TÊN Ở ĐÂY: Từ PetId thành ExistingPetId
         "ExistingPetId": _selectedPetId,
-
-        // Giữ lại các trường này để thỏa mãn [Required] của Backend
         "PetName": _petNameController.text,
         "PetType": _petTypeController.text,
         "PetWeight": double.tryParse(_petWeightController.text) ?? 0,
         "PetBreed": _petBreedController.text,
-
         "ServiceId": _selectedService!.serviceId,
         "AppointmentDate": DateFormat('yyyy-MM-dd').format(_selectedDate),
         "AppointmentTime": "${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}",
         "TotalPrice": double.tryParse(_calculatedPrice.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
         "Status": "Pending"
       };
-
       bool isUpdate = widget.appointment != null;
-      var appId = widget.appointment?['appointmentId'];
-
-      bool success = await ApiService.saveSpaBooking(bookingData, isUpdate, id: appId);
-
-      if (success) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Thao tác thành công! 🎉"))
-          );
-          Navigator.pop(context, true);
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Lỗi: Server từ chối dữ liệu. ❌"))
-          );
-        }
+      bool success = await ApiService.saveSpaBooking(bookingData, isUpdate, id: widget.appointment?['appointmentId']);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Thao tác thành công! 🎉"), backgroundColor: Colors.green));
+        Navigator.pop(context, true);
       }
-    } catch (e) {
-      debugPrint("Lỗi Local: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
-  Widget _buildSectionTitle(String icon, String title) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Text("$icon $title", style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-  );
-
-  Widget _buildReadonlyField(String label, TextEditingController controller) => TextFormField(
-    controller: controller,
-    readOnly: true,
-    decoration: InputDecoration(labelText: label, filled: true, fillColor: Colors.grey.shade100, border: const OutlineInputBorder()),
-  );
 }

@@ -201,14 +201,15 @@ class _LoginPageState extends State<LoginPage> {
                               final userController = Get.find<UserController>();
 
                               userController.profile.value = UserProfile(
-                                id: user.uid, // Dùng UID của Firebase làm ID
-                                // userName: user.displayName ?? "Người dùng Google",
-                                fullName: user.displayName ?? "Người dùng Google", // Thêm thuộc tính này
+                                id: user.uid,
+                                fullName: user.displayName ?? "Người dùng Google",
+                                userName: user.email ?? "google_user", // 👈 BẮT BUỘC PHẢI CÓ DÒNG NÀY
                                 email: user.email ?? "",
                                 phone: "",
                                 address: "",
                                 avatarUrl: user.photoURL ?? "",
                                 role: 'User',
+                                isLocked: false, // 👈 Đảm bảo thêm cả các trường required mới nếu có
                               );
 
                               // 4. Chuyển trang về AuthGate

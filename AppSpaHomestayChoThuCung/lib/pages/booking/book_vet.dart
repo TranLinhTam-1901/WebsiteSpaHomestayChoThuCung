@@ -27,6 +27,7 @@ class _VetBookingPageState extends State<VetBookingPage> {
   late TextEditingController _petWeightController;
   late TextEditingController _noteController;
 
+  static const kLightPink = Color(0xFFFFB6C1);
   int? _selectedPetId;
   ServiceModel? _selectedService;
   DateTime _selectedDate = DateTime.now();
@@ -148,7 +149,7 @@ class _VetBookingPageState extends State<VetBookingPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator(color: Colors.pinkAccent)));
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator(color: kLightPink)));
 
     return Scaffold(
       backgroundColor: Colors.grey[50], // Nền xám nhạt cho app chuyên nghiệp
@@ -162,7 +163,7 @@ class _VetBookingPageState extends State<VetBookingPage> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFFFFB6C1), // ✅ Màu kLightPink bạn chọn
+        backgroundColor: kLightPink, // ✅ Màu kLightPink bạn chọn
         elevation: 0,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -302,7 +303,7 @@ class _VetBookingPageState extends State<VetBookingPage> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.pinkAccent)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kLightPink)),
       filled: true,
       fillColor: Colors.white,
     );
@@ -334,9 +335,9 @@ class _VetBookingPageState extends State<VetBookingPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("Tổng chi phí dự kiến:", style: TextStyle(color: Colors.pinkAccent, fontWeight: FontWeight.w500)),
+          const Text("Tổng chi phí dự kiến:", style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500)),
           Text("${NumberFormat("#,###").format(_selectedService?.price ?? 0)}đ",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.pinkAccent)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.redAccent)),
         ],
       ),
     );
@@ -394,8 +395,6 @@ class _VetBookingPageState extends State<VetBookingPage> {
   }
 
   Widget _buildMainButton() {
-    const kLightPink = Color(0xFFFFB6C1); // Khai báo lại màu bạn chọn
-
     return ElevatedButton(
       onPressed: _handleBooking,
       style: ElevatedButton.styleFrom(
@@ -422,7 +421,7 @@ class _VetBookingPageState extends State<VetBookingPage> {
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 30)),
-      builder: (context, child) => Theme(data: ThemeData.light().copyWith(colorScheme: const ColorScheme.light(primary: Colors.pinkAccent)), child: child!),
+      builder: (context, child) => Theme(data: ThemeData.light().copyWith(colorScheme: const ColorScheme.light(primary: kLightPink)), child: child!),
     );
     if (picked != null) setState(() => _selectedDate = picked);
   }
@@ -431,7 +430,7 @@ class _VetBookingPageState extends State<VetBookingPage> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
-      builder: (context, child) => Theme(data: ThemeData.light().copyWith(colorScheme: const ColorScheme.light(primary: Colors.pinkAccent)), child: child!),
+      builder: (context, child) => Theme(data: ThemeData.light().copyWith(colorScheme: const ColorScheme.light(primary: kLightPink)), child: child!),
     );
     if (picked != null) setState(() => _selectedTime = picked);
   }
