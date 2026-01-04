@@ -138,5 +138,115 @@ namespace DoAnCoSo.Controllers.Api
             });
         }
 
+
+        [AllowAnonymous]
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // =========================
+            // 1️⃣ TÌM USER THEO EMAIL
+            // =========================
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+
+            // =========================
+            // 2️⃣ NẾU USER CHƯA TỒN TẠI → TẠO MỚI
+            // =========================
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = dto.Email,
+                    Email = dto.Email,
+                    FullName = dto.FullName,
+                    LoginProvider = "Google",
+                    IsExternalLogin = true,
+                    PhoneNumber = "000000000",
+                    ExternalProviderId = dto.FirebaseUid,
+                    EmailConfirmed = true // Google email đã xác thực
+                };
+
+                var createResult = await _userManager.CreateAsync(user);
+
+                if (!createResult.Succeeded)
+                    return BadRequest(createResult.Errors);
+
+                // 🔥 GÁN ROLE MẶC ĐỊNH
+                if (!await _roleManager.RoleExistsAsync("Customer"))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("Customer"));
+                }
+
+                await _userManager.AddToRoleAsync(user, "Customer");
+            }
+            else
+            {
+                // =========================
+                // 3️⃣ USER ĐÃ TỒN TẠI → CẬP NHẬT GOOGLE INFO (NẾU CHƯA CÓ)
+                // =========================
+                if (string.IsNullOrEmpty(user.ExternalProviderId))
+                {
+                    user.ExternalProviderId = dto.FirebaseUid;
+                    user.LoginProvider = "Google";
+                    user.IsExternalLogin = true;
+
+                    await _userManager.UpdateAsync(user);
+                }
+            }
+
+            // =========================
+            // 4️⃣ LẤY ROLE
+            // =========================
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault();
+
+            // =========================
+            // 5️⃣ TẠO JWT (DÙNG CHUNG LOGIC LOGIN THƯỜNG)
+            // =========================
+            var claims = new List<Claim>
+
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Email, user.Email)
+                };
+
+            foreach (var r in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, r));
+            }
+
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
+            );
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: new SigningCredentials(
+                key, SecurityAlgorithms.HmacSha256)
+            );
+
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            // =========================
+            // 6️⃣ TRẢ RESPONSE
+            // =========================
+            return Ok(new
+            {
+                token = tokenString,
+                user = new
+                {
+                    id = user.Id,
+                    email = user.Email,
+                    role = role
+                }
+            });
+        }
+
+
     }
 }

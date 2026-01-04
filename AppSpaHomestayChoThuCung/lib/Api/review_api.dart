@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import '../model/product/review_model.dart';
+
+import '../model/review_model.dart';
 import 'auth_service.dart';
 
 class ReviewApi {
@@ -39,7 +40,9 @@ class ReviewApi {
     request.headers.addAll({
       "Authorization": "Bearer $token",
     });
-    request.fields["productId"] = productId.toString();
+
+    request.fields["targetId"] = productId.toString();
+
     request.fields["rating"] = rating.toString();
     request.fields["comment"] = comment;
 
@@ -48,7 +51,9 @@ class ReviewApi {
         final bytes = await img.readAsBytes();
         request.files.add(
           http.MultipartFile.fromBytes(
-            "images",
+
+            "reviewImages",
+
             bytes,
             filename: img.name,
           ),
@@ -56,7 +61,8 @@ class ReviewApi {
       } else {
         request.files.add(
           await http.MultipartFile.fromPath(
-            "images",
+            "reviewImages",
+
             img.path,
           ),
         );
@@ -65,7 +71,9 @@ class ReviewApi {
 
     final res = await request.send();
     if (res.statusCode != 200) {
-      throw Exception("Upload review thất bại");
+      final body = await res.stream.bytesToString();
+      throw Exception("Upload review thất bại: $body");
+
     }
   }
 

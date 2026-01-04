@@ -169,14 +169,14 @@ class PawHouseDrawer extends StatelessWidget {
 
           const Divider(),
 
-          // Drawer – Cài đặt
-          _item("Cài đặt", Icons.settings, () {
-            Navigator.pop(context); // Đóng drawer
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => SettingsPage()),
-            );
-          }),
+          // // Drawer – Cài đặt
+          // _item("Cài đặt", Icons.settings, () {
+          //   Navigator.pop(context); // Đóng drawer
+          //   Navigator.push(
+          //     context,
+          //     MaterialPageRoute(builder: (_) => SettingsPage()),
+          //   );
+          // }),
 
           const Divider(),
 

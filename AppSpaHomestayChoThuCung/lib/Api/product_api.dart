@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import '../model/product/product_detail_model.dart';
-import '../model/product/product_model.dart';
 import '../Api/auth_service.dart';
+import '../model/product_model.dart';
 
 class ProductApi {
   final Dio _dio = Dio(
@@ -57,6 +57,26 @@ class ProductApi {
         .map((e) => ProductModel.fromJson(e))
         .toList();
   }
+
+
+  Future<List<ProductModel>> getProductsByPromotion(int promotionId,
+      {int? categoryId}) async {
+    final res = await _dio.get(
+      '/api/promotions/$promotionId/products',
+      queryParameters: {
+        if (categoryId != null && categoryId > 0) 'categoryId': categoryId,
+      },
+      options: Options(
+        headers: {'Accept': 'application/json'},
+      ),
+    );
+
+    // API trả về: { promotion: {...}, total: ..., items: [...] }
+    final items = (res.data as Map<String, dynamic>)['items'] as List? ?? [];
+    return items.map((e) => ProductModel.fromJson(e)).toList();
+  }
+
+
 }
 
 

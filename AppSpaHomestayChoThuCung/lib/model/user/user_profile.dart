@@ -30,4 +30,24 @@ class UserProfile {
       avatarUrl: json['avatarUrl']?.toString(),
     );
   }
+
+  UserProfile copyWith({
+    String? id,
+    String? fullName,
+    String? email,
+    String? phone,
+    String? address,
+    String? role,
+    String? avatarUrl,
+  }) {
+    return UserProfile(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      role: role ?? this.role,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+    );
+  }
 }

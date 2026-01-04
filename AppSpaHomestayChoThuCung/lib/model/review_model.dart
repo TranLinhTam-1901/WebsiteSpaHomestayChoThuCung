@@ -26,6 +26,7 @@ class ReviewModel {
   final String comment;
   final String userName;
   final List<String> images;
+  final DateTime createdDate;
 
   ReviewModel({
     required this.id,
@@ -33,6 +34,8 @@ class ReviewModel {
     required this.comment,
     required this.userName,
     required this.images,
+    required this.createdDate,
+
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +45,7 @@ class ReviewModel {
       comment: json['comment'] ?? '',
       userName: json['userName'] ?? 'Ẩn danh',
       images: List<String>.from(json['images'] ?? []),
+      createdDate: DateTime.parse(json['createdDate']),
     );
   }
 }

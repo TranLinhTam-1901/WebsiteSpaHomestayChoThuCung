@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../model/login/login_result.dart';
 
 class AuthService {
@@ -59,4 +60,38 @@ class AuthService {
 
     return doc.data()?['role'] ?? 'User';
   }
+
+  static Future<LoginResult?> googleLogin({
+    required String email,
+    required String fullName,
+    required String firebaseUid,
+    String? avatarUrl,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/auth/google-login"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "fullName": fullName,
+        "firebaseUid": firebaseUid,
+        "avatarUrl": avatarUrl,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      // 1️⃣ LƯU TOKEN RAM
+      jwtToken = data['token'];
+
+      // 2️⃣ LƯU TOKEN LOCAL (WEB = localStorage)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', jwtToken!);
+
+      return LoginResult.fromJson(data);
+    }
+
+    return null;
+  }
+
 }

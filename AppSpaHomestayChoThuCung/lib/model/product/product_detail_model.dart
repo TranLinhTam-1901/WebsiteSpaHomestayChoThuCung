@@ -1,3 +1,5 @@
+import 'package:baitap1/model/product_variant.dart';
+
 class ProductDetailModel {
   final int id;
   final String name;
@@ -8,6 +10,10 @@ class ProductDetailModel {
   final List<String> images;
   final List<OptionGroup> optionGroups;
   final int discountPercentage;
+  final List<ProductVariant> variants;
+  final int stockQuantity;
+
+
 
 
   ProductDetailModel({
@@ -19,7 +25,10 @@ class ProductDetailModel {
     required this.trademark,
     required this.images,
     required this.optionGroups,
-    required this.discountPercentage
+    required this.discountPercentage,
+    required this.variants,
+    required this.stockQuantity
+
   });
 
   factory ProductDetailModel.fromJson(Map<String, dynamic> json) {
@@ -37,8 +46,13 @@ class ProductDetailModel {
       optionGroups: (json['optionGroups'] as List)
           .map((e) => OptionGroup.fromJson(e))
           .toList(),
+      variants: (json['variants'] as List)
+          .map((e) => ProductVariant.fromJson(e))
+          .toList(),
+      stockQuantity: (json['stockQuantity'] ?? 0) as int,
     );
   }
+
 }
 
 class OptionGroup {

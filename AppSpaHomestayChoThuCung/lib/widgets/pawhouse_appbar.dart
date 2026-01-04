@@ -62,32 +62,32 @@ class PawHouseAppBar extends StatelessWidget
             IconButton(
               icon: const Icon(Icons.shopping_cart_outlined),
               onPressed: () {
-                Get.to(() => ShoppingCartPage());
+                Get.to(() => CartPage());
               },
             ),
-            Positioned(
-              right: 6,
-              top: 6,
-              child: Obx(() {
-                if (cartController.cartItems.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                return Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    cartController.cartItems.length.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                    ),
-                  ),
-                );
-              }),
-            ),
+            // Positioned(
+            //   right: 6,
+            //   top: 6,
+            //   child: Obx(() {
+            //     if (cartController.cartItems.isEmpty) {
+            //       return const SizedBox.shrink();
+            //     }
+            //     return Container(
+            //       padding: const EdgeInsets.all(4),
+            //       decoration: BoxDecoration(
+            //         color: Colors.red,
+            //         borderRadius: BorderRadius.circular(10),
+            //       ),
+            //       child: Text(
+            //         cartController.cartItems.length.toString(),
+            //         style: const TextStyle(
+            //           color: Colors.white,
+            //           fontSize: 10,
+            //         ),
+            //       ),
+            //     );
+            //   }),
+            // ),
           ],
         ),
       ],

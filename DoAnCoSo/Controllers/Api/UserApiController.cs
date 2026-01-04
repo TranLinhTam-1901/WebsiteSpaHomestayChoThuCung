@@ -1,4 +1,5 @@
-﻿using DoAnCoSo.Models;
+﻿using DoAnCoSo.DTO.Auth;
+using DoAnCoSo.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -39,4 +40,34 @@ public class UserApiController : ControllerBase
             role = roles.FirstOrDefault()
         });
     }
+
+    // PUT api/users/me
+    [HttpPut("me")]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateProfileDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null)
+            return NotFound();
+
+        if (string.IsNullOrWhiteSpace(dto.Phone))
+            return BadRequest("Số điện thoại không hợp lệ");
+
+        if (string.IsNullOrWhiteSpace(dto.Address))
+            return BadRequest("Địa chỉ không được để trống");
+
+        user.FullName = dto.FullName;
+        user.PhoneNumber = dto.Phone;
+        user.Address = dto.Address;
+
+        await _userManager.UpdateAsync(user);
+
+        return Ok(new
+        {
+            success = true,
+            message = "Cập nhật thông tin thành công"
+        });
+    }
+
 }

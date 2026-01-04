@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../model/order/order_model.dart';
 import '../../../services/api_service.dart';
+import '../../../utils/price_utils.dart';
 
 const kPrimaryPink = Color(0xFFFF6185);
 const kLightPink = Color(0xFFFFB6C1);
@@ -47,8 +48,8 @@ class OrderDetailPage extends StatelessWidget {
                     _infoRow(
                       "Tổng tiền",
                       order.discount > 0
-                          ? "${(order.totalPrice + order.discount).toStringAsFixed(0)} đ → ${order.totalPrice.toStringAsFixed(0)} đ"
-                          : "${order.totalPrice.toStringAsFixed(0)} đ",
+                          ? "${formatPrice(order.totalPrice + order.discount) } → ${formatPrice(order.totalPrice)}"
+                          : formatPrice(order.totalPrice),
                       isPrice: true,
                       discount: order.discount,
                     ),
@@ -109,7 +110,7 @@ class OrderDetailPage extends StatelessWidget {
                   child: Column(
                     children: [
                       _infoRow("Mã khuyến mãi", order.promoCode!),
-                      _infoRow("Giá trị giảm", "${order.discount.toStringAsFixed(0)} đ"),
+                      _infoRow("Giá trị giảm", formatPrice(order.discount)),
                     ],
                   ),
                 ),
@@ -193,21 +194,21 @@ class OrderDetailPage extends StatelessWidget {
           Expanded(child: Text("${it.quantity}", textAlign: TextAlign.center)),
           Expanded(
               child: it.discountedPrice < it.price
-                  ? Text("${it.price} đ",
+                  ? Text(formatPrice(it.price),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                       decoration: TextDecoration.lineThrough,
                       color: Colors.grey,
                       fontSize: 12))
-                  : Text("${it.price} đ", textAlign: TextAlign.center)),
+                  : Text(formatPrice(it.price), textAlign: TextAlign.center)),
           Expanded(
-              child: Text("${it.discountedPrice} đ",
+              child: Text(formatPrice(it.discountedPrice),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                       color: Colors.red, fontWeight: FontWeight.bold))),
           Expanded(child: Text("${it.option}", textAlign: TextAlign.center)),
           Expanded(
-              child: Text("${it.quantity * it.discountedPrice} đ",
+              child: Text(formatPrice(it.quantity * it.discountedPrice),
                   textAlign: TextAlign.center)),
         ],
       ),
